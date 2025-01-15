@@ -1,5 +1,7 @@
 package com.team9470.subsystems;
 
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 /**
  * AlgaeArm - Neev + Aadit
  * Subsystem Requirements:
@@ -11,5 +13,5 @@ package com.team9470.subsystems;
  * - one arm motor, one wheel motor
  * - motion magicc
  */
-public class AlgaeArm {
+public class AlgaeArm extends SubsystemBase {
 }

@@ -4,44 +4,73 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
+
+import static edu.wpi.first.units.Units.*;
 
 public final class Constants {
-    public final static class ElevatorConstants {
+
+    public static final class ElevatorConstants {
+        // Physical geometry
+        // For example: 22 * 0.25 inches * 2 = 11 inches per rotation
+        // Convert to meters for internal usage
+        public static final Distance DIST_PER_ROTATION =
+                Units.Inches.of(22 * 0.25).times(2);
+        public static final double rotationsPerMeter = 1.0 / DIST_PER_ROTATION.in(Meters);
+
+        // Gains
+        public static final double kP = 1.0;
+        public static final double kG = 0.18;
+        public static final double kV = 5.33;
+        // etc...
+
+        // Motion config
+        public static final LinearVelocity CRUISE_VELOCITY = Units.MetersPerSecond.of(5.0);
+        public static final LinearAcceleration ACCELERATION = MetersPerSecondPerSecond.of(120.0);
+        public static final double JERK = 10.0;
+
+        // Homing
+        public static final Voltage HOMING_OUTPUT = Units.Volts.of(-2.0);
+        public static final LinearVelocity HOMING_MAX_VELOCITY = Units.MetersPerSecond.of(0.1);
+        public static final Distance HOMING_ZONE = Meters.of(0.1);
+        public static final Time HOMING_TIMEOUT = Units.Seconds.of(0.5);
+
+        // Current limits
+        public static final double STALL_CURRENT = 40; // example
+
+        public static final Distance L1 = Meters.of(0);
+        public static final Distance L2 = Meters.of(.5);
+        public static final Distance L3 = Meters.of(1);
+        public static final Distance L4 = Meters.of(1.5);
+        public static final Distance INTAKE = Meters.of(0);
+
+
         public static TalonFXConfiguration ElevatorFXConfig(){
-            TalonFXConfiguration elevatorMainConfig = new TalonFXConfiguration();
-            elevatorMainConfig.MotionMagic.MotionMagicCruiseVelocity = 5.0;
-            elevatorMainConfig.MotionMagic.MotionMagicAcceleration = 120.0;
-            elevatorMainConfig.MotionMagic.MotionMagicJerk = 10;
-            elevatorMainConfig.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-            elevatorMainConfig.Slot0.kV = 5.33;
-            elevatorMainConfig.Slot0.kA = 0.0;
-            elevatorMainConfig.Slot0.kP = 1.0;
-            elevatorMainConfig.Slot0.kI = 0.0;
-            elevatorMainConfig.Slot0.kD = 0.0;
-            elevatorMainConfig.Slot0.kG = 0.18;
-            elevatorMainConfig.Slot0.kS = 0.0;
-            elevatorMainConfig.Feedback.SensorToMechanismRatio = 6.0;
-            elevatorMainConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            elevatorMainConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-            elevatorMainConfig.CurrentLimits.StatorCurrentLimit = 40;
-            return elevatorMainConfig;
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY.in(MetersPerSecond) * rotationsPerMeter;; // We'll override in code with setControl
+            config.MotionMagic.MotionMagicAcceleration = ACCELERATION.in(MetersPerSecondPerSecond) * rotationsPerMeter;;
+            config.MotionMagic.MotionMagicJerk = JERK;
+            config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+            config.Slot0.kV = kV;
+            config.Slot0.kA = 0.0;
+            config.Slot0.kP = kP;
+            config.Slot0.kI = 0.0;
+            config.Slot0.kD = 0.0;
+            config.Slot0.kG = kG;
+            config.Slot0.kS = 0.0;
+            config.Feedback.SensorToMechanismRatio = 6.0;
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            return config;
         }
 
         public static TalonFXConfiguration ElevatorFXConfigFollower(){
-            TalonFXConfiguration elevatorFollowerConfig = new TalonFXConfiguration();
-            elevatorFollowerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            elevatorFollowerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-            elevatorFollowerConfig.CurrentLimits.StatorCurrentLimit = 40;
-            return elevatorFollowerConfig;
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            return config;
         }
-
-        public static final Voltage HOMING_OUTPUT = Units.Volts.of(-2.0);
-        public static final LinearVelocity HOMING_MAX_VELOCITY = Units.MetersPerSecond.of(0.1);
-        public static final Distance HOMING_ZONE = Units.Meters.of(0.1);
-        public static final Time HOMING_TIMEOUT = Units.Seconds.of(.5);
     }
 }

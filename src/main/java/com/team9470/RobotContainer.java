@@ -5,35 +5,75 @@
 
 package com.team9470;
 
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.Elevator;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+
+import static edu.wpi.first.units.Units.*;
 
 
-public class RobotContainer
-{
-    CommandXboxController xbox = new CommandXboxController(0);
+public class RobotContainer {
+    private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+
+
+    public final Swerve drivetrain = TunerConstants.createDrivetrain();
+
+    private final Telemetry logger = new Telemetry(MaxSpeed);
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
+    CommandXboxController xbox = new CommandXboxController(0);
 
-    public RobotContainer()
-    {
+    public RobotContainer() {
         configureBindings();
     }
-    
-    
+
+
     private void configureBindings() {
-        xbox.getButtonA().whenPressed(elevator::home);
-        xbox.getButtonB().whenPressed(elevator.L1());
-        xbox.getButtonX().whenPressed(elevator.L3());
-        xbox.getButtonY().whenPressed(elevator.L4());
+        // Note that X is defined as forward according to WPILib convention,
+        // and Y is defined as to the left according to WPILib convention.
+        drivetrain.setDefaultCommand(
+                // Drivetrain will execute this command periodically
+                drivetrain.applyRequest(() ->
+                        drive.withVelocityX(-xbox.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                                .withVelocityY(-xbox.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                                .withRotationalRate(-xbox.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                )
+        );
+
+        xbox.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        xbox.b().whileTrue(drivetrain.applyRequest(() ->
+                point.withModuleDirection(new Rotation2d(-xbox.getLeftY(), -xbox.getLeftX()))
+        ));
+
+        // Run SysId routines when holding back/start and X/Y.
+        // Note that each routine should be run exactly once in a single log.
+        xbox.back().and(xbox.y()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        xbox.back().and(xbox.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        xbox.start().and(xbox.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        xbox.start().and(xbox.x()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+        // reset the field-centric heading on left bumper press
+        xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        drivetrain.registerTelemetry(logger::telemeterize);
     }
-    
-    
-    public Command getAutonomousCommand()
-    {
+
+
+    public Command getAutonomousCommand() {
         return Commands.print("No autonomous command configured");
     }
 }

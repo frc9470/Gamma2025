@@ -69,11 +69,11 @@ public class Elevator extends SubsystemBase {
         public LinearVelocity velocityMps;      // Actual elevator velocity (m/s)
         public Current current;                 // Stator current
         public Distance closedLoopError;        // difference between on-loop SETPOINT & actual
-        public Distance targetPositionMeters;   // Target position in meters
 
         // ---------------- Outputs / Telemetry ----------------
-        public Distance desiredPositionMeters;        // The commanded position in meters
-        public double desiredPositionRotations;       // The commanded position in rotations
+        public Distance goal;                         // Overall goal of the system
+        public Distance desiredPositionMeters;        // The PER-LOOP commanded position in meters
+        public double desiredPositionRotations;       // The PER-LOOP commanded position in rotations
         public double desiredVelocityRotPerSec;       // The commanded velocity in rotations/sec
         public LinearVelocity desiredVelocityMps;     // The commanded velocity in m/s
         public HomingState homingState;               // Current homing state
@@ -152,13 +152,12 @@ public class Elevator extends SubsystemBase {
         // we can compare target vs. actual in meters:
         periodicIO.closedLoopError = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopError().getValue());
 
-        // For telemetry: set the "desired position/velocity" to something informative
+        // For telemetry
+        periodicIO.goal = targetPosition;
         periodicIO.desiredPositionMeters = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopReference().getValue());
         periodicIO.desiredPositionRotations = elevatorMotor.getClosedLoopReference().getValue();
         periodicIO.desiredVelocityRotPerSec = elevatorMotor.getClosedLoopReference().getValue();
         periodicIO.desiredVelocityMps = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopReference().getValue()).per(Seconds);
-
-        targetPosition = periodicIO.targetPositionMeters;
     }
 
     /** Runs the homing state machine if needed. */
@@ -242,6 +241,9 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator/Velocity_mps", periodicIO.velocityMps.in(MetersPerSecond));
         SmartDashboard.putNumber("Elevator/Current_A", periodicIO.current.in(Amps));
         SmartDashboard.putNumber("Elevator/Error_m", periodicIO.closedLoopError.in(Meters));
+
+        // Goal
+        SmartDashboard.putNumber("Elevator/Goal", periodicIO.goal.in(Meters));
 
         // Desired setpoints
         SmartDashboard.putNumber("Elevator/DesiredPosition_m", periodicIO.desiredPositionMeters.in(Meters));

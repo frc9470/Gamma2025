@@ -73,4 +73,16 @@ public final class Constants {
             return config;
         }
     }
+
+    public static final class AlgaeConstants{
+        public static final double KS = 0;
+        public static final double KG = 0;
+        public static final double KV = 0;
+        public static final double CORAL_THRESHOLD = Math.toRadians(45);
+        public static final double ALGAE_IN_THRESHOLD = 0;
+        public static final double ANGLE_UP = Math.toRadians(45);
+        public static final double ANGLE_DOWN = Math.toRadians(45);
+        public static final int ARM_MOTOR_ID = 0;
+        public static final int ROLLER_MOTOR_ID = 1;
+    }
 }

@@ -2,13 +2,14 @@ package com.team9470.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.team254.lib.drivers.TalonFXFactory;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.math.controller.ArmFeedforward;
+// import edu.wpi.first.math.controller.ArmFeedforward;
 
 import com.team9470.Constants.AlgaeConstants;
 import com.team9470.Ports;
@@ -22,20 +23,23 @@ import com.team9470.Ports;
  * - detect if the arm is in the way of the CoralManipulator - DONE
  * - roll algae wheels to manipulate algae - DONE
  * - one arm motor, one wheel motor - DONE
- * - motion magicc - IDK
+ * - motion magicc - DONE
  */
 public class AlgaeArm extends SubsystemBase {
     private double setpoint = 0;
     private int onTop = 0; // top = 1; bottom = -1
     private TalonFX motor = TalonFXFactory.createDefaultTalon(Ports.ALGAE_PIVOT);
     private TalonFX rollers = TalonFXFactory.createDefaultTalon(Ports.ALGAE_ROLLER);
-    private ArmFeedforward ff = new ArmFeedforward(AlgaeConstants.KS, AlgaeConstants.KG, AlgaeConstants.KV);
+    // private ArmFeedforward ff = new ArmFeedforward(AlgaeConstants.KS, AlgaeConstants.KG, AlgaeConstants.KV);
+    final MotionMagicVoltage request = new MotionMagicVoltage(0);
 
     public AlgaeArm(CoralManipulator coral){
+        motor.getConfigurator().apply(AlgaeConstants.getConfigs());
     }
 
     public void periodic(){
-        motor.set(ff.calculate(setpoint, 0));
+        motor.setControl(request.withPosition(Units.Degrees.of(setpoint)));
+        // motor.set(ff.calculate(setpoint, 0));
     }
 
     public void armUp(){

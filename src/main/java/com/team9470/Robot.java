@@ -13,8 +13,11 @@ public class Robot extends TimedRobot
 {
     private Command autonomousCommand;
     
-    private RobotContainer robotContainer;
-    
+    private final RobotContainer robotContainer;
+
+    public Robot(){
+        robotContainer = new RobotContainer();
+    }
     
     @Override
     public void robotInit() {}

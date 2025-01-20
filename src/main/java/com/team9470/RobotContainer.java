@@ -5,20 +5,31 @@
 
 package com.team9470;
 
+import com.team9470.subsystems.Elevator;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 
 public class RobotContainer
 {
+    CommandXboxController xbox = new CommandXboxController(0);
+
+    // ---------------- SUBSYSTEMS --------------------
+    private final Elevator elevator = new Elevator();
+
     public RobotContainer()
     {
         configureBindings();
     }
     
     
-    private void configureBindings() {}
+    private void configureBindings() {
+        xbox.getButtonA().whenPressed(elevator::home);
+        xbox.getButtonB().whenPressed(elevator.L1());
+        xbox.getButtonX().whenPressed(elevator.L3());
+        xbox.getButtonY().whenPressed(elevator.L4());
+    }
     
     
     public Command getAutonomousCommand()

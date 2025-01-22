@@ -1,12 +1,10 @@
 package com.team9470;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -49,8 +47,8 @@ public final class Constants {
 
         public static TalonFXConfiguration ElevatorFXConfig(){
             TalonFXConfiguration config = new TalonFXConfiguration();
-            config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY.in(MetersPerSecond) * rotationsPerMeter;; // We'll override in code with setControl
-            config.MotionMagic.MotionMagicAcceleration = ACCELERATION.in(MetersPerSecondPerSecond) * rotationsPerMeter;;
+            config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY.in(MetersPerSecond) * rotationsPerMeter; // We'll override in code with setControl
+            config.MotionMagic.MotionMagicAcceleration = ACCELERATION.in(MetersPerSecondPerSecond) * rotationsPerMeter;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
             config.Slot0.kV = kV;
@@ -76,7 +74,7 @@ public final class Constants {
         }
     }
 
-    public static final class AlgaeConstants{
+    public static final class AlgaeConstants {
         public static final double KS = 0;
         public static final double KG = 0;
         public static final double KV = 0;
@@ -107,5 +105,10 @@ public final class Constants {
 
             return talonFXConfigs;
         }
+    }
+
+    public static final class CoralConstants {
+        public static final double TAKE_IN_SPEED = 0.7;
+        public static final double COAST_SPEED = 0.2;
     }
 }

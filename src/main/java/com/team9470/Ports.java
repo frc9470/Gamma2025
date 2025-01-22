@@ -3,6 +3,9 @@ package com.team9470;
 import com.team254.lib.drivers.CanDeviceId;
 
 public class Ports {
+    /**
+     * Motor IDs
+     */
     public static final CanDeviceId ELEVATOR_MAIN = new CanDeviceId(13, "rio");
     public static final CanDeviceId ELEVATOR_FOLLOWER = new CanDeviceId(14, "rio");
 
@@ -11,6 +14,8 @@ public class Ports {
 
     public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(12, "rio");
 
-    /* Beam Break ids */
+    /**
+     * Beam Break IDs
+     */
     public static final int CORAL_BREAK = 0;
 }

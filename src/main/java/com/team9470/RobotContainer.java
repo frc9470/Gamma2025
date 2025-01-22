@@ -7,6 +7,7 @@ package com.team9470;
 
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.Elevator;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -31,16 +32,20 @@ public class RobotContainer {
 
 
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
-
     private final Telemetry logger = new Telemetry(MaxSpeed);
+
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
+    private final CoralManipulator coral = new CoralManipulator();
+
     CommandXboxController xbox = new CommandXboxController(0);
 
     public RobotContainer() {
+        // setup default commands
+        coral.initDefaultCommand();
+
         configureBindings();
     }
-
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
@@ -68,6 +73,9 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        // coral intake
+        xbox.rightBumper().whileTrue(coral.defaultCommand(true));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

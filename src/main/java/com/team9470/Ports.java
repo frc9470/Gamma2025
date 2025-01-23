@@ -6,13 +6,13 @@ public class Ports {
     /**
      * Motor IDs
      */
-    public static final CanDeviceId ELEVATOR_MAIN = new CanDeviceId(13, "rio");
-    public static final CanDeviceId ELEVATOR_FOLLOWER = new CanDeviceId(14, "rio");
+    public static final CanDeviceId ELEVATOR_MAIN = new CanDeviceId(14, "rio");
+    public static final CanDeviceId ELEVATOR_FOLLOWER = new CanDeviceId(15, "rio");
 
-    public static final CanDeviceId ALGAE_ROLLER = new CanDeviceId(10, "rio");
-    public static final CanDeviceId ALGAE_PIVOT = new CanDeviceId(11, "rio");
+    public static final CanDeviceId ALGAE_ROLLER = new CanDeviceId(17, "rio");
+    public static final CanDeviceId ALGAE_PIVOT = new CanDeviceId(18, "rio");
 
-    public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(12, "rio");
+    public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(16, "rio");
 
     /**
      * Beam Break IDs

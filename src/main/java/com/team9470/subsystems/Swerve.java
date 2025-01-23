@@ -1,5 +1,8 @@
 package com.team9470.subsystems;
 
+import choreo.Choreo;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -7,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -33,6 +37,14 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.k180deg;
+
+    /* Swerve requests */
+    private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final PIDController pathXController = new PIDController(10, 0, 0);
+    private final PIDController pathYController = new PIDController(10, 0, 0);
+    private final PIDController pathThetaController = new PIDController(7, 0, 0);
+
+
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -95,7 +107,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this
             )
     );
-    private Notifier m_simNotifier = null;
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
@@ -178,6 +189,33 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     /**
+     * Creates a new auto factory for this drivetrain.
+     *
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory() {
+        return createAutoFactory((sample, isStart) -> {});
+    }
+
+    /**
+     * Creates a new auto factory for this drivetrain with the given
+     * trajectory logger.
+     *
+     * @param trajLogger Logger for the trajectory
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory(Choreo.TrajectoryLogger<SwerveSample> trajLogger) {
+        return new AutoFactory(
+                () -> getState().Pose,
+                this::resetPose,
+                this::followPath,
+                true,
+                this,
+                trajLogger
+        );
+    }
+
+    /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
      *
      * @param request Function returning the request to apply
@@ -185,6 +223,34 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));
+    }
+
+    /**
+     * Follows the given field-centric path sample with PID.
+     *
+     * @param sample Sample along the path to follow
+     */
+    public void followPath(SwerveSample sample) {
+        pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+        var pose = getState().Pose;
+
+        var targetSpeeds = sample.getChassisSpeeds();
+        targetSpeeds.vxMetersPerSecond += pathXController.calculate(
+                pose.getX(), sample.x
+        );
+        targetSpeeds.vyMetersPerSecond += pathYController.calculate(
+                pose.getY(), sample.y
+        );
+        targetSpeeds.omegaRadiansPerSecond += pathThetaController.calculate(
+                pose.getRotation().getRadians(), sample.heading
+        );
+
+        setControl(
+                applyFieldSpeeds.withSpeeds(targetSpeeds)
+                        .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                        .withWheelForceFeedforwardsY(sample.moduleForcesY())
+        );
     }
 
     /**
@@ -234,7 +300,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
 
         /* Run simulation at a faster rate so PID gains behave more reasonably */
-        m_simNotifier = new Notifier(() -> {
+        /* use the measured time delta, get battery voltage from WPILib */
+        Notifier m_simNotifier = new Notifier(() -> {
             final double currentTime = Utils.getCurrentTimeSeconds();
             double deltaTime = currentTime - m_lastSimTime;
             m_lastSimTime = currentTime;

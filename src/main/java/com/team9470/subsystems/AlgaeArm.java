@@ -28,6 +28,7 @@ import com.team9470.Ports;
 public class AlgaeArm extends SubsystemBase {
     private double setpoint = 0;
     private int onTop = 0; // top = 1; bottom = -1
+    private boolean homing = false;
     private TalonFX motor = TalonFXFactory.createDefaultTalon(Ports.ALGAE_PIVOT);
     private TalonFX rollers = TalonFXFactory.createDefaultTalon(Ports.ALGAE_ROLLER);
     // private ArmFeedforward ff = new ArmFeedforward(AlgaeConstants.KS, AlgaeConstants.KG, AlgaeConstants.KV);
@@ -38,6 +39,14 @@ public class AlgaeArm extends SubsystemBase {
     }
 
     public void periodic(){
+        if(homing == true){
+            motor.set(AlgaeConstants.HOMING_SPEED);
+            if(getPivotCurrent().gte(Units.Amps.of(AlgaeConstants.HOMING_THRESHOLD))){
+                homing = false;
+                motor.setPosition(0);
+            }
+            return;
+        }
         motor.setControl(request.withPosition(Units.Degrees.of(setpoint)));
         // motor.set(ff.calculate(setpoint, 0));
     }
@@ -63,6 +72,11 @@ public class AlgaeArm extends SubsystemBase {
     public Angle getAngle(){
         return motor.getPosition().getValue();
     }
+
+    public Current getPivotCurrent(){
+        return motor.getStatorCurrent().getValue();
+    }
+
     public Current getRollerCurrent(){
         return rollers.getStatorCurrent().getValue();
     }
@@ -71,7 +85,11 @@ public class AlgaeArm extends SubsystemBase {
         return getAngle().gte(Units.Degrees.of(AlgaeConstants.CORAL_THRESHOLD));
     }
 
-    public boolean AlgaeIn(){
+    public boolean algaeIn(){
         return getRollerCurrent().gte(Units.Amps.of(AlgaeConstants.ALGAE_IN_THRESHOLD));
+    }
+
+    public void setHoming(){
+        homing = true;
     }
 }

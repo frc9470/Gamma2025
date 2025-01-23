@@ -78,12 +78,13 @@ public final class Constants {
         public static final double KS = 0;
         public static final double KG = 0;
         public static final double KV = 0;
-        public static final double CORAL_THRESHOLD = Math.toRadians(45);
-        public static final double ALGAE_IN_THRESHOLD = 0;
-        public static final double ANGLE_UP = Math.toRadians(45);
-        public static final double ANGLE_DOWN = Math.toRadians(45);
-        public static final int ARM_MOTOR_ID = 0;
-        public static final int ROLLER_MOTOR_ID = 1;
+        public static final double CORAL_THRESHOLD = 75; // Angle in degrees
+        public static final double ALGAE_IN_THRESHOLD = 0; // Current
+        public static final double ANGLE_UP = 90;
+        public static final double ANGLE_DOWN = 0;
+
+        public static final double HOMING_SPEED = -1;
+        public static final double HOMING_THRESHOLD = 0; // Current
 
         public static TalonFXConfiguration getConfigs(){
             TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();

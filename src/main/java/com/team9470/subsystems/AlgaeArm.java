@@ -44,6 +44,7 @@ public class AlgaeArm extends SubsystemBase {
             if(getPivotCurrent().gte(Units.Amps.of(AlgaeConstants.HOMING_THRESHOLD))){
                 homing = false;
                 motor.setPosition(0);
+                motor.set(0);
             }
             return;
         }

@@ -41,8 +41,6 @@ public class RobotContainer {
     CommandXboxController xbox = new CommandXboxController(0);
 
     public RobotContainer() {
-        // setup default commands
-        coral.initDefaultCommand();
 
         configureBindings();
     }
@@ -75,9 +73,12 @@ public class RobotContainer {
         xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // coral intake
-        xbox.rightBumper().whileTrue(coral.defaultCommand(true));
+        xbox.rightBumper().whileTrue(coral.intakeCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.intakeCommand()));
+        xbox.leftTrigger().whileTrue(elevator.getMoveToPositionCommand(Meters.of(0.)));
     }
 
 

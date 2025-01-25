@@ -9,9 +9,18 @@ public class DelayedBoolean {
     private double mDelay;
 
     public DelayedBoolean(double timestamp, double delay) {
-        mTransitionTimestamp = timestamp;
-        mLastValue = false;
+        this(timestamp, delay, false);
+    }
+
+    public DelayedBoolean(double timestamp, double delay, boolean initialValue) {
         mDelay = delay;
+        mLastValue = initialValue;
+
+        if (initialValue) {
+            mTransitionTimestamp = timestamp - delay;
+        } else {
+            mTransitionTimestamp = timestamp;
+        }
     }
 
     public boolean update(double timestamp, boolean value) {

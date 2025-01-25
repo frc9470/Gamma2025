@@ -17,5 +17,5 @@ public class Ports {
     /**
      * Beam Break IDs
      */
-    public static final int CORAL_BREAK = 0;
+    public static final int CORAL_BREAK = 1;
 }

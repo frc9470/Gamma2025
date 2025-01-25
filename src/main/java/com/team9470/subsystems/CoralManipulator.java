@@ -1,16 +1,17 @@
 package com.team9470.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-
 import com.team254.lib.drivers.TalonFXFactory;
+import com.team254.lib.util.DelayedBoolean;
 import com.team9470.Constants.CoralConstants;
 import com.team9470.Ports;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import java.util.Set;
+import static edu.wpi.first.units.Units.Volts;
 
 
 /**
@@ -23,73 +24,54 @@ import java.util.Set;
 public class CoralManipulator extends SubsystemBase {
     private final TalonFX coralMotor = TalonFXFactory.createDefaultTalon(Ports.CORAL_INTAKE);
     private final DigitalInput coralSensor = new DigitalInput(Ports.CORAL_BREAK);
+    private final DelayedBoolean coralBreak = new DelayedBoolean(Timer.getFPGATimestamp(), CoralConstants.BREAK_TIMEOUT, sensorTrue());
 
-    public CoralManipulator() {}
+    public CoralManipulator() {
+        setDefaultCommand(coastUnless());
+    }
 
-    // TODO: verify the beambreak code works correctly
+    @Override
+    public void periodic() {
+        coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
+
+        SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
+        SmartDashboard.putBoolean("CoralManipulator/HasCoral", hasCoral());
+
+    }
+
+    // it works!
     /**
      * The beambreak is true if the beambreak is NOT "broken" (i.e. something is NOT detected)
      * The beambreak returns false if the beambreak IS "broken" (i.e. something IS detected)
      *
      * @return Whether coral is currently in the intake or not
      */
-    public boolean hasCoral() {
+    public boolean sensorTrue() {
         return !coralSensor.get();
     }
 
-    public void brake() {
-        coralMotor.set(0);
+    public boolean hasCoral() {
+        return coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
     }
 
-    public void intake() {
-        coralMotor.set(CoralConstants.TAKE_IN_SPEED);
+    public Command coastUnless(){
+        return this.run(() -> {
+            if(hasCoral()){
+                coralMotor.stopMotor();
+            } else {
+                coralMotor.setVoltage(CoralConstants.COAST_SPEED.in(Volts));
+            }
+        });
     }
 
-    public void outtake() {
-        coralMotor.set(-CoralConstants.TAKE_IN_SPEED);
+    public Command intakeCommand(){
+        return this.run(() -> coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)));
     }
-
-    public void coast() {
-        coralMotor.set(CoralConstants.COAST_SPEED);
-    }
-
-    // ---
 
     public Command outtakeCommand() {
         return this.runEnd(
-                this::outtake
-                , this::brake
+                () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
+                , coralMotor::stopMotor
         );
-    }
-
-    public Command defaultCommand(boolean wantsIntake) {
-        CoralManipulator self = this;
-
-        return new Command() {
-           @Override
-           public void execute() {
-               if (wantsIntake) {
-                   intake();
-               } else if (!hasCoral()) {
-                   coast();
-               } else {
-                   brake();
-               }
-           }
-
-           @Override
-           public void end(boolean interrupted) {
-               brake();
-           }
-
-           @Override
-           public Set<Subsystem> getRequirements() {
-               return Set.of(self);
-           }
-       };
-    }
-
-    public void initDefaultCommand() {
-        setDefaultCommand(defaultCommand(false));
     }
 }

@@ -59,6 +59,7 @@ public class Elevator extends SubsystemBase {
     // PeriodicIO for reading/writing
     private final PeriodicIO periodicIO = new PeriodicIO();
 
+
     private enum HomingState {
         IDLE,       // Not homing
         HOMING,     // Running motor downward
@@ -335,6 +336,10 @@ public class Elevator extends SubsystemBase {
                 return true;
             }
         };
+    }
+
+    public Command L0() {
+        return getMoveToPositionCommand(ElevatorConstants.HOME_POSITION);
     }
 
     public Command L1(){

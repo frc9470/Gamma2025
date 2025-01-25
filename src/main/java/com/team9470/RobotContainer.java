@@ -5,15 +5,17 @@
 
 package com.team9470;
 
+import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.commands.Autos;
 import com.team9470.subsystems.CoralManipulator;
-import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.Elevator;
+import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
@@ -34,6 +36,9 @@ public class RobotContainer {
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    private final Autos autos = new Autos(null, new CoralManipulator(), new Elevator(), drivetrain);
+    private final AutoChooser autoChooser = new AutoChooser();
+
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
     private final CoralManipulator coral = new CoralManipulator();
@@ -43,6 +48,12 @@ public class RobotContainer {
     public RobotContainer() {
 
         configureBindings();
+
+        autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
+        autoChooser.select("4C Test");
+        SmartDashboard.putData("AutoChooser", autoChooser);
+
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
 
     private void configureBindings() {
@@ -73,16 +84,12 @@ public class RobotContainer {
         xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // coral intake
-        xbox.rightBumper().whileTrue(coral.intakeCommand());
+        xbox.rightBumper().whileTrue(coral.scoreCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.intakeCommand()));
+        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()));
         xbox.leftTrigger().whileTrue(elevator.getMoveToPositionCommand(Meters.of(0.)));
     }
 
-
-    public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
-    }
 }

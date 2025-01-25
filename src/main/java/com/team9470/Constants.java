@@ -55,6 +55,7 @@ public final class Constants {
         // Current limits
         public static final double STALL_CURRENT = 40; // example
 
+        public static final Distance HOME_POSITION = Meters.of(0);
         public static final Distance L1 = Meters.of(0);
         public static final Distance L2 = Meters.of(.4);
         public static final Distance L3 = Meters.of(.6);

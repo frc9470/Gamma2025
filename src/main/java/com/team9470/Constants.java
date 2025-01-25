@@ -4,13 +4,27 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.Units;
+
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static edu.wpi.first.units.Units.*;
 
 public final class Constants {
+
+    // CHANGE THIS BECAUSE THIS IS SAMPLE FROM LAST YR
+     public static class VisionConstants {
+        public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-6.416074), Units.Inches.of(+6.234908), Units.Inches.of(24.876993),
+                new Rotation3d(-0.12384803489944651, -0.3272010156831353, 0.3695356336033198));
+        public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-6.416074), Units.Inches.of(-6.234908), Units.Inches.of(24.876993),
+                new Rotation3d(0.12384803489944651, -0.3272010156831353, -0.3695356336033198));
+
+
+    }
 
     public static final class ElevatorConstants {
         // Physical geometry

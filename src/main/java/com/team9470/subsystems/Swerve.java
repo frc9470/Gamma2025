@@ -8,7 +8,14 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
+
+import com.team9470.subsystems.vision.VisionPoseAcceptor;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,11 +34,19 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
+
+
+
+
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
 public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
+
+    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
+    private static Swerve instance;
+
     private static final double SIM_LOOP_PERIOD = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
@@ -310,6 +325,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
         m_simNotifier.startPeriodic(SIM_LOOP_PERIOD);
+    }
+
+    public Pose2d getPose()
+    {
+        return instance.getState().Pose;
+    }
+
+    public static Swerve getInstance(){
+        if(instance == null){
+            instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
 }

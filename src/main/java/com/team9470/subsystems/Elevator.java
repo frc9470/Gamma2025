@@ -1,15 +1,13 @@
 package com.team9470.subsystems;
 
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.drivers.TalonUtil;
 import com.team9470.Ports;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,6 +31,15 @@ public class Elevator extends SubsystemBase {
     // Control objects
     private final MotionMagicVoltage motionMagic = new MotionMagicVoltage(0);
     private final VoltageOut homingVoltage = new VoltageOut(ElevatorConstants.HOMING_OUTPUT);
+
+    // Status Signal Objects
+    private final StatusSignal<Angle> positionSignal;
+    private final StatusSignal<AngularVelocity> velocitySignal;
+    private final StatusSignal<Current> currentSignal;
+    private final StatusSignal<Voltage> voltageSignal;
+    private final StatusSignal<Double> setpointPositionSignal;
+    private final StatusSignal<Double> setpointVelocitySignal;
+    private final StatusSignal<Double> errorSignal;
 
     // Conversion factor: how many rotations per meter?
     // distancePerRotation ~ 0.2794 m, so ~3.58 rotations per meter
@@ -68,14 +75,15 @@ public class Elevator extends SubsystemBase {
         public Distance positionMeters;         // Actual elevator position (m)
         public LinearVelocity velocityMps;      // Actual elevator velocity (m/s)
         public Current current;                 // Stator current
+        public Voltage voltage;
         public Distance closedLoopError;        // difference between on-loop SETPOINT & actual
 
         // ---------------- Outputs / Telemetry ----------------
         public Distance goal;                         // Overall goal of the system
-        public Distance desiredPositionMeters;        // The PER-LOOP commanded position in meters
-        public double desiredPositionRotations;       // The PER-LOOP commanded position in rotations
-        public double desiredVelocityRotPerSec;       // The commanded velocity in rotations/sec
-        public LinearVelocity desiredVelocityMps;     // The commanded velocity in m/s
+        public Distance setpointPositionMeters;        // The PER-LOOP commanded position in meters
+        public double setpointPositionRotations;       // The PER-LOOP commanded position in rotations
+        public double setpointVelocityRotPerSec;       // The commanded velocity in rotations/sec
+        public LinearVelocity setpointVelocityMps;     // The commanded velocity in m/s
         public HomingState homingState;               // Current homing state
     }
 
@@ -86,6 +94,26 @@ public class Elevator extends SubsystemBase {
 
         TalonUtil.applyAndCheckConfiguration(elevatorMotor, ElevatorConstants.ElevatorFXConfig());
         TalonUtil.applyAndCheckConfiguration(elevatorMotorFollower, ElevatorConstants.ElevatorFXConfigFollower());
+        
+        Frequency refreshRate = Hertz.of(50);
+
+        positionSignal = elevatorMotor.getPosition();
+        positionSignal.setUpdateFrequency(refreshRate, 0.1);
+        velocitySignal = elevatorMotor.getVelocity();
+        velocitySignal.setUpdateFrequency(refreshRate, 0.1);
+        errorSignal = elevatorMotor.getClosedLoopError();
+        errorSignal.setUpdateFrequency(refreshRate, 0.1);
+
+        currentSignal = elevatorMotor.getStatorCurrent();
+        currentSignal.setUpdateFrequency(refreshRate, 0.1);
+        voltageSignal = elevatorMotor.getMotorVoltage();
+        voltageSignal.setUpdateFrequency(refreshRate, 0.1);
+
+        setpointPositionSignal = elevatorMotor.getClosedLoopReference();
+        setpointPositionSignal.setUpdateFrequency(refreshRate, 0.1);
+        setpointVelocitySignal = elevatorMotor.getClosedLoopReferenceSlope();
+        setpointVelocitySignal.setUpdateFrequency(refreshRate, 0.1);
+
     }
 
     @Override
@@ -128,7 +156,7 @@ public class Elevator extends SubsystemBase {
 
     // Example: check if we might be stalling
     public boolean isStalling() {
-        return periodicIO.current.in(Amps) >= ElevatorConstants.STALL_CURRENT;
+        return periodicIO.current.in(Amps) >= 10;
     }
 
     // ------------------ Internal (Periodic) Methods ------------------
@@ -138,26 +166,27 @@ public class Elevator extends SubsystemBase {
         periodicIO.timestamp = Seconds.of(Timer.getFPGATimestamp());
 
         // The motor’s position is in rotations. Convert to meters.
-        double rotations = elevatorMotor.getPosition().getValue().in(Rotations);
+        double rotations = positionSignal.asSupplier().get().in(Rotations);
         periodicIO.positionMeters = Meters.of(rotations / rotationsPerMeter);
 
         // The motor’s velocity is in rotations/sec. Convert to m/s.
-        double rotPerSec = elevatorMotor.getVelocity().getValue().in(RotationsPerSecond);
+        double rotPerSec = velocitySignal.asSupplier().get().in(RotationsPerSecond);
         periodicIO.velocityMps = MetersPerSecond.of(rotPerSec / rotationsPerMeter);
 
         // Current
-        periodicIO.current = elevatorMotor.getStatorCurrent().getValue();
+        periodicIO.current = currentSignal.asSupplier().get();
+        periodicIO.voltage = voltageSignal.asSupplier().get();
 
         // For closed-loop error (just for debugging),
         // we can compare target vs. actual in meters:
-        periodicIO.closedLoopError = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopError().getValue());
+        periodicIO.closedLoopError = DIST_PER_ROTATION.times(errorSignal.asSupplier().get());
 
         // For telemetry
         periodicIO.goal = targetPosition;
-        periodicIO.desiredPositionMeters = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopReference().getValue());
-        periodicIO.desiredPositionRotations = elevatorMotor.getClosedLoopReference().getValue();
-        periodicIO.desiredVelocityRotPerSec = elevatorMotor.getClosedLoopReference().getValue();
-        periodicIO.desiredVelocityMps = DIST_PER_ROTATION.times(elevatorMotor.getClosedLoopReference().getValue()).per(Seconds);
+        periodicIO.setpointPositionMeters = DIST_PER_ROTATION.times(setpointPositionSignal.asSupplier().get());
+        periodicIO.setpointPositionRotations = setpointPositionSignal.asSupplier().get();
+        periodicIO.setpointVelocityRotPerSec = setpointVelocitySignal.asSupplier().get();
+        periodicIO.setpointVelocityMps = DIST_PER_ROTATION.times(setpointVelocitySignal.asSupplier().get()).per(Seconds);
     }
 
     /** Runs the homing state machine if needed. */
@@ -166,7 +195,11 @@ public class Elevator extends SubsystemBase {
             case IDLE:
                 // Example condition: only start homing if the elevator
                 // is basically at the commanded position (meaning not in use).
-                if (targetPosition.isNear(periodicIO.positionMeters, Meters.of(0.01))) {
+
+                boolean timeOut = periodicIO.timestamp
+                        .minus(homingStartTime)
+                        .gt(ElevatorConstants.HOMING_TIMEOUT);
+                if (targetPosition.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }
@@ -178,11 +211,8 @@ public class Elevator extends SubsystemBase {
                 boolean velocityStalled =
                         Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01;
                 boolean currentTooHigh = isStalling();
-                boolean timeOut = periodicIO.timestamp
-                        .minus(homingStartTime)
-                        .gt(ElevatorConstants.HOMING_TIMEOUT);
 
-                if (velocityStalled || currentTooHigh || timeOut) {
+                if (velocityStalled && currentTooHigh) {
                     // We consider ourselves at the bottom => zero the sensor
                     elevatorMotor.setPosition(0);
                     homingState = HomingState.HOMED;
@@ -204,10 +234,10 @@ public class Elevator extends SubsystemBase {
             elevatorMotor.setControl(homingVoltage);
 
             // For telemetry: set the "desired position/velocity" to something informative
-            periodicIO.desiredPositionMeters = Meters.of(0);
-            periodicIO.desiredPositionRotations = 0;
-            periodicIO.desiredVelocityRotPerSec = 0;
-            periodicIO.desiredVelocityMps = MetersPerSecond.of(0);
+            periodicIO.setpointPositionMeters = Meters.of(0);
+            periodicIO.setpointPositionRotations = 0;
+            periodicIO.setpointVelocityRotPerSec = 0;
+            periodicIO.setpointVelocityMps = MetersPerSecond.of(0);
         } else {
             // Normal control
             // Convert target position (meters) to rotations:
@@ -229,8 +259,9 @@ public class Elevator extends SubsystemBase {
         if (!needsHoming &&
                 (homingState != HomingState.HOMING) &&
                 periodicIO.closedLoopError.abs(Meters) < 0.01 &&
-                Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01) {
-            needsHoming = true;
+                Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01
+                && targetPosition.gt(Meters.of(0))) {
+//            needsHoming = true;
         }
     }
 
@@ -240,16 +271,17 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator/Position_m", periodicIO.positionMeters.in(Meters));
         SmartDashboard.putNumber("Elevator/Velocity_mps", periodicIO.velocityMps.in(MetersPerSecond));
         SmartDashboard.putNumber("Elevator/Current_A", periodicIO.current.in(Amps));
+        SmartDashboard.putNumber("Elevator/Voltage", periodicIO.voltage.in(Volts));
         SmartDashboard.putNumber("Elevator/Error_m", periodicIO.closedLoopError.in(Meters));
 
         // Goal
         SmartDashboard.putNumber("Elevator/Goal", periodicIO.goal.in(Meters));
 
         // Desired setpoints
-        SmartDashboard.putNumber("Elevator/DesiredPosition_m", periodicIO.desiredPositionMeters.in(Meters));
-        SmartDashboard.putNumber("Elevator/DesiredPosition_rot", periodicIO.desiredPositionRotations);
-        SmartDashboard.putNumber("Elevator/DesiredVelocity_rps", periodicIO.desiredVelocityRotPerSec);
-        SmartDashboard.putNumber("Elevator/DesiredVelocity_mps", periodicIO.desiredVelocityMps.in(MetersPerSecond));
+        SmartDashboard.putNumber("Elevator/Setpoint/Position_m", periodicIO.setpointPositionMeters.in(Meters));
+        SmartDashboard.putNumber("Elevator/Setpoint/Position_rot", periodicIO.setpointPositionRotations);
+        SmartDashboard.putNumber("Elevator/Setpoint/Velocity_rps", periodicIO.setpointVelocityRotPerSec);
+        SmartDashboard.putNumber("Elevator/Setpoint/Velocity_mps", periodicIO.setpointVelocityMps.in(MetersPerSecond));
 
         // Homing info
         SmartDashboard.putString("Elevator/HomingState", periodicIO.homingState.toString());
@@ -280,7 +312,7 @@ public class Elevator extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                setPosition(Meters.of(0));
+//                setPosition(Meters.of(0));
             }
 
             @Override

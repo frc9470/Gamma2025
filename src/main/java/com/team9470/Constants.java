@@ -56,10 +56,10 @@ public final class Constants {
         public static final double STALL_CURRENT = 40; // example
 
         public static final Distance HOME_POSITION = Meters.of(0);
-        public static final Distance L1 = Meters.of(0);
+        public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
-        public static final Distance L3 = Meters.of(.6);
-        public static final Distance L4 = Meters.of(1.3);
+        public static final Distance L3 = Meters.of(.7);
+        public static final Distance L4 = Meters.of(1.35);
         public static final Distance INTAKE = Meters.of(0);
 
 

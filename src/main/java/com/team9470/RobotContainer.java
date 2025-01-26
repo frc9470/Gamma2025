@@ -12,7 +12,6 @@ import com.team9470.commands.Autos;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -36,12 +35,12 @@ public class RobotContainer {
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final Autos autos = new Autos(null, new CoralManipulator(), new Elevator(), drivetrain);
-    private final AutoChooser autoChooser = new AutoChooser();
-
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
     private final CoralManipulator coral = new CoralManipulator();
+
+    private final Autos autos = new Autos(null, coral, elevator, drivetrain);
+    private final AutoChooser autoChooser = new AutoChooser();
 
     CommandXboxController xbox = new CommandXboxController(0);
 
@@ -68,10 +67,8 @@ public class RobotContainer {
                 )
         );
 
-        xbox.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        xbox.b().whileTrue(drivetrain.applyRequest(() ->
-                point.withModuleDirection(new Rotation2d(-xbox.getLeftY(), -xbox.getLeftX()))
-        ));
+//        xbox.a().whileTrue(drivetrain.applyRequest(() -> brake));
+//        xbox.b().whileTrue(new InstantCommand(() -> drivetrain.resetRotation(Rotation2d.fromDegrees(0))));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -88,7 +85,12 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()));
+        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()))
+                .onFalse(elevator.L0());
+//        xbox.x().whileTrue(elevator.L1().andThen(coral.scoreCommand()).andThen(elevator.L0()));
+//        xbox.y().whileTrue(elevator.L2().andThen(coral.scoreCommand()).andThen(elevator.L0()));
+//        xbox.b().whileTrue(elevator.L3().andThen(coral.scoreCommand()).andThen(elevator.L0()));
+
         xbox.leftTrigger().whileTrue(elevator.getMoveToPositionCommand(Meters.of(0.)));
     }
 

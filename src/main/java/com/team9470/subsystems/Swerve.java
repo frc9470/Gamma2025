@@ -10,14 +10,10 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
-
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -79,8 +75,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this
             )
     );
-    /* The SysId routine to test */
-    private final SysIdRoutine sysIdRoutineToApply = sysIdRoutineTranslation;
     /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
     private final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -96,6 +90,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this
             )
     );
+    /* The SysId routine to test */
+    private final SysIdRoutine sysIdRoutineToApply = sysIdRoutineSteer;
     /*
      * SysId routine for characterizing rotation.
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.

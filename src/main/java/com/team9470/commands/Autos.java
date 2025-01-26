@@ -32,7 +32,7 @@ public class Autos {
     }
 
     public AutoRoutine getFourCoralTest(){
-        AutoRoutine routine = autoFactory.newRoutine("3C Test");
+        AutoRoutine routine = autoFactory.newRoutine("4C Test");
 
         // Trajectories
         AutoTrajectory startToC1 = routine.trajectory("S-1");

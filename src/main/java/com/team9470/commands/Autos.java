@@ -72,5 +72,35 @@ public class Autos {
         return routine;
     }
 
+    public AutoRoutine getTwoCoralTest() {
+        AutoRoutine routine = autoFactory.newRoutine("2C Test");
+
+        // Trajectories
+        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+
+        routine.active().onTrue(
+            Commands.sequence(
+                    toC9.resetOdometry(),
+                    toC9.cmd(),
+                    C9toSource.cmd(),
+                    toC10.cmd(),
+                    C10toSource.cmd()
+            )
+        );
+
+        toC9.done().onTrue(
+                scoreL4().andThen(C9toSource.cmd())
+        );
+
+        toC10.done().onTrue(
+                scoreL4().andThen(C10toSource.cmd())
+        );
+
+        return routine;
+    }
+
 
 }

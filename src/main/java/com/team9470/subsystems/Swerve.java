@@ -15,8 +15,10 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -30,7 +32,11 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
-
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 
 
@@ -50,7 +56,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private static final Rotation2d RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.k180deg;
 
     /* Swerve requests */
-    private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final SwerveRequest.ApplyFieldSpeeds    applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
@@ -60,6 +66,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+    private final SwerveRequest.FieldCentric fieldCentricRequest = new SwerveRequest.FieldCentric();
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -118,6 +125,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this
             )
     );
+    
+    private static RobotConfig config;
+
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
@@ -140,6 +150,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        try{
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        configAutoBuilder();
     }
 
     /**
@@ -164,6 +180,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        try{
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        configAutoBuilder();
     }
 
     /**
@@ -196,7 +218,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
+        try{
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        configAutoBuilder();
     }
 
     /**
@@ -224,6 +251,61 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 this,
                 trajLogger
         );
+    }
+
+    // For pathplanner
+    public void configAutoBuilder(){
+        AutoBuilder.configure(
+                this::getPose, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> setChassisSpeeds(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                        new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(7.0, 0.0, 0.0) // Rotation PID constants
+                ),
+                config, // The robot configuration
+                () -> {
+                // Boolean supplier that controls when the path will be mirrored for the red alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                var alliance = DriverStation.getAlliance();
+                if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
+    }
+
+    public void setChassisSpeeds(ChassisSpeeds speeds){
+        setControl(
+                fieldCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                                   .withVelocityY(speeds.vyMetersPerSecond)
+                                   .withRotationalRate(speeds.omegaRadiansPerSecond)
+        );
+    }
+
+    public Command getPathfindingCommand(double x, double y, double angle, double maxVelocity, double maxAcceleration, double maxAngularVelocity, double maxAngularAcceleration){
+        // Since we are using a holonomic drivetrain, the rotation component of this pose
+        // represents the goal holonomic rotation
+        Pose2d targetPose = new Pose2d(x, y, Rotation2d.fromDegrees(angle));
+
+        // Create the constraints to use while pathfinding
+        PathConstraints constraints = new PathConstraints(
+                maxVelocity, maxAcceleration,
+                Units.degreesToRadians(maxAngularVelocity), Units.degreesToRadians(maxAngularAcceleration));
+
+        // Since AutoBuilder is configured, we can use it to build pathfinding commands
+        Command pathfindingCommand = AutoBuilder.pathfindToPose(
+                targetPose,
+                constraints,
+                0.0 // Goal end velocity in meters/sec
+        );
+
+        return pathfindingCommand;
     }
 
     /**
@@ -326,6 +408,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     public Pose2d getPose()
     {
         return instance.getState().Pose;
+    }
+
+    public ChassisSpeeds getChassisSpeeds(){
+        return instance.getChassisSpeeds();
     }
 
     public static Swerve getInstance(){

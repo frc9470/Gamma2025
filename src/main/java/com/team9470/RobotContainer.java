@@ -12,6 +12,7 @@ import com.team9470.commands.Autos;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -38,6 +39,9 @@ public class RobotContainer {
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
     private final CoralManipulator coral = new CoralManipulator();
+
+    // ----------------      VISION     --------------------
+    private final Vision vision = Vision.getInstance();
 
     private final Autos autos = new Autos(null, coral, elevator, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Contains various field dimensions and useful reference points. All units are in meters and poses
@@ -182,7 +183,7 @@ public class FieldConstants {
 	public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
 	public static final int aprilTagCount = 22;
 
-	// @Getter
+	@Getter
 	public enum AprilTagLayoutType {
 		OFFICIAL("2025-official");
 

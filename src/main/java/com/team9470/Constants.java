@@ -16,7 +16,8 @@ import static edu.wpi.first.units.Units.*;
 
 public final class Constants {
     public static class Global {
-        public static final boolean disableHAL = true;
+        // we want apriltags! see `FieldConstants.java`
+        public static final boolean disableHAL = false;
     }
 
     // CHANGE THIS BECAUSE THIS IS SAMPLE FROM LAST YR

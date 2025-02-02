@@ -121,15 +121,15 @@ public class Autos {
                     Commands.parallel(
                         toC9.cmd(),
                         elevator.L4()
-                    )
+                    ),
                     Commands.parallel(
                         C9toSource.cmd(),
                         elevator.L0()
-                    )
+                    ),
                     Commands.parallel(
                         toC10.cmd(),
                         elevator.L4()
-                    )
+                    ),
                     Commands.parallel(
                         C10toSource.cmd(),
                         elevator.L0()

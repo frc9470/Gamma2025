@@ -318,7 +318,7 @@ public class Elevator extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return getPosition().isNear(position, Meters.of(0.01));
+                return getPosition().isNear(position, Meters.of(0.03));
             }
         };
     }

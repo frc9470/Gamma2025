@@ -66,7 +66,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
-    private final SwerveRequest.FieldCentric fieldCentricRequest = new SwerveRequest.FieldCentric();
+    private final SwerveRequest.RobotCentric robotCentricRequest = new SwerveRequest.RobotCentric();
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -282,21 +282,17 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     public void setChassisSpeeds(ChassisSpeeds speeds){
         setControl(
-                fieldCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
                                    .withVelocityY(speeds.vyMetersPerSecond)
                                    .withRotationalRate(speeds.omegaRadiansPerSecond)
         );
     }
 
-    public Command getPathfindingCommand(double x, double y, double angle, double maxVelocity, double maxAcceleration, double maxAngularVelocity, double maxAngularAcceleration){
-        // Since we are using a holonomic drivetrain, the rotation component of this pose
-        // represents the goal holonomic rotation
-        Pose2d targetPose = new Pose2d(x, y, Rotation2d.fromDegrees(angle));
-
+    public Command getPathfindingCommand(Pose2d targetPose){
         // Create the constraints to use while pathfinding
         PathConstraints constraints = new PathConstraints(
-                maxVelocity, maxAcceleration,
-                Units.degreesToRadians(maxAngularVelocity), Units.degreesToRadians(maxAngularAcceleration));
+                TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
+                Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
 
         // Since AutoBuilder is configured, we can use it to build pathfinding commands
         Command pathfindingCommand = AutoBuilder.pathfindToPose(

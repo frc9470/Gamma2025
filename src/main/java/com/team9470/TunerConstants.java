@@ -35,7 +35,7 @@ public class TunerConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
-            .withKP(50).withKI(0).withKD(0.5)
+            .withKP(100).withKI(0).withKD(0.5)
             .withKS(0.1).withKV(0).withKA(0)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
@@ -119,6 +119,12 @@ public class TunerConstants {
                     .withDriveFrictionVoltage(kDriveFrictionVoltage);
 
 
+    // pathfinding constraints
+    public static final double maxVelocity = 5;
+    public static final double maxAcceleration = 5;
+    public static final double maxAngularVelocity = 540; // degrees
+    public static final double maxAngularAcceleration = 720; // degrees
+
     // Front Left
     private static final int kFrontLeftDriveMotorId = 2;
     private static final int kFrontLeftSteerMotorId = 1;
@@ -176,6 +182,7 @@ public class TunerConstants {
                     kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset,
                     kBackRightXPos, kBackRightYPos, kInvertRightSide, kBackRightSteerMotorInverted, kBackRightEncoderInverted
             );
+
 
     /**
      * Creates a CommandSwerveDrivetrain instance.

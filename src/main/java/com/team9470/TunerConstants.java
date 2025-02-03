@@ -119,6 +119,12 @@ public class TunerConstants {
                     .withDriveFrictionVoltage(kDriveFrictionVoltage);
 
 
+    // pathfinding constraints
+    public static final double maxVelocity = 5;
+    public static final double maxAcceleration = 5;
+    public static final double maxAngularVelocity = 540; // degrees
+    public static final double maxAngularAcceleration = 720; // degrees
+
     // Front Left
     private static final int kFrontLeftDriveMotorId = 2;
     private static final int kFrontLeftSteerMotorId = 1;
@@ -176,6 +182,7 @@ public class TunerConstants {
                     kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset,
                     kBackRightXPos, kBackRightYPos, kInvertRightSide, kBackRightSteerMotorInverted, kBackRightEncoderInverted
             );
+
 
     /**
      * Creates a CommandSwerveDrivetrain instance.

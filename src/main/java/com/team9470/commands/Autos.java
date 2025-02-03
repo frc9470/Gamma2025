@@ -31,6 +31,10 @@ public class Autos {
                 .andThen(elevator.L0());
     }
 
+    public Command scoreCoral() {
+        return coralManipulator.scoreCommand()
+    }
+
     public AutoRoutine getFourCoralTest(){
         AutoRoutine routine = autoFactory.newRoutine("4C Test");
 
@@ -97,6 +101,48 @@ public class Autos {
 
         toC10.done().onTrue(
                 scoreL4().andThen(C10toSource.cmd())
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getTwoCoralOptimizedTest() {
+        AutoRoutine routine = autoFactory.newRoutine("2C Test");
+
+        // Trajectories
+        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+
+        routine.active().onTrue(
+            Commands.sequence(
+                    toC9.resetOdometry(),
+                    Commands.parallel(
+                        toC9.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C9toSource.cmd(),
+                        elevator.L0()
+                    ),
+                    Commands.parallel(
+                        toC10.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C10toSource.cmd(),
+                        elevator.L0()
+                    )
+            )
+        );
+
+        toC9.done().onTrue(
+                scoreCoral()
+        );
+
+        toC10.done().onTrue(
+                scoreCoral()
         );
 
         return routine;

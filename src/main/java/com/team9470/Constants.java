@@ -133,6 +133,6 @@ public final class Constants {
     public static final class CoralConstants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
-        public static final double BREAK_TIMEOUT = .3;
+        public static final double BREAK_TIMEOUT = .1;
     }
 }

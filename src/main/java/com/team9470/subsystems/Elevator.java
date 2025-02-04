@@ -4,11 +4,23 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.drivers.TalonUtil;
+import com.team9470.Constants;
+import com.team9470.Constants.ElevatorConstants;
 import com.team9470.Ports;
+
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -66,6 +78,23 @@ public class Elevator extends SubsystemBase {
         HOMED       // We found bottom and zeroed
     }
 
+    public final TalonFXSimState mainTalonFXSim;
+    public final TalonFXSimState followerTalonFXSim;
+
+    private final ElevatorSim elevatorSim =
+        new ElevatorSim(
+            DCMotor.getKrakenX60Foc(2),
+            Constants.ElevatorConstants.GEAR_RATIO,
+            Constants.ElevatorConstants.MASS,
+            Constants.ElevatorConstants.DRUM_RADIUS,
+            Constants.ElevatorConstants.HOME_POSITION.in(Meter),
+            Constants.ElevatorConstants.L4.in(Meter),
+            true,
+            Constants.ElevatorConstants.HOME_POSITION.in(Meter),
+            0.01, 0.0
+        );
+
+
     /**
      * Container for inputs and outputs that we want to log.
      * The idea is to gather all I/O in one place.
@@ -115,6 +144,10 @@ public class Elevator extends SubsystemBase {
         setpointVelocitySignal = elevatorMotor.getClosedLoopReferenceSlope();
         setpointVelocitySignal.setUpdateFrequency(refreshRate, 0.1);
 
+        mainTalonFXSim = elevatorMotor.getSimState();
+        mainTalonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
+        followerTalonFXSim = elevatorMotor.getSimState();
+        followerTalonFXSim.Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @Override
@@ -136,6 +169,22 @@ public class Elevator extends SubsystemBase {
 
         // 4) Log data to SmartDashboard (or any other telemetry sink)
         logTelemetry();
+    }
+
+    public void simulationPeriodic() {
+        // In this method, we update our simulation of what our elevator is doing
+        // First, we set our "inputs" (voltages)
+        elevatorSim.setInput(motorSim.getSpeed() * RobotController.getBatteryVoltage());
+
+        // Next, we update it. The standard loop time is 20ms.
+        elevatorSim.update(0.020);
+
+        // Finally, we set our simulated encoder's readings and simulated battery voltage
+        encoderSim.setDistance(elevatorSim.getPositionMeters());
+        // SimBattery estimates loaded battery voltages
+        RoboRioSim.setVInVoltage(
+            BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
+        );
     }
 
     // ------------------ Public Methods ------------------

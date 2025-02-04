@@ -32,7 +32,7 @@ public class Autos {
     }
 
     public Command scoreCoral() {
-        return coralManipulator.scoreCommand()
+        return coralManipulator.scoreCommand();
     }
 
     public AutoRoutine getFourCoralTest(){

@@ -5,6 +5,8 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.Units;
@@ -137,5 +139,25 @@ public final class Constants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
         public static final double BREAK_TIMEOUT = .1;
+    }
+
+    public static final class DriverAssistConstants {
+        public static final Pose2d[] BLUE_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
+            new Pose2d(3.7454309463500977, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
+            new Pose2d(2.9004666805267334, 4.025999546051025, new Rotation2d(0)),
+            new Pose2d(3.7042129039764404, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
+            new Pose2d(5.270488739013672, 2.645203113555908, new Rotation2d(2.1375260206777438)),
+            new Pose2d(6.094844341278076, 4.025998592376709, new Rotation2d(3.141592653589793)),
+            new Pose2d(5.249879837036133, 5.40679407119751, new Rotation2d(-2.095592098445004)),
+        };
+
+        public static final Pose2d[] RED_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
+            new Pose2d(12.339337348937988, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
+            new Pose2d(11.514982223510742, 4.025999546051025, new Rotation2d(0)),
+            new Pose2d(12.29811954498291, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
+            new Pose2d(13.864395141601562, 2.645203113555908, new Rotation2d(2.1375260206777438)),
+            new Pose2d(14.647533416748047, 4.025998592376709, new Rotation2d(3.141592653589793)),
+            new Pose2d(13.823177337646484, 5.40679407119751, new Rotation2d(-2.095592098445004)),
+        };
     }
 }

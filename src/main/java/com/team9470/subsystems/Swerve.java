@@ -38,6 +38,8 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import com.team9470.Constants.DriverAssistConstants;
+
 
 
 /**
@@ -302,6 +304,46 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         );
 
         return pathfindingCommand;
+    }
+
+    public Command pathfindClosestReefPos(){
+        Pose2d[] reefPoses;
+        if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+            reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
+        }
+        else{
+            reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+        }
+
+        double shortestDistance = -1;
+        Pose2d shortestDistancePose = null;
+        Pose2d robotPose = getPose();
+
+        for(Pose2d pose:reefPoses){
+            if(robotPose.getTranslation().getDistance(pose.getTranslation()) < shortestDistance || shortestDistance == -1){
+                shortestDistance = robotPose.getTranslation().getDistance(pose.getTranslation());
+                shortestDistancePose = pose;
+            }
+        }
+
+        return getPathfindingCommand(shortestDistancePose);
+    }
+
+    /**
+     * 
+     * @param posID ID os reef pos from 0-5
+     * @return pathfinding command
+     */
+    public Command pathfindReefPos(int posId){
+        Pose2d[] reefPoses;
+        if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+            reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
+        }
+        else{
+            reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+        }
+
+        return getPathfindingCommand(reefPoses[posId]);
     }
 
     /**

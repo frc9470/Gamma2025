@@ -9,6 +9,7 @@ import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.commands.Autos;
+import com.team9470.subsystems.AlgaeArm;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
@@ -40,6 +41,7 @@ public class RobotContainer {
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator();
     private final CoralManipulator coral = new CoralManipulator();
+    private final AlgaeArm alg = new AlgaeArm();
 
     private final Autos autos = new Autos(null, coral, elevator, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
@@ -52,6 +54,7 @@ public class RobotContainer {
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
+        autoChooser.addRoutine("2C Optimized Test", autos::getTwoCoralOptimizedTest);
         autoChooser.select("4C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
 
@@ -79,6 +82,9 @@ public class RobotContainer {
         xbox.back().and(xbox.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         xbox.start().and(xbox.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         xbox.start().and(xbox.x()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+
+        xbox.a().whileTrue(alg.deploy().alongWith(alg.spin())).onFalse(alg.stow());
 
         // reset the field-centric heading on left bumper press
         xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));

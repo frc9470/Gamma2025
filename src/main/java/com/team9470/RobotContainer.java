@@ -8,6 +8,7 @@ package com.team9470;
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
@@ -15,11 +16,18 @@ import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
+
+import org.opencv.ml.DTrees;
 
 
 public class RobotContainer {
@@ -94,6 +102,11 @@ public class RobotContainer {
 //        xbox.b().whileTrue(elevator.L3().andThen(coral.scoreCommand()).andThen(elevator.L0()));
 
         xbox.leftTrigger().whileTrue(elevator.L3().andThen(coral.scoreCommand())).onFalse(elevator.L0());
+
+        //driverassist
+        drivetrain.getInstance();
+
+        xbox.a().onTrue(drivetrain.pathfindClosestReefPos());
 
     }
 

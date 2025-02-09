@@ -171,21 +171,21 @@ public class Elevator extends SubsystemBase {
         logTelemetry();
     }
 
-    public void simulationPeriodic() {
-        // In this method, we update our simulation of what our elevator is doing
-        // First, we set our "inputs" (voltages)
-        elevatorSim.setInput(motorSim.getSpeed() * RobotController.getBatteryVoltage());
+    // public void simulationPeriodic() {
+    //     // In this method, we update our simulation of what our elevator is doing
+    //     // First, we set our "inputs" (voltages)
+    //     elevatorSim.setInput(motorSim.getSpeed() * RobotController.getBatteryVoltage());
 
-        // Next, we update it. The standard loop time is 20ms.
-        elevatorSim.update(0.020);
+    //     // Next, we update it. The standard loop time is 20ms.
+    //     elevatorSim.update(0.020);
 
-        // Finally, we set our simulated encoder's readings and simulated battery voltage
-        encoderSim.setDistance(elevatorSim.getPositionMeters());
-        // SimBattery estimates loaded battery voltages
-        RoboRioSim.setVInVoltage(
-            BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
-        );
-    }
+    //     // Finally, we set our simulated encoder's readings and simulated battery voltage
+    //     encoderSim.setDistance(elevatorSim.getPositionMeters());
+    //     // SimBattery estimates loaded battery voltages
+    //     RoboRioSim.setVInVoltage(
+    //         BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
+    //     );
+    // }
 
     // ------------------ Public Methods ------------------
 

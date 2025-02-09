@@ -16,6 +16,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -303,18 +305,21 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 0.0 // Goal end velocity in meters/sec
         );
 
+        pathfindingCommand.addRequirements(this);
+
         return pathfindingCommand;
     }
-
+    
     public Command pathfindClosestReefPos(){
         Pose2d[] reefPoses;
-        if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-            reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
-        }
-        else{
-            reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-        }
-
+        // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+        //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
+        // }
+        // else{
+        //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+        // }
+        reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+        
         double shortestDistance = -1;
         Pose2d shortestDistancePose = null;
         Pose2d robotPose = getPose();
@@ -325,7 +330,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 shortestDistancePose = pose;
             }
         }
-
+        
         return getPathfindingCommand(shortestDistancePose);
     }
 
@@ -336,12 +341,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      */
     public Command pathfindReefPos(int posId){
         Pose2d[] reefPoses;
-        if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-            reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
-        }
-        else{
-            reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-        }
+        // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+        //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
+        // }
+        // else{
+        //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+        // }
+        reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
 
         return getPathfindingCommand(reefPoses[posId]);
     }
@@ -449,7 +455,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public ChassisSpeeds getChassisSpeeds(){
-        return instance.getChassisSpeeds();
+        // Get the current swerve module states
+        SwerveModuleState[] moduleStates = instance.getState().ModuleStates;
+
+        // Convert module states to chassis speeds using the drivetrain kinematics
+        SwerveDriveKinematics kinematics = instance.getKinematics();
+        return kinematics.toChassisSpeeds(moduleStates);
     }
 
     public static Swerve getInstance(){

@@ -4,11 +4,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.Units;
-
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -105,15 +103,20 @@ public final class Constants {
         public static final double KS = 0;
         public static final double KG = 0;
         public static final double KV = 0;
-        public static final double CORAL_THRESHOLD = 75; // Angle in degrees
-        public static final double ALGAE_IN_THRESHOLD = 0; // Current
-        public static final double ANGLE_UP = 90;
-        public static final double ANGLE_DOWN = 0;
+        public static final Angle CORAL_THRESHOLD = Degrees.of(75); // Angle in degrees
+        public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
+        public static final Angle ANGLE_UP = Degrees.of(90);
+        public static final Angle STOW_ANGLE = Degrees.of(0);
 
-        public static final double HOMING_SPEED = -1;
         public static final double HOMING_THRESHOLD = 0; // Current
+        public static final Voltage HOMING_OUTPUT = Volts.of(-3);
+        public static final Time HOMING_TIMEOUT = Seconds.of(0.5);
+        public static final Angle HOMING_ANGLE = Degrees.of(-10);
 
-        public static TalonFXConfiguration getConfigs(){
+        public static final Voltage INTAKE_OUTPUT = Volts.of(4);
+        public static final Voltage HOLDING_OUTPUT = Volts.of(1);
+
+        public static TalonFXConfiguration getPivotConfig(){
             TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
 
             // set slot 0 gains
@@ -135,11 +138,18 @@ public final class Constants {
 
             return talonFXConfigs;
         }
+
+        public static TalonFXConfiguration getRollerConfig(){
+            TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+            return talonFXConfigs;
+        }
     }
 
     public static final class CoralConstants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
+        public static final Voltage FUNNEL_SPEED = Volts.of(-3);
+        public static final Voltage HOLD_SPEED = Volts.of(-1);
         public static final double BREAK_TIMEOUT = .1;
     }
 }

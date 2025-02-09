@@ -37,9 +37,12 @@ public final class Constants {
         public static final Distance DIST_PER_ROTATION =
                 Units.Inches.of(22 * 0.25).times(2);
         public static final double rotationsPerMeter = 1.0 / DIST_PER_ROTATION.in(Meters);
+        public static final double GEAR_RATIO = 6.0;
+        public static final double MASS = 9.072;
+        public static final double DRUM_RADIUS = DIST_PER_ROTATION.in(Meter) / (2 * Math.PI);
 
         // Gains
-        public static final double kP = 5;
+        public static final double kP = 7;
         public static final double kG = 0.38;
         public static final double kV = 0.85;
         public static final double kA = 0.01;
@@ -63,7 +66,7 @@ public final class Constants {
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
         public static final Distance L3 = Meters.of(.7);
-        public static final Distance L4 = Meters.of(1.35);
+        public static final Distance L4 = Meters.of(1.37);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -81,7 +84,7 @@ public final class Constants {
             config.Slot0.kD = 0.0;
             config.Slot0.kG = kG;
             config.Slot0.kS = 0.0;
-            config.Feedback.SensorToMechanismRatio = 6.0;
+            config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
@@ -128,13 +131,15 @@ public final class Constants {
             motionMagicConfigs.MotionMagicAcceleration = 160; // Target acceleration of 160 rps/s (0.5 seconds)
             motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
+            talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
             return talonFXConfigs;
         }
     }
 
     public static final class CoralConstants {
-        public static final Voltage TAKE_IN_SPEED = Volts.of(8);
-        public static final Voltage COAST_SPEED = Volts.of(1.2);
-        public static final double BREAK_TIMEOUT = .8;
+        public static final Voltage TAKE_IN_SPEED = Volts.of(3);
+        public static final Voltage COAST_SPEED = Volts.of(2);
+        public static final double BREAK_TIMEOUT = .1;
     }
 }

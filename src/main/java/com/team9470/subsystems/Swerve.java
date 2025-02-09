@@ -8,6 +8,12 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+import com.team9470.Constants.DriverAssistConstants;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
@@ -33,14 +39,6 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
-
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.auto.AutoBuilder;
-
-import com.team9470.Constants.DriverAssistConstants;
 
 
 
@@ -151,6 +149,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
+        instance = this;
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -181,6 +180,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
+        instance = this;
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -219,6 +219,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
+        instance = this;
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -305,33 +306,55 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 0.0 // Goal end velocity in meters/sec
         );
 
-        pathfindingCommand.addRequirements(this);
-
         return pathfindingCommand;
     }
-    
-    public Command pathfindClosestReefPos(){
-        Pose2d[] reefPoses;
-        // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-        //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
-        // }
-        // else{
-        //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-        // }
-        reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-        
-        double shortestDistance = -1;
-        Pose2d shortestDistancePose = null;
-        Pose2d robotPose = getPose();
 
-        for(Pose2d pose:reefPoses){
-            if(robotPose.getTranslation().getDistance(pose.getTranslation()) < shortestDistance || shortestDistance == -1){
-                shortestDistance = robotPose.getTranslation().getDistance(pose.getTranslation());
-                shortestDistancePose = pose;
+    public Command pathfindClosestReefPos() {
+        return new Command() {
+            private Command pathfindingCommand;
+
+            @Override
+            public void initialize() {
+                // Select the appropriate reef positions.
+                // (You can add alliance-specific logic if needed.)
+                Pose2d[] reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+
+                // Get the current robot pose at initialization.
+                Pose2d currentPose = getPose();
+
+                // Find the closest reef pose.
+                double shortestDistance = Double.MAX_VALUE;
+                Pose2d closestPose = null;
+                for (Pose2d pose : reefPoses) {
+                    double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
+                    if (distance < shortestDistance) {
+                        shortestDistance = distance;
+                        closestPose = pose;
+                    }
+                }
+
+                // Create the pathfinding command using the closest pose.
+                pathfindingCommand = getPathfindingCommand(closestPose);
+                // Initialize the pathfinding command.
+                pathfindingCommand.initialize();
             }
-        }
-        
-        return getPathfindingCommand(shortestDistancePose);
+
+            @Override
+            public void execute() {
+                // Delegate execution to the pathfinding command.
+                pathfindingCommand.execute();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return pathfindingCommand.isFinished();
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                pathfindingCommand.end(interrupted);
+            }
+        };
     }
 
     /**
@@ -451,15 +474,15 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     public Pose2d getPose()
     {
-        return instance.getState().Pose;
+        return getState().Pose;
     }
 
     public ChassisSpeeds getChassisSpeeds(){
         // Get the current swerve module states
-        SwerveModuleState[] moduleStates = instance.getState().ModuleStates;
+        SwerveModuleState[] moduleStates = getState().ModuleStates;
 
         // Convert module states to chassis speeds using the drivetrain kinematics
-        SwerveDriveKinematics kinematics = instance.getKinematics();
+        SwerveDriveKinematics kinematics = getKinematics();
         return kinematics.toChassisSpeeds(moduleStates);
     }
 

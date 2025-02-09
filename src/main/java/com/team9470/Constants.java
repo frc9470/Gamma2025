@@ -141,7 +141,7 @@ public final class Constants {
         public static final double BREAK_TIMEOUT = .1;
     }
 
-    public static final class DriverAssistConstants {
+    public static final class DriverAssistConstants { // TODO: maybe you can use hexagon math to calculate these? also, there are TWELVE positions per reef, not six. im also sure theres a flipper method in fieldconstants, but you may have to check.
         public static final Pose2d[] BLUE_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
             new Pose2d(3.7454309463500977, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
             new Pose2d(2.9004666805267334, 4.025999546051025, new Rotation2d(0)),

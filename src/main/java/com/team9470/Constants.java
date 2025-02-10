@@ -99,45 +99,60 @@ public final class Constants {
         public static final double KS = 0;
         public static final double KG = 0;
         public static final double KV = 0;
-        public static final Angle CORAL_THRESHOLD = Degrees.of(75); // Angle in degrees
+        public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
         public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
-        public static final Angle ANGLE_UP = Degrees.of(90);
-        public static final Angle STOW_ANGLE = Degrees.of(0);
+        public static final Angle ANGLE_UP = Degrees.of(0);
+        public static final Angle STOW_ANGLE = Degrees.of(-90);
 
-        public static final double HOMING_THRESHOLD = 0; // Current
+        public static final double CRUISE_VELOCITY = 10;
+        public static final double ACCELERATION = 20;
+        public static final double JERK = 0;
+
+        public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
         public static final Voltage HOMING_OUTPUT = Volts.of(-3);
         public static final Time HOMING_TIMEOUT = Seconds.of(0.5);
-        public static final Angle HOMING_ANGLE = Degrees.of(-10);
+        public static final Angle HOMING_ANGLE = Degrees.of(-123.319);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);
         public static final Voltage HOLDING_OUTPUT = Volts.of(1);
 
+        public static final double GEAR_RATIO = 4.2;
+
+        public static final double STALL_CURRENT = 40; // Amps
+
+        // sim stuff
+        public static final Mass ARM_MASS = Kilogram.of(6.252); // kg
+        public static final Distance ARM_LENGTH = Meter.of(.14); // m
+        public static final Angle MIN_ANGLE = HOMING_ANGLE; // deg
+        public static final Angle MAX_ANGLE = Degrees.of(90); // deg
+
+
         public static TalonFXConfiguration getPivotConfig(){
-            TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-
-            // set slot 0 gains
-            var slot0Configs = talonFXConfigs.Slot0;
-            slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
-            slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-            slot0Configs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-            slot0Configs.kP = 4.8; // A position error of 2.5 rotations results in 12 V output
-            slot0Configs.kI = 0; // no output for integrated error
-            slot0Configs.kD = 0.1; // A velocity error of 1 rps results in 0.1 V output
-
-            // set Motion Magic settings
-            var motionMagicConfigs = talonFXConfigs.MotionMagic;
-            motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target cruise velocity of 80 rps
-            motionMagicConfigs.MotionMagicAcceleration = 160; // Target acceleration of 160 rps/s (0.5 seconds)
-            motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
-
-            talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-            return talonFXConfigs;
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY;
+            config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
+            config.MotionMagic.MotionMagicJerk = JERK;
+            config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+            config.Slot0.kV = .08;
+            config.Slot0.kA = .02;
+            config.Slot0.kP = 5;
+            config.Slot0.kI = 0.0;
+            config.Slot0.kD = 0.0;
+            config.Slot0.kG = 1.2;
+            config.Slot0.kS = 0.0;
+            config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+            return config;
         }
 
         public static TalonFXConfiguration getRollerConfig(){
-            TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-            return talonFXConfigs;
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+            return config;
         }
     }
 
@@ -145,7 +160,7 @@ public final class Constants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
         public static final Voltage FUNNEL_SPEED = Volts.of(-3);
-        public static final Voltage HOLD_SPEED = Volts.of(-1);
+        public static final Voltage HOLD_SPEED = Volts.of(-.5);
         public static final double BREAK_TIMEOUT = .1;
     }
 }

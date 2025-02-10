@@ -4,12 +4,20 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.drivers.TalonUtil;
 import com.team9470.Constants.AlgaeConstants;
 import com.team9470.Ports;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -70,7 +78,14 @@ public class AlgaeArm extends SubsystemBase {
     }
     private final PeriodicIO periodicIO = new PeriodicIO();
 
-    public AlgaeArm() {
+    // --- Simulation objects ---
+    private final SingleJointedArmSim armSim;
+    private TalonFXSimState pivotSimState;
+
+    // --- Visualization (Mechanism2d) ---
+    private final MechanismLigament2d armLigament;
+
+    public AlgaeArm(MechanismLigament2d mechanism) {
         // Create the pivot and roller TalonFX instances.
         pivotMotor = TalonFXFactory.createDefaultTalon(Ports.ALGAE_PIVOT);
         rollerMotor = TalonFXFactory.createDefaultTalon(Ports.ALGAE_ROLLER);
@@ -97,7 +112,23 @@ public class AlgaeArm extends SubsystemBase {
         setpointVelocitySignal.setUpdateFrequency(refreshRate, 0.1);
 
         // Publish this subsystem to SmartDashboard.
-        SmartDashboard.putData("AlgaeArm", this);
+
+        // --- Initialize simulation for the pivoting arm ---
+        // Using a SingleJointedArmSim to simulate arm dynamics.
+        armSim = new SingleJointedArmSim(
+                // Simulated motor (adjust if necessary)
+                DCMotor.getKrakenX60Foc(1),
+                AlgaeConstants.GEAR_RATIO,                  // Gear ratio (motor:arm)
+                AlgaeConstants.ARM_MASS.in(Kilogram),                          // Mass (kg)
+                AlgaeConstants.ARM_LENGTH.in(Meter),              // Arm length (m)
+                AlgaeConstants.MIN_ANGLE.in(Radians),             // Minimum angle (radians)
+                AlgaeConstants.MAX_ANGLE.in(Radians),             // Maximum angle (radians)
+                true,                                            // Simulate gravity
+                -Math.PI // starting angle
+        );
+
+        // Scale the visual length (e.g., 1 meter = 10 mechanism units)
+        armLigament = mechanism.append(new MechanismLigament2d("Arm", AlgaeConstants.ARM_LENGTH.in(Meter)*3, -180));
     }
 
     @Override
@@ -116,6 +147,39 @@ public class AlgaeArm extends SubsystemBase {
         logTelemetry();
     }
 
+    /**
+     * Simulation periodic – to be called from the simulation loop.
+     * <p>
+     * This method updates our simulated sensor values using a SingleJointedArmSim and
+     * updates our Mechanism2d visualization.
+     */
+    public void simulationPeriodic() {
+        pivotSimState = pivotMotor.getSimState();
+        pivotSimState.Orientation = ChassisReference.Clockwise_Positive;
+        pivotSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        double motorVoltage = pivotSimState.getMotorVoltage();
+
+        // Update simulation with the applied voltage.
+        armSim.setInputVoltage(motorVoltage);
+        armSim.update(0.020); // assuming a 20ms loop
+
+        // Convert simulated arm angle (radians) to motor rotations.
+        double motorRotations = (armSim.getAngleRads() / (2 * Math.PI)) * AlgaeConstants.GEAR_RATIO;
+        double motorAngularVelocity = (armSim.getVelocityRadPerSec() / (2 * Math.PI)) * AlgaeConstants.GEAR_RATIO;
+
+        pivotSimState.setRawRotorPosition(motorRotations);
+        pivotSimState.setRotorVelocity(motorAngularVelocity);
+
+        // Update battery voltage simulation.
+        RoboRioSim.setVInVoltage(
+                BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps())
+        );
+
+        // Update visualization: set the ligament angle (in degrees).
+        double armAngleDeg = Math.toDegrees(armSim.getAngleRads());
+        armLigament.setAngle(armAngleDeg - 90);
+    }
+
     /** Read sensor values into our PeriodicIO structure. */
     private void readPeriodicInputs() {
         periodicIO.timestamp = Seconds.of(Timer.getFPGATimestamp());
@@ -123,20 +187,19 @@ public class AlgaeArm extends SubsystemBase {
         periodicIO.velocity = velocitySignal.asSupplier().get();
         periodicIO.current = currentSignal.asSupplier().get();
         periodicIO.voltage = voltageSignal.asSupplier().get();
-        periodicIO.closedLoopError = Degrees.of(errorSignal.asSupplier().get());
+        periodicIO.closedLoopError = Rotations.of(errorSignal.asSupplier().get());
         periodicIO.goal = targetAngle;
-        periodicIO.setpointAngle = Degrees.of(setpointSignal.asSupplier().get());
+        periodicIO.setpointAngle = Rotations.of(setpointSignal.asSupplier().get());
         periodicIO.setpointRaw = setpointSignal.asSupplier().get();
         periodicIO.setpointVelocityRaw = setpointVelocitySignal.asSupplier().get();
-        periodicIO.setpointAngularVelocity = DegreesPerSecond.of(setpointVelocitySignal.asSupplier().get());
+        periodicIO.setpointAngularVelocity = RotationsPerSecond.of(setpointVelocitySignal.asSupplier().get());
     }
 
     /** Run homing state machine logic. */
     private void updateHomingLogic() {
         switch (homingState) {
             case IDLE:
-                // Example condition: if the arm is near its target (and a timeout has passed),
-                // start homing.
+                // Example: if the arm is near its target (and a timeout has passed), start homing.
                 boolean timeOut = periodicIO.timestamp.minus(homingStartTime).gt(AlgaeConstants.HOMING_TIMEOUT);
                 if (targetAngle.isNear(periodicIO.position, Degrees.of(0.5)) && timeOut) {
                     homingState = HomingState.HOMING;
@@ -147,9 +210,14 @@ public class AlgaeArm extends SubsystemBase {
                 // When homing, if the pivot is nearly stalled and the current is high,
                 // assume the arm has hit the hard stop.
                 boolean velocityStalled = Math.abs(periodicIO.velocity.in(DegreesPerSecond)) < 0.5;
-                boolean currentTooHigh = periodicIO.current.in(Amps) >= AlgaeConstants.HOMING_THRESHOLD;
+                boolean currentTooHigh = periodicIO.current.gte(AlgaeConstants.HOMING_THRESHOLD);
                 if (velocityStalled && currentTooHigh) {
-                    pivotMotor.setPosition(AlgaeConstants.HOMING_ANGLE); // Zero the sensor at the limit.
+                    // Zero the sensor at the homing limit.
+                    pivotMotor.setPosition(AlgaeConstants.HOMING_ANGLE);
+                    // reset the simulation in sim
+                    if(pivotSimState != null) {
+                        armSim.setState(AlgaeConstants.HOMING_ANGLE.in(Radians), 0);
+                    }
                     homingState = HomingState.HOMED;
                 }
                 break;
@@ -164,13 +232,16 @@ public class AlgaeArm extends SubsystemBase {
     /** Write outputs (commands) to the pivot motor. */
     private void writePeriodicOutputs() {
         if (homingState == HomingState.HOMING) {
-            // While homing, command a fixed voltage to move the arm.
+            // While homing, command a fixed voltage.
             pivotMotor.setControl(homingVoltage);
             periodicIO.setpointAngle = Degrees.of(0);
         } else {
             // Normal motion magic control to the target angle.
-            // (Since we work in degrees, no conversion is necessary.)
-            pivotMotor.setControl(motionMagic.withPosition(targetAngle.in(Degrees)));
+            System.out.println("target angle: " + targetAngle.in(Degrees));
+            pivotMotor.setControl(
+                    motionMagic.withPosition(targetAngle)
+                            .withSlot(0)
+                            .withEnableFOC(true));
         }
     }
 
@@ -247,7 +318,6 @@ public class AlgaeArm extends SubsystemBase {
             public void execute() {
                 setTargetAngle(angle);
             }
-
             @Override
             public boolean isFinished() {
                 return getAngle().isNear(angle, Degrees.of(0.5));
@@ -265,14 +335,12 @@ public class AlgaeArm extends SubsystemBase {
             public void execute() {
                 needsHoming = true;
             }
-
             @Override
             public boolean isFinished() {
                 return homingState == HomingState.HOMED;
             }
         };
     }
-
 
     public Command deploy() {
         return getMoveToAngleCommand(AlgaeConstants.ANGLE_UP);
@@ -284,14 +352,17 @@ public class AlgaeArm extends SubsystemBase {
             public void execute() {
                 setTargetAngle(AlgaeConstants.STOW_ANGLE);
             }
-
             @Override
             public boolean isFinished() {
                 return getAngle().isNear(AlgaeConstants.STOW_ANGLE, Degrees.of(0.5));
             }
         };
     }
+
     public Command spin() {
-        return runEnd(() -> setRollerSpeed(AlgaeConstants.INTAKE_OUTPUT), () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT));
+        return runEnd(
+                () -> setRollerSpeed(AlgaeConstants.INTAKE_OUTPUT),
+                () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT)
+        );
     }
 }

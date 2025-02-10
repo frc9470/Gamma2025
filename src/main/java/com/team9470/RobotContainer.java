@@ -14,6 +14,7 @@ import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -38,10 +39,15 @@ public class RobotContainer {
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    // ---------------- MECHANISM2D --------------------
+    private final Mechanism2d mech = new Mechanism2d(20, 50);
+
     // ---------------- SUBSYSTEMS --------------------
-    private final Elevator elevator = new Elevator();
+    private final Elevator elevator = new Elevator(mech);
     private final CoralManipulator coral = new CoralManipulator();
-    private final AlgaeArm alg = new AlgaeArm();
+    private final AlgaeArm alg = new AlgaeArm(elevator.getElevatorLigament());
+
+    // ---------------- AUTONOMOUS --------------------
 
     private final Autos autos = new Autos(null, coral, elevator, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
@@ -57,6 +63,8 @@ public class RobotContainer {
         autoChooser.addRoutine("2C Optimized Test", autos::getTwoCoralOptimizedTest);
         autoChooser.select("4C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
+
+        SmartDashboard.putData("Mechanism", mech);
 
 //        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
@@ -84,13 +92,14 @@ public class RobotContainer {
         xbox.start().and(xbox.x()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
 
-        xbox.a().whileTrue(alg.deploy().alongWith(alg.spin())).onFalse(alg.stow());
+        xbox.a().whileTrue(alg.deploy().alongWith(alg.spin()).alongWith(elevator.L3())).onFalse(alg.stow().alongWith(elevator.L0()));
 
         // reset the field-centric heading on left bumper press
-        xbox.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        xbox.b().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // coral intake
         xbox.rightBumper().whileTrue(coral.scoreCommand());
+        xbox.leftBumper().whileTrue(coral.reverseCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
 

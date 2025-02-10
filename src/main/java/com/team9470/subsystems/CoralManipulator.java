@@ -72,7 +72,8 @@ public class CoralManipulator extends SubsystemBase {
         return this.run(() -> coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)));
     }
 
-    public Command outtakeCommand() {
+
+    public Command reverseCommand() {
         return this.runEnd(
                 () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
                 , coralMotor::stopMotor

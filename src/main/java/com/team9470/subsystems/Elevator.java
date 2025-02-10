@@ -71,6 +71,10 @@ public class Elevator extends SubsystemBase {
     // PeriodicIO for reading/writing
     private final PeriodicIO periodicIO = new PeriodicIO();
 
+    public MechanismLigament2d getElevatorLigament() {
+        return elevatorLigament;
+    }
+
 
     private enum HomingState {
         IDLE,       // Not homing
@@ -94,9 +98,9 @@ public class Elevator extends SubsystemBase {
             0.01, 0.0
         );
 
-    private final Mechanism2d elevatorMechanism;
+    private final Mechanism2d mechanism;
     private final MechanismRoot2d elevatorRoot;
-    private final MechanismLigament2d elevatorCarriage;
+    private final MechanismLigament2d elevatorLigament;
 
     /**
      * Container for inputs and outputs that we want to log.
@@ -120,7 +124,7 @@ public class Elevator extends SubsystemBase {
         public HomingState homingState;               // Current homing state
     }
 
-    public Elevator() {
+    public Elevator(Mechanism2d mechanism) {
         elevatorMotor = TalonFXFactory.createDefaultTalon(Ports.ELEVATOR_MAIN);
         elevatorMotorFollower = TalonFXFactory.createPermanentFollowerTalon(
                 Ports.ELEVATOR_FOLLOWER, Ports.ELEVATOR_MAIN, true);
@@ -149,15 +153,14 @@ public class Elevator extends SubsystemBase {
 
         // Create a 2d mechanism for visualization.
         // Dimensions (width, height) are arbitrary units; adjust as needed.
-        elevatorMechanism = new Mechanism2d(20, 50);
+        this.mechanism = mechanism;
         // Set a root; here (100,0) places it at the bottom center.
-        elevatorRoot = elevatorMechanism.getRoot("Elevator", 10, 0);
+        elevatorRoot = mechanism.getRoot("Elevator", 10, 0);
         // Append a ligament that represents the elevator carriage.
         // A vertical ligament (angle=90) whose length you update based on position.
-        elevatorCarriage = elevatorRoot.append(new MechanismLigament2d("Carriage", elevatorSim.getPositionMeters() + 0.58, 90));
+        elevatorLigament = elevatorRoot.append(new MechanismLigament2d("Carriage", elevatorSim.getPositionMeters() + 0.58, 90));
 
         // Publish the visualization to Shuffleboard (or SmartDashboard)
-        SmartDashboard.putData("Elevator/Mechanism", elevatorMechanism);
     }
 
     @Override
@@ -357,7 +360,7 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putBoolean("Elevator/NeedsHoming", needsHoming);
 
         // Mechanism 2D output
-        elevatorCarriage.setLength(Math.max(0.58, 0.58 + periodicIO.positionMeters.in(Meters)));
+        elevatorLigament.setLength(Math.max(0.58, 0.58 + periodicIO.positionMeters.in(Meters)));
 //        SmartDashboard.putData("Elevator/Mechanism", elevatorMechanism);
 
 

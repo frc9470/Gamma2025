@@ -124,7 +124,7 @@ public class AlgaeArm extends SubsystemBase {
                 AlgaeConstants.MIN_ANGLE.in(Radians),             // Minimum angle (radians)
                 AlgaeConstants.MAX_ANGLE.in(Radians),             // Maximum angle (radians)
                 true,                                            // Simulate gravity
-                -Math.PI // starting angle
+                -Math.PI/2 // starting angle
         );
 
         // Scale the visual length (e.g., 1 meter = 10 mechanism units)

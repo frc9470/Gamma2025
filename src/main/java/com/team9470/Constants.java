@@ -135,7 +135,7 @@ public final class Constants {
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
             config.Slot0.kV = .08;
             config.Slot0.kA = .02;
-            config.Slot0.kP = 5;
+            config.Slot0.kP = 0;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
             config.Slot0.kG = 1.2;

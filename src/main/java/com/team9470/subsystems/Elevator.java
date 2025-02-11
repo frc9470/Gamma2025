@@ -333,7 +333,7 @@ public class Elevator extends SubsystemBase {
                 periodicIO.closedLoopError.abs(Meters) < 0.01 &&
                 Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01
                 && targetPosition.gt(Meters.of(0))) {
-//            needsHoming = true;
+            needsHoming = true;
         }
     }
 

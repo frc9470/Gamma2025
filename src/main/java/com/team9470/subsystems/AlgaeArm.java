@@ -123,8 +123,9 @@ public class AlgaeArm extends SubsystemBase {
                 AlgaeConstants.ARM_LENGTH.in(Meter),              // Arm length (m)
                 AlgaeConstants.MIN_ANGLE.in(Radians),             // Minimum angle (radians)
                 AlgaeConstants.MAX_ANGLE.in(Radians),             // Maximum angle (radians)
-                true,                                            // Simulate gravity
-                -Math.PI/2 // starting angle
+                false,                                            // Simulate gravity
+                -Math.PI/2, // starting angle
+                0.01, 0
         );
 
         // Scale the visual length (e.g., 1 meter = 10 mechanism units)
@@ -237,7 +238,7 @@ public class AlgaeArm extends SubsystemBase {
             periodicIO.setpointAngle = Degrees.of(0);
         } else {
             // Normal motion magic control to the target angle.
-            System.out.println("target angle: " + targetAngle.in(Degrees));
+//            System.out.println("target angle: " + targetAngle.in(Degrees));
             pivotMotor.setControl(
                     motionMagic.withPosition(targetAngle)
                             .withSlot(0)

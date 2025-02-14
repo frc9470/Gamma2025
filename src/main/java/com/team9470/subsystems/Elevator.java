@@ -155,7 +155,7 @@ public class Elevator extends SubsystemBase {
         // Dimensions (width, height) are arbitrary units; adjust as needed.
         this.mechanism = mechanism;
         // Set a root; here (100,0) places it at the bottom center.
-        elevatorRoot = mechanism.getRoot("Elevator", 10, 0);
+        elevatorRoot = mechanism.getRoot("Elevator", 2.5, 0);
         // Append a ligament that represents the elevator carriage.
         // A vertical ligament (angle=90) whose length you update based on position.
         elevatorLigament = elevatorRoot.append(new MechanismLigament2d("Carriage", elevatorSim.getPositionMeters() + 0.58, 90));

@@ -40,7 +40,7 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     // ---------------- MECHANISM2D --------------------
-    private final Mechanism2d mech = new Mechanism2d(20, 50);
+    private final Mechanism2d mech = new Mechanism2d(5, 10);
 
     // ---------------- SUBSYSTEMS --------------------
     private final Elevator elevator = new Elevator(mech);

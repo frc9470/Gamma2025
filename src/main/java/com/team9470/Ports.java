@@ -13,6 +13,7 @@ public class Ports {
     public static final CanDeviceId ALGAE_PIVOT = new CanDeviceId(18, "rio");
 
     public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(16, "rio");
+    public static final CanDeviceId FUNNEL = new CanDeviceId(19, "rio");
 
     /**
      * Beam Break IDs

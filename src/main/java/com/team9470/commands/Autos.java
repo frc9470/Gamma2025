@@ -27,7 +27,7 @@ public class Autos {
 
     public Command scoreL4(){
         return elevator.L4().andThen(
-                coralManipulator.scoreCommand())
+                coralManipulator.scoreCommand().withTimeout(0.5))
                 .andThen(elevator.L0());
     }
 

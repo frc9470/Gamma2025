@@ -23,16 +23,20 @@ import static edu.wpi.first.units.Units.Volts;
  */
 public class CoralManipulator extends SubsystemBase {
     private final TalonFX coralMotor = TalonFXFactory.createDefaultTalon(Ports.CORAL_INTAKE);
+    private final TalonFX funnelMotor = TalonFXFactory.createDefaultTalon(Ports.FUNNEL);
     private final DigitalInput coralSensor = new DigitalInput(Ports.CORAL_BREAK);
     private final DelayedBoolean coralBreak = new DelayedBoolean(Timer.getFPGATimestamp(), CoralConstants.BREAK_TIMEOUT, sensorTrue());
 
     public CoralManipulator() {
+
         setDefaultCommand(coastUnless());
     }
 
     @Override
     public void periodic() {
         coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
+
+        funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
 
         SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
         SmartDashboard.putBoolean("CoralManipulator/HasCoral", hasCoral());
@@ -57,7 +61,7 @@ public class CoralManipulator extends SubsystemBase {
     public Command coastUnless(){
         return this.run(() -> {
             if(hasCoral()){
-                coralMotor.stopMotor();
+                coralMotor.setVoltage(CoralConstants.HOLD_SPEED.in(Volts));
             } else {
                 coralMotor.setVoltage(CoralConstants.COAST_SPEED.in(Volts));
             }
@@ -68,7 +72,8 @@ public class CoralManipulator extends SubsystemBase {
         return this.run(() -> coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)));
     }
 
-    public Command outtakeCommand() {
+
+    public Command reverseCommand() {
         return this.runEnd(
                 () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
                 , coralMotor::stopMotor

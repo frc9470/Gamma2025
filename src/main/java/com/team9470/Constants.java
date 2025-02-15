@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.Units;
 
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static edu.wpi.first.units.Units.*;
@@ -161,11 +162,12 @@ public final class Constants {
         // };
 
         public static final double centerX = 4.47675;
-        public static final double centerY = 4;
+        public static final double centerY = 4.0259;
         public static final double radius = 1.58115;
         public static final double pipeDistance = 0.1651;
+        public static final double fieldLength = 17.548225;
         
-        public static Pose2d[] getReefPositions(){
+        public static Pose2d[] getReefPositions(DriverStation.Alliance alliance){
             Pose2d[] REEF_POSITIONS = new Pose2d[12];
             for (int i = 0; i < 6; i++) {
                 double angle1 = Math.PI / 6 + Math.PI / 3 * i;
@@ -182,10 +184,20 @@ public final class Constants {
 
                 
                 // Compute the angle to face away from the hexagon center
-                double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
-                
-                REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.abs(Math.cos(Math.PI / 3 * i)), midY - pipeDistance * Math.abs(Math.sin(Math.PI / 3 * i)), new Rotation2d(faceAngle));
-                REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.abs(Math.cos(Math.PI / 3 * i)), midY + pipeDistance * Math.abs(Math.sin(Math.PI / 3 * i)), new Rotation2d(faceAngle));
+                if(alliance == DriverStation.Alliance.Blue){
+                    double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
+                    
+                    REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                    REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                }
+                else{
+                    double faceAngle = -Math.atan2(midY - centerY, midX - centerX);
+                    
+                    REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                    REEF_POSITIONS[2*i+1] = new Pose2d(fieldLength - midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                }
+                System.out.println(REEF_POSITIONS[2*i]);
+                System.out.println(REEF_POSITIONS[2*i+1]);
             }
             return REEF_POSITIONS;
         }

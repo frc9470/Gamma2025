@@ -5,21 +5,26 @@
 
 package com.team9470;
 
-import choreo.auto.AutoChooser;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
+
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
-import static edu.wpi.first.units.Units.*;
 
 
 public class RobotContainer {
@@ -45,6 +50,7 @@ public class RobotContainer {
     private final AutoChooser autoChooser = new AutoChooser();
 
     CommandXboxController xbox = new CommandXboxController(0);
+    Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
 
@@ -98,7 +104,12 @@ public class RobotContainer {
         //driverassist
 //        drivetrain.getInstance();
 
-        xbox.a().whileTrue(drivetrain.pathfindClosestReefPos());
+        for(int i = 0; i < 12; i++){
+                JoystickButton button = new JoystickButton(buttonBoard, i+1);
+                button.whileTrue(drivetrain.pathfindReefPos(i));
+        }
+        JoystickButton button13 = new JoystickButton(buttonBoard, 13);
+        button13.whileTrue(drivetrain.pathfindClosestReefPos());
 
     }
 

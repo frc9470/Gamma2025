@@ -142,22 +142,52 @@ public final class Constants {
     }
 
     public static final class DriverAssistConstants { // TODO: maybe you can use hexagon math to calculate these? also, there are TWELVE positions per reef, not six. im also sure theres a flipper method in fieldconstants, but you may have to check.
-        public static final Pose2d[] BLUE_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
-            new Pose2d(3.7454309463500977, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
-            new Pose2d(2.9004666805267334, 4.025999546051025, new Rotation2d(0)),
-            new Pose2d(3.7042129039764404, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
-            new Pose2d(5.270488739013672, 2.645203113555908, new Rotation2d(2.1375260206777438)),
-            new Pose2d(6.094844341278076, 4.025998592376709, new Rotation2d(3.141592653589793)),
-            new Pose2d(5.249879837036133, 5.40679407119751, new Rotation2d(-2.095592098445004)),
-        };
+        // public static final Pose2d[] BLUE_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
+        //     new Pose2d(3.7454309463500977, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
+        //     new Pose2d(2.9004666805267334, 4.025999546051025, new Rotation2d(0)),
+        //     new Pose2d(3.7042129039764404, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
+        //     new Pose2d(5.270488739013672, 2.645203113555908, new Rotation2d(2.1375260206777438)),
+        //     new Pose2d(6.094844341278076, 4.025998592376709, new Rotation2d(3.141592653589793)),
+        //     new Pose2d(5.249879837036133, 5.40679407119751, new Rotation2d(-2.095592098445004)),
+        // };
 
-        public static final Pose2d[] RED_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
-            new Pose2d(12.339337348937988, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
-            new Pose2d(11.514982223510742, 4.025999546051025, new Rotation2d(0)),
-            new Pose2d(12.29811954498291, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
-            new Pose2d(13.864395141601562, 2.645203113555908, new Rotation2d(2.1375260206777438)),
-            new Pose2d(14.647533416748047, 4.025998592376709, new Rotation2d(3.141592653589793)),
-            new Pose2d(13.823177337646484, 5.40679407119751, new Rotation2d(-2.095592098445004)),
-        };
+        // public static final Pose2d[] RED_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
+        //     new Pose2d(12.339337348937988, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
+        //     new Pose2d(11.514982223510742, 4.025999546051025, new Rotation2d(0)),
+        //     new Pose2d(12.29811954498291, 2.6452038288116455, new Rotation2d(1.0303770533621297)),
+        //     new Pose2d(13.864395141601562, 2.645203113555908, new Rotation2d(2.1375260206777438)),
+        //     new Pose2d(14.647533416748047, 4.025998592376709, new Rotation2d(3.141592653589793)),
+        //     new Pose2d(13.823177337646484, 5.40679407119751, new Rotation2d(-2.095592098445004)),
+        // };
+
+        public static final double centerX = 4.47675;
+        public static final double centerY = 4;
+        public static final double radius = 1.58115;
+        public static final double pipeDistance = 0.1651;
+        
+        public static Pose2d[] getReefPositions(){
+            Pose2d[] REEF_POSITIONS = new Pose2d[12];
+            for (int i = 0; i < 6; i++) {
+                double angle1 = Math.PI / 6 + Math.PI / 3 * i;
+                double angle2 = Math.PI / 6 + Math.PI / 3 * (i + 1);
+                
+                double x1 = centerX + radius * Math.cos(angle1);
+                double y1 = centerY + radius * Math.sin(angle1);
+                double x2 = centerX + radius * Math.cos(angle2);
+                double y2 = centerY + radius * Math.sin(angle2);
+                
+                // Compute the midpoint of the side
+                double midX = (x1 + x2) / 2;
+                double midY = (y1 + y2) / 2;
+
+                
+                // Compute the angle to face away from the hexagon center
+                double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
+                
+                REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.abs(Math.cos(Math.PI / 3 * i)), midY - pipeDistance * Math.abs(Math.sin(Math.PI / 3 * i)), new Rotation2d(faceAngle));
+                REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.abs(Math.cos(Math.PI / 3 * i)), midY + pipeDistance * Math.abs(Math.sin(Math.PI / 3 * i)), new Rotation2d(faceAngle));
+            }
+            return REEF_POSITIONS;
+        }
     }
 }

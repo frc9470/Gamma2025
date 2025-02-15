@@ -1,6 +1,6 @@
 package com.team9470.subsystems.vision;
 
-import com.team9470.FieldLayout;
+import com.team9470.FieldConstants;
 import com.team9470.LogUtil;
 import com.team9470.Util;
 import com.team9470.subsystems.Swerve;
@@ -27,8 +27,8 @@ public class VisionDevice {
 
     private final PhotonCamera photonCamera;
     private final PhotonPoseEstimator photonPoseEstimator;
-    private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
-
+    // private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     public VisionDevice(String name, Transform3d transform) {
         this.photonCamera = new PhotonCamera(name);
@@ -72,7 +72,8 @@ public class VisionDevice {
             // Add all tag poses to the list
             for (PhotonTrackedTarget target : result.getTargets()) {
                 int tagId = target.getFiducialId();
-                Optional<Pose3d> tagPose = FieldLayout.kTagMap.getTagPose(tagId);
+                // Optional<Pose3d> tagPose = FieldLayout.kTagMap.getTagPose(tagId);
+                Optional<Pose3d> tagPose = aprilTagFieldLayout.getTagPose(tagId);
                 tagPose.ifPresent(tagPoses::add);
             }
 

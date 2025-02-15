@@ -17,12 +17,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import static edu.wpi.first.units.Units.*;
 
 public final class Constants {
+    public static class Global {
+        // we want apriltags! see `FieldConstants.java`
+        public static final boolean disableHAL = false;
+    }
 
-    // CHANGE THIS BECAUSE THIS IS SAMPLE FROM LAST YR
-     public static class VisionConstants {
-        public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-6.416074), Units.Inches.of(+6.234908), Units.Inches.of(24.876993),
+    // TODO: change camera constants
+    public static class VisionConstants {
+        public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-12.498394), Units.Inches.of(+12.145856), Units.Inches.of(+7.715021),
                 new Rotation3d(-0.12384803489944651, -0.3272010156831353, 0.3695356336033198));
-        public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-6.416074), Units.Inches.of(-6.234908), Units.Inches.of(24.876993),
+        public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.498394), Units.Inches.of(+12.145856), Units.Inches.of(+7.715021),
                 new Rotation3d(0.12384803489944651, -0.3272010156831353, -0.3695356336033198));
 
 

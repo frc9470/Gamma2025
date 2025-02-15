@@ -1,6 +1,9 @@
 package com.team9470.subsystems.vision;
 
-import com.team9470.FieldLayout;
+import com.team9470.FieldConstants;
+//import com.team9470.FieldLayout;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -12,6 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class VisionPoseAcceptor {
 	private static final double FIELD_BORDER_MARGIN = 0.5;
 	private static final double MAX_VISION_CORRECTION = 2.0; // Jump from fused pose
+	// private static final AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.defaultAprilTagType.getLayout();
+	private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
 	Pose2d mLastVisionFieldToVehicle = null;
 
@@ -33,9 +38,11 @@ public class VisionPoseAcceptor {
 
 		// Check out of field
 		if (visionFieldToVehicle.getTranslation().getX() < -FIELD_BORDER_MARGIN
-				|| visionFieldToVehicle.getTranslation().getX() > FieldLayout.kFieldLength + FIELD_BORDER_MARGIN
+				// || visionFieldToVehicle.getTranslation().getX() > FieldLayout.kFieldLength + FIELD_BORDER_MARGIN
+				|| visionFieldToVehicle.getTranslation().getX() > aprilTagFieldLayout.getFieldLength() + FIELD_BORDER_MARGIN
 				|| visionFieldToVehicle.getTranslation().getY() < -FIELD_BORDER_MARGIN
-				|| visionFieldToVehicle.getTranslation().getY() > FieldLayout.kFieldWidth + FIELD_BORDER_MARGIN) {
+				// || visionFieldToVehicle.getTranslation().getY() > FieldLayout.kFieldWidth + FIELD_BORDER_MARGIN) {
+				|| visionFieldToVehicle.getTranslation().getY() > aprilTagFieldLayout.getFieldWidth() + FIELD_BORDER_MARGIN) {
 			SmartDashboard.putString("Vision validation", "Outside field");
 			return false;
 		}

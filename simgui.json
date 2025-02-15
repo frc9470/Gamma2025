@@ -4,8 +4,10 @@
       "/FMSInfo": "FMSInfo",
       "/Pose": "Field2d",
       "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/AlgaeArm": "Subsystem",
       "/SmartDashboard/AutoChooser": "String Chooser",
       "/SmartDashboard/Choreo Alerts": "Alerts",
+      "/SmartDashboard/Elevator/Mechanism": "Mechanism2d",
       "/SmartDashboard/Module 0": "Mechanism2d",
       "/SmartDashboard/Module 1": "Mechanism2d",
       "/SmartDashboard/Module 2": "Mechanism2d",
@@ -32,6 +34,9 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   },
   "NetworkTables View": {
     "visible": false

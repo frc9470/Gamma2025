@@ -28,7 +28,7 @@ public class VisionDevice {
     private final PhotonCamera photonCamera;
     private final PhotonPoseEstimator photonPoseEstimator;
     // private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
-    private static final AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.defaultAprilTagType.getLayout();
+    private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     public VisionDevice(String name, Transform3d transform) {
         this.photonCamera = new PhotonCamera(name);

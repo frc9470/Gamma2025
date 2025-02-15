@@ -52,11 +52,11 @@ public class AlgaeArm extends SubsystemBase {
         HOMED       // Homing complete; sensor zeroed
     }
     private boolean needsHoming = true;
-    private HomingState homingState = HomingState.IDLE;
+    private HomingState homingState = HomingState.HOMING;
     private Time homingStartTime = Seconds.of(0);
 
     // --- Target angle ---
-    private Angle targetAngle = Degrees.of(0);
+    private Angle targetAngle = Degrees.of(-90);
 
     // --- Periodic I/O container ---
     public static class PeriodicIO {
@@ -202,7 +202,7 @@ public class AlgaeArm extends SubsystemBase {
             case IDLE:
                 // Example: if the arm is near its target (and a timeout has passed), start homing.
                 boolean timeOut = periodicIO.timestamp.minus(homingStartTime).gt(AlgaeConstants.HOMING_TIMEOUT);
-                if (targetAngle.isNear(periodicIO.position, Degrees.of(0.5)) && timeOut) {
+                if (targetAngle.isNear(periodicIO.position, Degrees.of(0.5)) && timeOut && needsHoming) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }
@@ -238,7 +238,7 @@ public class AlgaeArm extends SubsystemBase {
             periodicIO.setpointAngle = Degrees.of(0);
         } else {
             // Normal motion magic control to the target angle.
-//            System.out.println("target angle: " + targetAngle.in(Degrees));
+//            System.out.println("target angle: " + targetAngle.in(Degrexes));
             pivotMotor.setControl(
                     motionMagic.withPosition(targetAngle)
                             .withSlot(0)
@@ -355,7 +355,7 @@ public class AlgaeArm extends SubsystemBase {
             }
             @Override
             public boolean isFinished() {
-                return getAngle().isNear(AlgaeConstants.STOW_ANGLE, Degrees.of(0.5));
+                return getAngle().isNear(AlgaeConstants.STOW_ANGLE, Degrees.of(2));
             }
         };
     }
@@ -363,6 +363,12 @@ public class AlgaeArm extends SubsystemBase {
     public Command spin() {
         return runEnd(
                 () -> setRollerSpeed(AlgaeConstants.INTAKE_OUTPUT),
+                () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT)
+        );
+    }
+    public Command reverse() {
+        return runEnd(
+                () -> setRollerSpeed(AlgaeConstants.INTAKE_OUTPUT.unaryMinus()),
                 () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT)
         );
     }

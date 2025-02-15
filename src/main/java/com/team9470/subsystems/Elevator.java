@@ -25,8 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static com.team9470.Constants.ElevatorConstants.DIST_PER_ROTATION;
-import static com.team9470.Constants.ElevatorConstants.GEAR_RATIO;
+import static com.team9470.Constants.ElevatorConstants.*;
 import static edu.wpi.first.units.Units.*;
 
 /**
@@ -271,7 +270,7 @@ public class Elevator extends SubsystemBase {
                 boolean timeOut = periodicIO.timestamp
                         .minus(homingStartTime)
                         .gt(ElevatorConstants.HOMING_TIMEOUT);
-                if (targetPosition.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
+                if (HOME_POSITION.equals(targetPosition) && targetPosition.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }

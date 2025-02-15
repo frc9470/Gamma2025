@@ -92,7 +92,8 @@ public class RobotContainer {
         xbox.start().and(xbox.x()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
 
-        xbox.a().whileTrue(alg.deploy().alongWith(alg.spin()).alongWith(elevator.L3())).onFalse(alg.stow().alongWith(elevator.L0()));
+        xbox.leftBumper().whileTrue(elevator.L3().andThen(alg.deploy().alongWith(alg.spin()))).onFalse(alg.stow().andThen(elevator.L0()));
+        xbox.rightBumper().whileTrue(elevator.L1().andThen(alg.deploy().alongWith(alg.reverse()))).onFalse(alg.stow().andThen(elevator.L0()));
 
         // reset the field-centric heading on left bumper press
         xbox.b().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
@@ -103,12 +104,13 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()));
+        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()).andThen(elevator.L0()));
 //        xbox.x().whileTrue(elevator.L1().andThen(coral.scoreCommand()).andThen(elevator.L0()));
 //        xbox.y().whileTrue(elevator.L2().andThen(coral.scoreCommand()).andThen(elevator.L0()));
 //        xbox.b().whileTrue(elevator.L3().andThen(coral.scoreCommand()).andThen(elevator.L0()));
 
-        xbox.leftTrigger().whileTrue(elevator.L3().andThen(coral.scoreCommand())).onFalse(elevator.L0());
+        xbox.leftTrigger().whileTrue(elevator.L3()
+                .andThen(coral.scoreCommand())).onFalse(elevator.L0());
 
     }
 

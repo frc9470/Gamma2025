@@ -13,12 +13,16 @@ import com.team9470.subsystems.AlgaeArm;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
@@ -47,12 +51,16 @@ public class RobotContainer {
     private final CoralManipulator coral = new CoralManipulator();
     private final AlgaeArm alg = new AlgaeArm(elevator.getElevatorLigament());
 
+    // ----------------      VISION     --------------------
+    private final Vision vision = Vision.getInstance();
+
     // ---------------- AUTONOMOUS --------------------
 
     private final Autos autos = new Autos(null, coral, elevator, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
 
     CommandXboxController xbox = new CommandXboxController(0);
+    Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
 
@@ -66,7 +74,7 @@ public class RobotContainer {
 
         SmartDashboard.putData("Mechanism", mech);
 
-//        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
 
     private void configureBindings() {
@@ -111,6 +119,16 @@ public class RobotContainer {
 
         xbox.leftTrigger().whileTrue(elevator.L3()
                 .andThen(coral.scoreCommand())).onFalse(elevator.L0());
+
+        //driverassist
+//        drivetrain.getInstance();
+
+        for(int i = 0; i < 12; i++){
+                JoystickButton button = new JoystickButton(buttonBoard, i+1);
+                button.whileTrue(drivetrain.pathfindReefPos(i));
+        }
+        JoystickButton button13 = new JoystickButton(buttonBoard, 13);
+        button13.whileTrue(drivetrain.pathfindClosestReefPos());
 
     }
 

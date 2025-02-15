@@ -35,12 +35,14 @@
       }
     }
   },
-  "NetworkTables": {
-    "transitory": {
-      "Pose": {
-        "open": true
-      }
-    }
+  "NetworkTables Info": {
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
+    "visible": true
   },
   "NetworkTables Info": {
     "visible": true

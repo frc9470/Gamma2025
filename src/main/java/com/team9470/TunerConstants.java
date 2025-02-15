@@ -120,10 +120,10 @@ public class TunerConstants {
 
 
     // pathfinding constraints
-    public static final double maxVelocity = 5;
-    public static final double maxAcceleration = 5;
-    public static final double maxAngularVelocity = 540; // degrees
-    public static final double maxAngularAcceleration = 720; // degrees
+    public static final double maxVelocity = 1000;
+    public static final double maxAcceleration = 1000;
+    public static final double maxAngularVelocity = 1000; // degrees
+    public static final double maxAngularAcceleration = 100000; // degrees
 
     // Front Left
     private static final int kFrontLeftDriveMotorId = 2;

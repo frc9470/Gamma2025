@@ -75,6 +75,8 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
+        drivetrain.registerTelemetry(logger::telemeterize);
+
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
@@ -96,21 +98,32 @@ public class RobotContainer {
 //        xbox.start().and(xbox.x()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
 
-        xbox.leftBumper().whileTrue(elevator.L3().andThen(alg.deploy().alongWith(alg.spin()))).onFalse(alg.stow().andThen(elevator.L0()));
-        xbox.rightBumper().whileTrue(elevator.L1().andThen(alg.deploy().alongWith(alg.reverse()))).onFalse(alg.stow().andThen(elevator.L0()));
+
 
         // reset the field-centric heading on left bumper press
-        xbox.b().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-
-        drivetrain.registerTelemetry(logger::telemeterize);
+        xbox.x().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()).andThen(elevator.L0()));
-//        xbox.x().whileTrue(elevator.L1().andThen(coral.scoreCommand()).andThen(elevator.L0()));
-//        xbox.y().whileTrue(elevator.L2().andThen(coral.scoreCommand()).andThen(elevator.L0()));
-//        xbox.b().whileTrue(elevator.L3().andThen(coral.scoreCommand()).andThen(elevator.L0()));
+        xbox.b().whileTrue(coral.reverseCommand());
 
-        xbox.leftTrigger().whileTrue(elevator.L3()
-                .andThen(coral.scoreCommand())).onFalse(elevator.L0());
+        // ALGAE
+        // ALGAE DESCORE
+        xbox.leftBumper().whileTrue(
+                elevator.L4().andThen(alg.deploy().alongWith(alg.spin())))
+            .onFalse(alg.stow().andThen(elevator.L0()));
+        xbox.leftTrigger().whileTrue(
+                elevator.L3().andThen(alg.deploy().alongWith(alg.spin())))
+            .onFalse(alg.stow().andThen(elevator.L0()));
+
+        // ALGAE GROUND INTAKE
+        xbox.rightBumper().whileTrue(
+                elevator.L1().andThen(alg.deploy().andThen(elevator.L0()).alongWith(alg.reverse())))
+            .onFalse(elevator.L1().andThen(alg.stow()).andThen(elevator.L0()));
+
+        // ALGAE PROCESSOR
+        xbox.a().whileTrue(
+                elevator.L1().andThen(alg.deploy().alongWith(alg.spin())))
+            .onFalse(alg.stow().andThen(elevator.L0()));
 
         //driverassist
 //        drivetrain.getInstance();

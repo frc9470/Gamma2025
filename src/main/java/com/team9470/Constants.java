@@ -119,7 +119,7 @@ public final class Constants {
         public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
         public static final Voltage HOMING_OUTPUT = Volts.of(3);
         public static final Time HOMING_TIMEOUT = Seconds.of(0.5);
-        public static final Angle HOMING_ANGLE = Degrees.of(-90);
+        public static final Angle HOMING_ANGLE = Degrees.of(-95);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);
         public static final Voltage HOLDING_OUTPUT = Volts.of(1);

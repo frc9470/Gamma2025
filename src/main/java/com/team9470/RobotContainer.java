@@ -62,6 +62,25 @@ public class RobotContainer {
     Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
+        /*
+         * Current Button Binds:
+         * 
+         * XBOX:
+         * X: Reset field-centric heading
+         * B: Reverse Coral Intake
+         * A: Algae processor
+         * Y: Set pathfind to closest reef position
+         * Right Trigger: L4 + score + L0
+         * Left Trigger: L3 Algae Descore
+         * Right Bumper: Algaeo ground intake
+         * Left Bumper: L4 Algae Descore
+         * Right Stick: Pathfind and shoot coral at specified level
+         * 
+         * 
+         * BUTTON BOARD:
+         * Buttons 1-12: Each corresponds to specific reef pos
+         * Buttons 13-16 (axis): Each corresponds to levels of the elevator
+         */
 
         configureBindings();
 
@@ -130,33 +149,21 @@ public class RobotContainer {
         //driverassist
 //        drivetrain.getInstance();
 
-        for(int i = 0; i < 8; i++){
+        for(int i = 0; i < 12; i++){
                 JoystickButton button = new JoystickButton(buttonBoard, i+1);
                 final int id = i;
                 button.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(id)));
         }
 
-        Trigger xAxisZeroTrigger = new Trigger(() -> buttonBoard.getX() == -1.0);
-        Trigger xAxisOneTrigger = new Trigger(() -> buttonBoard.getX() == 1.0);
-        Trigger yAxisZeroTrigger = new Trigger(() -> buttonBoard.getY() == -1.0);
-        Trigger yAxisOneTrigger = new Trigger(() -> buttonBoard.getY() == 1.0);
-
-        xAxisZeroTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(8)));
-        xAxisOneTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(9)));
-        yAxisZeroTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(10)));
-        yAxisOneTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(11)));
-
-        xbox.a().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
-
-        xbox.leftBumper().whileTrue(drivetrain.getPathfindingCommand());
-
         for(int i = 0; i < 4; i++){
-                JoystickButton button = new JoystickButton(buttonBoard, i+9);
                 final int id = i;
-                button.whileTrue(new InstantCommand(() -> elevator.setLevel(id)));
+                Trigger trig = new Trigger(() -> (id<2) ? buttonBoard.getX() == Math.pow(-1.0, id+1) : buttonBoard.getY() == Math.pow(-1.0, id+1));
+                trig.whileTrue(new InstantCommand(() -> elevator.setLevel(id)));
         }
 
-        xbox.rightBumper().whileTrue(elevator.getCommand(coral));
+        xbox.y().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1))); // pathfind to closest reef pos
+
+        xbox.rightStick().whileTrue(drivetrain.getPathfindingCommand().andThen(elevator.getCommand(coral)));
 
     }
 

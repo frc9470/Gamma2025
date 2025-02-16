@@ -6,12 +6,17 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.drivers.TalonUtil;
 import com.team9470.Constants;
 import com.team9470.Constants.ElevatorConstants;
 import com.team9470.Ports;
+import com.team9470.TunerConstants;
+
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -23,6 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static com.team9470.Constants.ElevatorConstants.*;
@@ -100,6 +106,7 @@ public class Elevator extends SubsystemBase {
     private final Mechanism2d mechanism;
     private final MechanismRoot2d elevatorRoot;
     private final MechanismLigament2d elevatorLigament;
+    private int curLevel = 0;
 
     /**
      * Container for inputs and outputs that we want to log.
@@ -436,6 +443,55 @@ public class Elevator extends SubsystemBase {
 
     public Command intake(){
         return getMoveToPositionCommand(ElevatorConstants.INTAKE);
+    }
+
+    public void setLevel(int level){
+        curLevel = level;
+    }
+
+    public Command getCommand(CoralManipulator coral){
+        class ElevatorCommand extends Command{
+            private Command cmd;
+            private CoralManipulator coral;
+
+            public ElevatorCommand(CoralManipulator coral){
+                this.coral = coral;
+            }
+
+            @Override
+            public void initialize() {
+                if(curLevel == 0){
+                    cmd = Commands.none();
+                }
+                else{
+                    Command[] cmdList = {
+                        L1().andThen(coral.scoreCommand()).andThen(L0()),
+                        L2().andThen(coral.scoreCommand()).andThen(L0()),
+                        L3().andThen(coral.scoreCommand()).andThen(L0()),
+                        L4().andThen(coral.scoreCommand()).andThen(L0())
+                    };
+                    cmd = cmdList[curLevel-1];
+                    cmd.initialize();
+                }
+            }
+
+            @Override
+            public void execute() {
+                // Delegate execution to the pathfinding command.
+                cmd.execute();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return cmd.isFinished();
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                cmd.end(interrupted);
+            }
+        };
+        return new ElevatorCommand(coral);
     }
 
 

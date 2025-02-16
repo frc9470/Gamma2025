@@ -9,6 +9,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -129,6 +130,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     );
     
     private static RobotConfig config;
+
+    public Pose2d curReefPos = null;
 
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
@@ -293,49 +296,27 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         );
     }
 
-    public Command getPathfindingCommand(Pose2d targetPose){
-        // Create the constraints to use while pathfinding
-        PathConstraints constraints = new PathConstraints(
-                TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
-                Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
-
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-        Command pathfindingCommand = AutoBuilder.pathfindToPose(
-                targetPose,
-                constraints,
-                0.0 // Goal end velocity in meters/sec
-        );
-
-        return pathfindingCommand;
-    }
-
-    public Command pathfindClosestReefPos() {
+    public Command getPathfindingCommand(){
         return new Command() {
             private Command pathfindingCommand;
 
             @Override
             public void initialize() {
-                // Select the appropriate reef positions.
-                // (You can add alliance-specific logic if needed.)
-                Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
-
-                // Get the current robot pose at initialization.
-                Pose2d currentPose = getPose();
-
-                // Find the closest reef pose.
-                double shortestDistance = Double.MAX_VALUE;
-                Pose2d closestPose = null;
-                for (Pose2d pose : reefPoses) {
-                    double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
-                    if (distance < shortestDistance) {
-                        shortestDistance = distance;
-                        closestPose = pose;
-                    }
+                if(curReefPos == null){
+                    pathfindClosestReefPos();
                 }
+                // Create the constraints to use while pathfinding
+                PathConstraints constraints = new PathConstraints(
+                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
+                        Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
 
-                // Create the pathfinding command using the closest pose.
-                pathfindingCommand = getPathfindingCommand(closestPose);
-                // Initialize the pathfinding command.
+                // Since AutoBuilder is configured, we can use it to build pathfinding commands
+                pathfindingCommand = AutoBuilder.pathfindToPose(
+                        curReefPos,
+                        constraints,
+                        0.0 // Goal end velocity in meters/sec
+                );
+
                 pathfindingCommand.initialize();
             }
 
@@ -357,23 +338,49 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         };
     }
 
+    public void pathfindClosestReefPos() {
+        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
+
+        // Get the current robot pose at initialization.
+        Pose2d currentPose = getPose();
+
+        // Find the closest reef pose.
+        double shortestDistance = Double.MAX_VALUE;
+        Pose2d closestPose = null;
+        for (Pose2d pose : reefPoses) {
+            double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestPose = pose;
+            }
+        }
+
+        curReefPos = closestPose;
+    }
+
     /**
      * 
      * @param posID ID os reef pos from 0-5
      * @return pathfinding command
      */
-    public Command pathfindReefPos(int posId){
-        Pose2d[] reefPoses;
-        // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-        //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
-        // }
-        // else{
-        //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-        // }
-        reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
-
-        return getPathfindingCommand(reefPoses[posId]);
+    public void setReefPos(int posId){
+        if(posId == -1){
+            curReefPos = null;
+        }
+        else{
+            Pose2d[] reefPoses;
+            // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+            //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
+            // }
+            // else{
+            //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
+            // }
+            reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
+            curReefPos = reefPoses[posId];
+        }
     }
+
+
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.

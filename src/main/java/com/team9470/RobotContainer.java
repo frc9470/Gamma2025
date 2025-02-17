@@ -68,7 +68,7 @@ public class RobotContainer {
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
         autoChooser.addRoutine("2C Optimized Test", autos::getTwoCoralOptimizedTest);
-        autoChooser.select("4C Test");
+//        autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
 
         SmartDashboard.putData("Mechanism", mech);
@@ -105,7 +105,8 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         xbox.x().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()).andThen(elevator.L0()));
+        // SCORING
+//        xbox.rightTrigger().whileTrue(elevator.L4().andThen(coral.scoreCommand()).andThen(elevator.L0()));
         xbox.b().whileTrue(coral.reverseCommand());
 
         // ALGAE
@@ -119,19 +120,19 @@ public class RobotContainer {
 
         // ALGAE GROUND INTAKE
         xbox.rightBumper().whileTrue(
-                elevator.L1().andThen(alg.deploy().andThen(elevator.L0()).alongWith(alg.reverse())))
-            .onFalse(elevator.L1().andThen(alg.stow()).andThen(elevator.L0()));
+                alg.deploy().alongWith(alg.reverse()))
+            .onFalse(alg.stow());
 
         // ALGAE PROCESSOR
         xbox.a().whileTrue(
-                elevator.L1().andThen(alg.deploy().alongWith(alg.spin())))
-            .onFalse(alg.stow().andThen(elevator.L0()));
+                alg.deploy().alongWith(alg.spin()))
+            .onFalse(alg.stow());
 
         //driverassist
 //        drivetrain.getInstance();
 
-        for(int i = 0; i < 8; i++){
-                JoystickButton button = new JoystickButton(buttonBoard, i+1);
+        for(int i = 0; i < 12; i++){
+                JoystickButton button = new JoystickButton(buttonBoard, 12-i);
                 final int id = i;
                 button.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(id)));
         }
@@ -141,22 +142,17 @@ public class RobotContainer {
         Trigger yAxisZeroTrigger = new Trigger(() -> buttonBoard.getY() == -1.0);
         Trigger yAxisOneTrigger = new Trigger(() -> buttonBoard.getY() == 1.0);
 
-        xAxisZeroTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(8)));
-        xAxisOneTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(9)));
-        yAxisZeroTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(10)));
-        yAxisOneTrigger.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(11)));
+        xAxisZeroTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(1)));
+        xAxisOneTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(2)));
+        yAxisOneTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(3)));
+        yAxisZeroTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(4)));
 
-        xbox.a().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
+//        xbox.a().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
 
-        xbox.leftBumper().whileTrue(drivetrain.getPathfindingCommand());
 
-        for(int i = 0; i < 4; i++){
-                JoystickButton button = new JoystickButton(buttonBoard, i+9);
-                final int id = i;
-                button.whileTrue(new InstantCommand(() -> elevator.setLevel(id)));
-        }
 
-        xbox.rightBumper().whileTrue(elevator.getCommand(coral));
+        xbox.y().whileTrue(drivetrain.getPathfindingCommand());
+        xbox.rightTrigger().whileTrue(elevator.getCommand(coral)).onFalse(elevator.L0());
 
     }
 

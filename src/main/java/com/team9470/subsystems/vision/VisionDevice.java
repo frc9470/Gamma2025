@@ -1,6 +1,6 @@
 package com.team9470.subsystems.vision;
 
-import com.team9470.FieldConstants;
+import com.ctre.phoenix6.Utils;
 import com.team9470.LogUtil;
 import com.team9470.Util;
 import com.team9470.subsystems.Swerve;
@@ -14,8 +14,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -59,7 +59,7 @@ public class VisionDevice {
             EstimatedRobotPose estimatedPose = posEstimate.get();
             Pose3d robotPose = estimatedPose.estimatedPose;
             Pose3d cameraPose = robotPose.plus(photonPoseEstimator.getRobotToCameraTransform());
-            double timestamp = estimatedPose.timestampSeconds;
+            double timestamp = Utils.fpgaToCurrentTime(estimatedPose.timestampSeconds);
 
             if (result.getTargets().size() < 2) {
                 if (result.getTargets().get(0).getPoseAmbiguity() > 0.2) return;
@@ -90,14 +90,15 @@ public class VisionDevice {
             double xyStdDev = calculateXYStandardDeviation(lowestDist, avgDist, tagPoses.size(), std_dev_multiplier);
 
             // Log vision data
-            logVisionData(tagPoses, xyStdDev, cameraPose.toPose2d(), robotPose.toPose2d(), timestamp);
+            logVisionData(tagPoses, xyStdDev, cameraPose, robotPose, timestamp);
 
             if (Vision.getInstance().isVisionDisabled()) {
                 return;
             }
-
             // Update robot state with vision data
+
             swerve.addVisionMeasurement(robotPose.toPose2d(), timestamp, new Matrix<>(Nat.N3(), Nat.N1(), new double[]{xyStdDev, xyStdDev, xyStdDev}));
+
 
             // Calculate and log rotation
 //            double rotationDegrees = calculateRotation(pose, Swerve.isRedAlliance());
@@ -128,13 +129,13 @@ public class VisionDevice {
         return Math.max(0.02, xyStdDev);
     }
 
-    private void logVisionData(List<Pose3d> tagPoses, double xyStdDev, Pose2d camera_pose, Pose2d robotPose, double timestamp) {
+    private void logVisionData(List<Pose3d> tagPoses, double xyStdDev, Pose3d camera_pose, Pose3d robotPose, double timestamp) {
 
         LogUtil.recordPose3d("Vision/" + photonCamera.getName() + "/Tag Poses", tagPoses.toArray(new Pose3d[0]));
         SmartDashboard.putNumber("Vision/" + photonCamera.getName() + "/N Tags Seen", tagPoses.size());
         SmartDashboard.putNumber("Vision/" + photonCamera.getName() + "/Calculated STDev", xyStdDev);
-        LogUtil.recordPose2d("Vision/" + photonCamera.getName() + "/Camera Pose", camera_pose);
-        LogUtil.recordPose2d(
+        LogUtil.recordPose3d("Vision/" + photonCamera.getName() + "/Camera Pose", camera_pose);
+        LogUtil.recordPose3d(
                 "Vision/" + photonCamera.getName() + "/Robot Pose", robotPose);
         LogUtil.recordPose2d(
                 "Vision/" + photonCamera.getName() + "/Relevant Pose Estimate",

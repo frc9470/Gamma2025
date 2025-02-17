@@ -9,12 +9,12 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.team9470.Constants.DriverAssistConstants;
+import com.team9470.LogUtil;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
@@ -22,6 +22,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -307,8 +308,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 }
                 // Create the constraints to use while pathfinding
                 PathConstraints constraints = new PathConstraints(
-                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
-                        Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
+                        TunerConstants.maxVelocity/3, TunerConstants.maxAcceleration/3,
+                        Units.degreesToRadians(TunerConstants.maxAngularVelocity/3), Units.degreesToRadians(TunerConstants.maxAngularAcceleration/3));
 
                 // Since AutoBuilder is configured, we can use it to build pathfinding commands
                 pathfindingCommand = AutoBuilder.pathfindToPose(
@@ -360,7 +361,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     /**
      * 
-     * @param posID ID os reef pos from 0-5
+     * @param posId ID os reef pos from 0-12
      * @return pathfinding command
      */
     public void setReefPos(int posId){
@@ -385,7 +386,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
      *
-     * @param request Function returning the request to apply
+     * @param requestSupplier Function returning the request to apply
      * @return Command to run
      */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -461,6 +462,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+        if(curReefPos != null)
+            LogUtil.recordPose2d("Controls/ReefPos", curReefPos);
+
+
     }
 
     private void startSimThread() {
@@ -500,4 +505,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return instance;
     }
 
+    /**
+     * Get Twist2d of robot velocity
+     */
+    public Twist2d getRobotTwist(){
+        return new Twist2d(getChassisSpeeds().vxMetersPerSecond, getChassisSpeeds().vyMetersPerSecond, getChassisSpeeds().omegaRadiansPerSecond);
+    }
+
+    @Override
+    public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
+        if(visionPoseAcceptor.shouldAcceptVision(timestampSeconds, visionRobotPoseMeters, getPose(), getRobotTwist(), DriverStation.isAutonomous())){
+            System.out.println("ADDING VISION!");
+            super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        }
+    }
 }

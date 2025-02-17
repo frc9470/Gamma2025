@@ -6,17 +6,12 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathConstraints;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.drivers.TalonUtil;
 import com.team9470.Constants;
 import com.team9470.Constants.ElevatorConstants;
 import com.team9470.Ports;
-import com.team9470.TunerConstants;
-
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -365,6 +360,9 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putString("Elevator/HomingState", periodicIO.homingState.toString());
         SmartDashboard.putBoolean("Elevator/NeedsHoming", needsHoming);
 
+        // Level Select
+        SmartDashboard.putNumber("Controls/Level", curLevel);
+
         // Mechanism 2D output
         elevatorLigament.setLength(Math.max(0.58, 0.58 + periodicIO.positionMeters.in(Meters)));
 //        SmartDashboard.putData("Elevator/Mechanism", elevatorMechanism);
@@ -465,10 +463,10 @@ public class Elevator extends SubsystemBase {
                 }
                 else{
                     Command[] cmdList = {
-                        L1().andThen(coral.scoreCommand()).andThen(L0()),
-                        L2().andThen(coral.scoreCommand()).andThen(L0()),
-                        L3().andThen(coral.scoreCommand()).andThen(L0()),
-                        L4().andThen(coral.scoreCommand()).andThen(L0())
+                        L1().andThen(coral.scoreCommand()),
+                        L2().andThen(coral.scoreCommand()),
+                        L3().andThen(coral.scoreCommand()),
+                        L4().andThen(coral.scoreCommand())
                     };
                     cmd = cmdList[curLevel-1];
                     cmd.initialize();

@@ -18,8 +18,6 @@ public class Vision extends SubsystemBase {
 
     private final List<VisionDevice> devices = List.of(frontL, frontR);
 
-    private Vision() {
-    }
 
     public static Vision getInstance() {
         if (instance == null) {

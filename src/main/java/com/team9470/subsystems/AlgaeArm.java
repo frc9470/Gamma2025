@@ -56,7 +56,7 @@ public class AlgaeArm extends SubsystemBase {
     private Time homingStartTime = Seconds.of(0);
 
     // --- Target angle ---
-    private Angle targetAngle = Degrees.of(-90);
+    private Angle targetAngle = AlgaeConstants.HOMING_ANGLE;
 
     // --- Periodic I/O container ---
     public static class PeriodicIO {

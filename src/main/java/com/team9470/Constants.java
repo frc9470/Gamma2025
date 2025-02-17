@@ -24,10 +24,10 @@ public final class Constants {
 
     // TODO: change camera constants
     public static class VisionConstants {
-        public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(-12.498394), Units.Inches.of(+12.145856), Units.Inches.of(+7.715021),
-                new Rotation3d(-0.12384803489944651, -0.3272010156831353, 0.3695356336033198));
-        public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.498394), Units.Inches.of(+12.145856), Units.Inches.of(+7.715021),
-                new Rotation3d(0.12384803489944651, -0.3272010156831353, -0.3695356336033198));
+        public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.290427), Units.Inches.of(12.710), Units.Inches.of(+8.803138),
+                new Rotation3d(0, Math.toRadians(-28.125), Math.toRadians(-45)));
+        public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.290427), Units.Inches.of(-12.710), Units.Inches.of(+8.803138),
+                new Rotation3d(0, Math.toRadians(-28.125), Math.toRadians(45)));
 
 
     }
@@ -110,23 +110,23 @@ public final class Constants {
         public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
         public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
         public static final Angle ANGLE_UP = Degrees.of(-30);
-        public static final Angle STOW_ANGLE = Degrees.of(-100);
+        public static final Angle STOW_ANGLE = Degrees.of(93.98);
 
         public static final double CRUISE_VELOCITY = 10;
         public static final double ACCELERATION = 20;
         public static final double JERK = 0;
 
         public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
-        public static final Voltage HOMING_OUTPUT = Volts.of(3);
+        public static final Voltage HOMING_OUTPUT = Volts.of(7);
         public static final Time HOMING_TIMEOUT = Seconds.of(0.5);
-        public static final Angle HOMING_ANGLE = Degrees.of(-95);
+        public static final Angle HOMING_ANGLE = Degrees.of(93.98);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);
         public static final Voltage HOLDING_OUTPUT = Volts.of(1);
 
         public static final double GEAR_RATIO = 4.2;
 
-        public static final double STALL_CURRENT = 40; // Amps
+        public static final double STALL_CURRENT = 80; // Amps
 
         // sim stuff
         public static final Mass ARM_MASS = Kilogram.of(6.252); // kg
@@ -146,7 +146,7 @@ public final class Constants {
             config.Slot0.kP = 15;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
-            config.Slot0.kG = 0.8;
+            config.Slot0.kG = 0.64;
             config.Slot0.kS = 0.2;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

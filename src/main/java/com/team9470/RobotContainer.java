@@ -17,7 +17,6 @@ import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -62,13 +61,32 @@ public class RobotContainer {
     Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
+        /*
+         * Current Button Binds:
+         *
+         * XBOX:
+         * X: Reset field-centric heading
+         * B: Reverse Coral Intake
+         * A: Algae processor
+         * Y: Set pathfind to closest reef position
+         * Right Trigger: L4 + score + L0
+         * Left Trigger: L3 Algae Descore
+         * Right Bumper: Algaeo ground intake
+         * Left Bumper: L4 Algae Descore
+         * Right Stick: Pathfind and shoot coral at specified level
+         *
+         *
+         * BUTTON BOARD:
+         * Buttons 1-12: Each corresponds to specific reef pos
+         * Buttons 13-16 (axis): Each corresponds to levels of the elevator
+         */
 
         configureBindings();
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
         autoChooser.addRoutine("2C Optimized Test", autos::getTwoCoralOptimizedTest);
-//        autoChooser.select("2C Test");
+        autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
 
         SmartDashboard.putData("Mechanism", mech);
@@ -113,23 +131,22 @@ public class RobotContainer {
         // ALGAE DESCORE
         xbox.leftBumper().whileTrue(
                 elevator.L4().andThen(alg.deploy().alongWith(alg.spin())))
-            .onFalse(alg.stow().andThen(elevator.L0()));
+            .onFalse(elevator.L0());
         xbox.leftTrigger().whileTrue(
                 elevator.L3().andThen(alg.deploy().alongWith(alg.spin())))
-            .onFalse(alg.stow().andThen(elevator.L0()));
+            .onFalse(elevator.L0());
 
         // ALGAE GROUND INTAKE
         xbox.rightBumper().whileTrue(
-                alg.deploy().alongWith(alg.reverse()))
-            .onFalse(alg.stow());
+                alg.deploy().alongWith(alg.reverse()));
+//                .onFalse(alg.stow().onlyIf(alg::notAlgae));
 
         // ALGAE PROCESSOR
         xbox.a().whileTrue(
                 alg.deploy().alongWith(alg.spin()))
             .onFalse(alg.stow());
 
-        //driverassist
-//        drivetrain.getInstance();
+        xbox.back().onTrue(new InstantCommand(alg::triggerHoming));
 
         for(int i = 0; i < 12; i++){
                 JoystickButton button = new JoystickButton(buttonBoard, 12-i);
@@ -137,27 +154,17 @@ public class RobotContainer {
                 button.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(id)));
         }
 
-        Trigger xAxisZeroTrigger = new Trigger(() -> buttonBoard.getX() == -1.0);
-        Trigger xAxisOneTrigger = new Trigger(() -> buttonBoard.getX() == 1.0);
-        Trigger yAxisZeroTrigger = new Trigger(() -> buttonBoard.getY() == -1.0);
-        Trigger yAxisOneTrigger = new Trigger(() -> buttonBoard.getY() == 1.0);
-
-        xAxisZeroTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(1)));
-        xAxisOneTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(2)));
-        yAxisOneTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(3)));
-        yAxisZeroTrigger.whileTrue(new InstantCommand(() -> elevator.setLevel(4)));
-
-//        xbox.a().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
-
-
+        for(int i = 0; i < 4; i++){
+                final int id = i;
+                Trigger trig = new Trigger(() -> (id<2) ? buttonBoard.getX() == Math.pow(-1.0, id+1) : buttonBoard.getY() == Math.pow(-1.0, id));
+                trig.whileTrue(new InstantCommand(() -> elevator.setLevel(id+1)));
+        }
 
         xbox.y().whileTrue(drivetrain.getPathfindingCommand());
-        xbox.rightTrigger().whileTrue(elevator.getCommand(coral)).onFalse(elevator.L0());
+        xbox.rightTrigger()
+                .whileTrue(elevator.getCommand(coral).onlyIf(coral::hasCoral))
+                .onFalse(elevator.L0());
 
-    }
-
-    public Command getAutonomousCommand(){
-        return autoChooser.selectedCommand();
     }
 
 }

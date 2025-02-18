@@ -71,6 +71,7 @@ public class Elevator extends SubsystemBase {
     // PeriodicIO for reading/writing
     private final PeriodicIO periodicIO = new PeriodicIO();
 
+
     public MechanismLigament2d getElevatorLigament() {
         return elevatorLigament;
     }
@@ -198,8 +199,8 @@ public class Elevator extends SubsystemBase {
         // First, we set our "inputs" (voltages)
         elevatorSim.setInputVoltage(motorVoltage);
 
-    //     // Next, we update it. The standard loop time is 20ms.
-    //     elevatorSim.update(0.020);
+         // Next, we update it. The standard loop time is 20ms.
+         elevatorSim.update(0.020);
 
         // Finally, we set our simulated encoder's readings and simulated battery voltage
         mainTalonFXSim.setRawRotorPosition(elevatorSim.getPositionMeters() * rotationsPerMeter * GEAR_RATIO);

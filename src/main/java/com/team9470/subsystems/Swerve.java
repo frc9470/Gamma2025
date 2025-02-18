@@ -308,8 +308,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 }
                 // Create the constraints to use while pathfinding
                 PathConstraints constraints = new PathConstraints(
-                        TunerConstants.maxVelocity/3, TunerConstants.maxAcceleration/3,
-                        Units.degreesToRadians(TunerConstants.maxAngularVelocity/3), Units.degreesToRadians(TunerConstants.maxAngularAcceleration/3));
+                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
+                        Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
 
                 // Since AutoBuilder is configured, we can use it to build pathfinding commands
                 pathfindingCommand = AutoBuilder.pathfindToPose(
@@ -340,7 +340,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public void pathfindClosestReefPos() {
-        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
+        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
 
         // Get the current robot pose at initialization.
         Pose2d currentPose = getPose();
@@ -370,13 +370,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         }
         else{
             Pose2d[] reefPoses;
-            // if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-            //     reefPoses = DriverAssistConstants.RED_REEF_POSITIONS;
-            // }
-            // else{
-            //     reefPoses = DriverAssistConstants.BLUE_REEF_POSITIONS;
-            // }
-            reefPoses = DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red);
+            reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
             curReefPos = reefPoses[posId];
         }
     }
@@ -515,7 +509,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
         if(visionPoseAcceptor.shouldAcceptVision(timestampSeconds, visionRobotPoseMeters, getPose(), getRobotTwist(), DriverStation.isAutonomous())){
-            System.out.println("ADDING VISION!");
             super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
         }
     }

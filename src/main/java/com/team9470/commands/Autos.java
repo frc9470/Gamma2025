@@ -7,8 +7,11 @@ import com.team9470.subsystems.AlgaeArm;
 import com.team9470.subsystems.CoralManipulator;
 import com.team9470.subsystems.Elevator;
 import com.team9470.subsystems.Swerve;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Autos {
     private final AutoFactory autoFactory;
@@ -25,10 +28,28 @@ public class Autos {
         this.swerve = swerve;
     }
 
+    public static final double SCORING_DELAY = 0.3;
+
     public Command scoreL4(){
         return elevator.L4().andThen(
-                coralManipulator.scoreCommand().withTimeout(0.5))
+                coralManipulator.scoreCommand().withTimeout(SCORING_DELAY))
                 .andThen(elevator.L0());
+    }
+
+    int count = 0;
+    public Command scoreL4WaitLower(Command driveAway, double delay){
+        return elevator.L4()
+                .andThen(new InstantCommand(() -> SmartDashboard.putNumber("Auto L4 Count", ++count)))
+                .andThen(
+                    coralManipulator.scoreCommand().withTimeout(SCORING_DELAY)
+                )
+                .andThen(
+                        driveAway
+                        .alongWith(
+                                new WaitCommand(delay).andThen(elevator.L0())
+                        )
+                );
+
     }
 
     public Command scoreCoral() {
@@ -88,19 +109,20 @@ public class Autos {
         routine.active().onTrue(
             Commands.sequence(
                     toC9.resetOdometry(),
-                    toC9.cmd(),
-                    C9toSource.cmd(),
-                    toC10.cmd(),
-                    C10toSource.cmd()
+                    toC9.cmd()
             )
         );
 
         toC9.done().onTrue(
-                scoreL4().andThen(C9toSource.cmd())
+                scoreL4WaitLower(C9toSource.cmd(), 0.5)
+        );
+
+        C9toSource.done().onTrue(
+                toC10.cmd()
         );
 
         toC10.done().onTrue(
-                scoreL4().andThen(C10toSource.cmd())
+                scoreL4WaitLower(C10toSource.cmd(), 0.5)
         );
 
         return routine;

@@ -202,7 +202,7 @@ public class AlgaeArm extends SubsystemBase {
             case IDLE:
                 // Example: if the arm is near its target (and a timeout has passed), start homing.
                 boolean timeOut = periodicIO.timestamp.minus(homingStartTime).gt(AlgaeConstants.HOMING_TIMEOUT);
-                if (targetAngle.isNear(periodicIO.position, Degrees.of(0.5)) && timeOut && needsHoming) {
+                if (AlgaeConstants.STOW_ANGLE.isNear(periodicIO.position, Degrees.of(5)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }
@@ -258,6 +258,8 @@ public class AlgaeArm extends SubsystemBase {
         SmartDashboard.putNumber("AlgaeArm/Setpoint_deg", periodicIO.setpointAngle.in(Degrees));
         // Also log roller motor current for algae detection.
         SmartDashboard.putNumber("AlgaeArm/RollerCurrent_A", rollerMotor.getStatorCurrent().asSupplier().get().in(Amps));
+        SmartDashboard.putBoolean("AlgaeArm/HasAlgae", hasAlgae());
+
     }
 
     // --- Public Methods ---
@@ -302,9 +304,17 @@ public class AlgaeArm extends SubsystemBase {
         return getRollerCurrent().gte(AlgaeConstants.ALGAE_IN_THRESHOLD);
     }
 
+    public boolean notAlgae() {
+        return getRollerCurrent().gte(AlgaeConstants.ALGAE_IN_THRESHOLD);
+    }
+
     /** Set the roller motor speed (using a VoltageOut control). */
     public void setRollerSpeed(Voltage volts) {
         rollerMotor.setControl(new VoltageOut(volts));
+    }
+
+    public void triggerHoming() {
+        needsHoming = true;
     }
 
     // --- Command methods ---
@@ -322,6 +332,11 @@ public class AlgaeArm extends SubsystemBase {
             @Override
             public boolean isFinished() {
                 return getAngle().isNear(angle, Degrees.of(0.5));
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                triggerHoming();
             }
         };
     }
@@ -348,16 +363,11 @@ public class AlgaeArm extends SubsystemBase {
     }
 
     public Command stow() {
-        return new Command() {
-            @Override
-            public void execute() {
-                setTargetAngle(AlgaeConstants.STOW_ANGLE);
-            }
-            @Override
-            public boolean isFinished() {
-                return getAngle().isNear(AlgaeConstants.STOW_ANGLE, Degrees.of(2));
-            }
-        };
+        return getMoveToAngleCommand(AlgaeConstants.STOW_ANGLE);
+    }
+
+    public Command stowDown() {
+        return getMoveToAngleCommand(AlgaeConstants.STOW_DOWN);
     }
 
     public Command spin() {

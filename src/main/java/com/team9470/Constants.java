@@ -4,11 +4,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -67,7 +63,7 @@ public final class Constants {
         public static final Distance HOME_POSITION = Meters.of(0);
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
-        public static final Distance L3 = Meters.of(.7);
+        public static final Distance L3 = Meters.of(.76);
         public static final Distance L4 = Meters.of(1.37);
         public static final Distance INTAKE = Meters.of(0);
 
@@ -108,9 +104,10 @@ public final class Constants {
         public static final double KG = 0;
         public static final double KV = 0;
         public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
-        public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
+        public static final Current ALGAE_IN_THRESHOLD = Amps.of(2); // Current
         public static final Angle ANGLE_UP = Degrees.of(-30);
         public static final Angle STOW_ANGLE = Degrees.of(93.98);
+        public static final Angle STOW_DOWN = Degrees.of(-80);
 
         public static final double CRUISE_VELOCITY = 10;
         public static final double ACCELERATION = 20;
@@ -122,7 +119,7 @@ public final class Constants {
         public static final Angle HOMING_ANGLE = Degrees.of(93.98);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);
-        public static final Voltage HOLDING_OUTPUT = Volts.of(1);
+        public static final Voltage HOLDING_OUTPUT = Volts.of(-1);
 
         public static final double GEAR_RATIO = 4.2;
 
@@ -169,7 +166,7 @@ public final class Constants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
         public static final Voltage FUNNEL_SPEED = Volts.of(-3);
-        public static final Voltage HOLD_SPEED = Volts.of(-.5);
+        public static final Voltage HOLD_SPEED = Volts.of(-.6);
         public static final double BREAK_TIMEOUT = .1;
     }
 
@@ -194,43 +191,105 @@ public final class Constants {
 
         public static final double centerX = 4.47675;
         public static final double centerY = 4.0259;
-        public static final double radius = 1.58115;
+        public static final double radius = 1.51;
         public static final double pipeDistance = 0.1651;
         public static final double fieldLength = 17.548225;
-        
-        public static Pose2d[] getReefPositions(DriverStation.Alliance alliance){
+
+        public static Pose2d[] getReefPositions(DriverStation.Alliance alliance) {
             Pose2d[] REEF_POSITIONS = new Pose2d[12];
             for (int i = 0; i < 6; i++) {
                 double angle1 = Math.PI / 6 + Math.PI / 3 * i;
                 double angle2 = Math.PI / 6 + Math.PI / 3 * (i + 1);
-                
+
                 double x1 = centerX + radius * Math.cos(angle1);
                 double y1 = centerY + radius * Math.sin(angle1);
                 double x2 = centerX + radius * Math.cos(angle2);
                 double y2 = centerY + radius * Math.sin(angle2);
-                
+
                 // Compute the midpoint of the side
                 double midX = (x1 + x2) / 2;
                 double midY = (y1 + y2) / 2;
 
-                
+
+
                 // Compute the angle to face away from the hexagon center
                 if(alliance == DriverStation.Alliance.Blue){
+                    System.out.println("Getting Blue");
                     double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
-                    
+
                     REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                     REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                 }
                 else{
+                    System.out.println("Getting Red");
                     double faceAngle = -Math.atan2(midY - centerY, midX - centerX);
-                    
+
                     REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                     REEF_POSITIONS[2*i+1] = new Pose2d(fieldLength - midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                 }
                 System.out.println(REEF_POSITIONS[2*i]);
                 System.out.println(REEF_POSITIONS[2*i+1]);
             }
-            return REEF_POSITIONS;
+
+            // Rotate the positions 4 spots clockwise.
+            Pose2d[] rotatedPositions = new Pose2d[12];
+            for (int i = 0; i < 12; i++) {
+                int newIndex = (i + 4 + 12) % 12;
+                rotatedPositions[newIndex] = REEF_POSITIONS[i];
+            }
+
+            // Flip positions for red alliance using the provided helper.
+//            boolean isRedAlliance = (alliance == DriverStation.Alliance.Red);
+//            for (int i = 0; i < 12; i++) {
+//                rotatedPositions[i] = handleAllianceFlip(rotatedPositions[i], isRedAlliance);
+//            }
+
+            return rotatedPositions;
+        }
+    }
+
+    public static class PoseMath {
+        public static Distance kFieldLength = Inches.of(651.223);
+        public static Distance kFieldWidth = Inches.of(323.277);
+
+        public static Pose2d handleAllianceFlip(Pose2d blue_pose, boolean is_red_alliance) {
+            if (is_red_alliance) {
+                blue_pose = mirrorAboutX(blue_pose, kFieldLength.in(Meters) / 2.0);
+            }
+            return blue_pose;
+        }
+
+        public static Translation2d handleAllianceFlip(Translation2d blue_translation, boolean is_red_alliance) {
+            if (is_red_alliance) {
+                blue_translation = mirrorAboutX(blue_translation,kFieldLength.in(Meters) / 2.0);
+            }
+            return blue_translation;
+        }
+
+        public static Rotation2d handleAllianceFlip(Rotation2d blue_rotation, boolean is_red_alliance) {
+            if (is_red_alliance) {
+                blue_rotation = mirrorAboutX(blue_rotation);
+            }
+            return blue_rotation;
+        }
+
+        public static double distanceFromAllianceWall(double x_coordinate, boolean is_red_alliance) {
+            if (is_red_alliance) {
+                return kFieldLength.in(Meters) - x_coordinate;
+            }
+            return x_coordinate;
+        }
+
+        public static Pose2d mirrorAboutX(Pose2d pose, double xValue) {
+            return new Pose2d(mirrorAboutX(pose.getTranslation(), xValue), mirrorAboutX(pose.getRotation()));
+        }
+
+        public static Translation2d mirrorAboutX(Translation2d translation, double xValue) {
+            return new Translation2d(xValue + (xValue - translation.getX()), translation.getY());
+        }
+
+        public static Rotation2d mirrorAboutX(Rotation2d rotation) {
+            return new Rotation2d(-rotation.getCos(), -rotation.getSin());
         }
     }
 }

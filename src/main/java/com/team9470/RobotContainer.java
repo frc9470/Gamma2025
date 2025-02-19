@@ -82,8 +82,8 @@ public class RobotContainer {
         configureBindings();
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
+        autoChooser.addRoutine("3C Test", autos::getThreeCoralTest);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
-        autoChooser.addRoutine("2C Optimized Test", autos::getTwoCoralOptimizedTest);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
 

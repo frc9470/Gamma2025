@@ -97,6 +97,76 @@ public class Autos {
         return routine;
     }
 
+    public AutoRoutine getFourCoralOptimizedTest() {
+        AutoRoutine routine = autoFactory.newRoutine("4C Test");
+
+        // Trajectories
+        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
+
+        routine.active().onTrue(
+            Commands.sequence(
+                    toC9.resetOdometry(),
+                    Commands.parallel(
+                        toC9.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C9toSource.cmd(),
+                        elevator.L0()
+                    ),
+                    Commands.parallel(
+                        toC10.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C10toSource.cmd(),
+                        elevator.L0()
+                    ),
+                    Commands.parallel(
+                        toC11.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C11toSource.cmd(),
+                        elevator.L0()
+                    ),
+                    Commands.parallel(
+                        toC12.cmd(),
+                        elevator.L4()
+                    ),
+                    Commands.parallel(
+                        C12toSource.cmd(),
+                        elevator.L0()
+                    )
+            )
+        );
+
+        toC9.done().onTrue(
+                scoreCoral()
+        );
+
+        toC10.done().onTrue(
+                scoreCoral()
+        );
+
+        toC11.done().onTrue(
+                scoreCoral()
+        );
+
+        toC12.done().onTrue(
+                scoreCoral()
+        );
+
+        return routine;
+    }
+
     public AutoRoutine getTwoCoralTest() {
         AutoRoutine routine = autoFactory.newRoutine("2C Test");
 

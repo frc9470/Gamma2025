@@ -29,6 +29,7 @@ public class Autos {
     }
 
     public static final double SCORING_DELAY = 0.3;
+    private static final double ELEVATOR_DELAY = 0.5;
 
     public Command scoreL4(){
         return elevator.L4().andThen(
@@ -56,48 +57,7 @@ public class Autos {
         return coralManipulator.scoreCommand();
     }
 
-    public AutoRoutine getFourCoralTest(){
-        AutoRoutine routine = autoFactory.newRoutine("4C Test");
-
-        // Trajectories
-        AutoTrajectory startToC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
-        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
-        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
-        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
-        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
-        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
-        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
-        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
-
-        routine.active().onTrue(
-                Commands.sequence(
-                        startToC1.resetOdometry(),
-                        startToC1.cmd()
-                )
-        );
-
-        startToC1.done().onTrue(
-                scoreL4().andThen(C1toSource.cmd())
-        );
-
-        C1toSource.done().onTrue(toC12.cmd());
-        toC12.done().onTrue(scoreL4().andThen(C12toSource.cmd()));
-
-        C12toSource.done().onTrue(toC11.cmd());
-        toC11.done().onTrue(scoreL4().andThen(C11toSource.cmd()));
-
-        C11toSource.done().onTrue(toC10.cmd());
-        toC10.done().onTrue(scoreL4().andThen(C10toSource.cmd()));
-
-        C10toSource.done().onTrue(toC9.cmd());
-        toC9.done().onTrue(scoreL4().andThen(C9toSource.cmd()));
-
-        return routine;
-    }
-
-    public AutoRoutine getFourCoralOptimizedTest() {
+    public AutoRoutine getFourCoralTest() {
         AutoRoutine routine = autoFactory.newRoutine("4C Test");
 
         // Trajectories
@@ -113,55 +73,90 @@ public class Autos {
         routine.active().onTrue(
             Commands.sequence(
                     toC9.resetOdometry(),
-                    Commands.parallel(
-                        toC9.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C9toSource.cmd(),
-                        elevator.L0()
-                    ),
-                    Commands.parallel(
-                        toC10.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C10toSource.cmd(),
-                        elevator.L0()
-                    ),
-                    Commands.parallel(
-                        toC11.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C11toSource.cmd(),
-                        elevator.L0()
-                    ),
-                    Commands.parallel(
-                        toC12.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C12toSource.cmd(),
-                        elevator.L0()
-                    )
+                    toC9.cmd(),
+                    toC10.cmd(),
+                    toC11.cmd(),
+                    toC12.cmd()
             )
         );
 
+        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
         toC9.done().onTrue(
-                scoreCoral()
+            scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
         );
 
         toC10.done().onTrue(
-                scoreCoral()
+            scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
         );
 
         toC11.done().onTrue(
-                scoreCoral()
+            scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
         );
 
         toC12.done().onTrue(
-                scoreCoral()
+            scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getThreeCoralTest() {
+        AutoRoutine routine = autoFactory.newRoutine("4C Test");
+
+        // Trajectories
+        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+
+        routine.active().onTrue(
+            Commands.sequence(
+                    toC9.resetOdometry(),
+                    toC9.cmd(),
+                    toC10.cmd(),
+                    toC11.cmd()
+            )
+        );
+
+        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+            elevator.L4()
+        );
+
+        toC9.done().onTrue(
+            scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
+        );
+
+        toC10.done().onTrue(
+            scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
+        );
+
+        toC11.done().onTrue(
+            scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
         );
 
         return routine;
@@ -197,48 +192,4 @@ public class Autos {
 
         return routine;
     }
-
-    public AutoRoutine getTwoCoralOptimizedTest() {
-        AutoRoutine routine = autoFactory.newRoutine("2C Test");
-
-        // Trajectories
-        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
-        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
-        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
-        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
-
-        routine.active().onTrue(
-            Commands.sequence(
-                    toC9.resetOdometry(),
-                    Commands.parallel(
-                        toC9.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C9toSource.cmd(),
-                        elevator.L0()
-                    ),
-                    Commands.parallel(
-                        toC10.cmd(),
-                        elevator.L4()
-                    ),
-                    Commands.parallel(
-                        C10toSource.cmd(),
-                        elevator.L0()
-                    )
-            )
-        );
-
-        toC9.done().onTrue(
-                scoreCoral()
-        );
-
-        toC10.done().onTrue(
-                scoreCoral()
-        );
-
-        return routine;
-    }
-
-
 }

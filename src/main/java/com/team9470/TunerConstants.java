@@ -197,7 +197,7 @@ public class TunerConstants {
         return new Swerve(DrivetrainConstants,
                 200, odometryStandardDeviation, visionStandardDeviation,
                 FrontLeft, FrontRight, BackLeft, BackRight);
-        );
+
     }
 
 

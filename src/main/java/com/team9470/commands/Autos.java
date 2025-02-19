@@ -73,10 +73,7 @@ public class Autos {
         routine.active().onTrue(
             Commands.sequence(
                     toC9.resetOdometry(),
-                    toC9.cmd(),
-                    toC10.cmd(),
-                    toC11.cmd(),
-                    toC12.cmd()
+                    toC9.cmd()
             )
         );
 
@@ -112,6 +109,18 @@ public class Autos {
             scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
         );
 
+        C9toSource.done().onTrue(
+                toC10.cmd()
+        );
+
+        C10toSource.done().onTrue(
+                toC11.cmd()
+        );
+
+        C11toSource.done().onTrue(
+                toC12.cmd()
+        );
+
         return routine;
     }
 
@@ -129,9 +138,7 @@ public class Autos {
         routine.active().onTrue(
             Commands.sequence(
                     toC9.resetOdometry(),
-                    toC9.cmd(),
-                    toC10.cmd(),
-                    toC11.cmd()
+                    toC9.cmd()
             )
         );
 
@@ -157,6 +164,14 @@ public class Autos {
 
         toC11.done().onTrue(
             scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
+        );
+
+        C9toSource.done().onTrue(
+                toC10.cmd()
+        );
+
+        C10toSource.done().onTrue(
+                toC11.cmd()
         );
 
         return routine;

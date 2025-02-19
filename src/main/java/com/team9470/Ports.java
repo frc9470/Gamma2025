@@ -15,6 +15,7 @@ public class Ports {
     public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(16, "rio");
     public static final CanDeviceId FUNNEL = new CanDeviceId(19, "rio");
 
+    public static final CanDeviceId CANdle = new CanDeviceId(20, "rio");
     /**
      * Beam Break IDs
      */

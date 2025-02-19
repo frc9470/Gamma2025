@@ -9,10 +9,7 @@ import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.commands.Autos;
-import com.team9470.subsystems.AlgaeArm;
-import com.team9470.subsystems.CoralManipulator;
-import com.team9470.subsystems.Elevator;
-import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.*;
 import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -48,6 +45,7 @@ public class RobotContainer {
     private final Elevator elevator = new Elevator(mech);
     private final CoralManipulator coral = new CoralManipulator();
     private final AlgaeArm alg = new AlgaeArm(elevator.getElevatorLigament());
+    private final LEDs leds = new LEDs();
 
     // ----------------      VISION     --------------------
     private final Vision vision = Vision.getInstance();
@@ -164,6 +162,8 @@ public class RobotContainer {
         xbox.rightTrigger()
                 .whileTrue(elevator.getCommand(coral).onlyIf(coral::hasCoral))
                 .onFalse(elevator.L0());
+
+        xbox.start().onTrue(new InstantCommand(leds::incrementAnimation));
 
     }
 

@@ -1,4 +1,4 @@
-package com.team9470;
+package com.team9470.util;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;

@@ -4,6 +4,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
@@ -11,6 +16,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static edu.wpi.first.units.Units.*;
+
+import java.nio.file.Path;
+import java.util.List;
 
 public final class Constants {
     public static class Global {
@@ -192,8 +200,56 @@ public final class Constants {
         public static final double centerX = 4.47675;
         public static final double centerY = 4.0259;
         public static final double radius = 1.51;
+        public static final double pathRadius = 1.8;
         public static final double pipeDistance = 0.1651;
         public static final double fieldLength = 17.548225;
+        
+        public static PathPlannerPath[] getPaths(){
+            PathPlannerPath[] paths = new PathPlannerPath[12];
+            PathConstraints constraints = new PathConstraints(
+                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
+                        Math.toRadians(TunerConstants.maxAngularVelocity), Math.toRadians(TunerConstants.maxAngularAcceleration));
+            // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0);
+            for (int i = 0; i < 6; i++) {
+                double angle1 = Math.PI / 6 + Math.PI / 3 * i;
+                double angle2 = Math.PI / 6 + Math.PI / 3 * (i + 1);
+
+                double x1 = centerX + pathRadius * Math.cos(angle1);
+                double y1 = centerY + pathRadius * Math.sin(angle1);
+                double x2 = centerX + pathRadius * Math.cos(angle2);
+                double y2 = centerY + pathRadius * Math.sin(angle2);
+
+                double x1hex = centerX + radius * Math.cos(angle1);
+                double y1hex = centerY + radius * Math.sin(angle1);
+                double x2hex = centerX + radius * Math.cos(angle2);
+                double y2hex = centerY + radius * Math.sin(angle2);
+
+                // Compute the midpoint of the side
+                double midX = (x1 + x2) / 2;
+                double midY = (y1 + y2) / 2;
+
+                double midXhex = (x1hex + x2hex) / 2;
+                double midYhex = (y1hex + y2hex) / 2;
+
+
+                System.out.println("Getting Blue");
+                double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
+                List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+                    new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle)),
+                    new Pose2d(midXhex - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midYhex + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), Rotation2d.fromDegrees(0))
+                );
+                PathPlannerPath path1 = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                paths[2*i] = path1;
+                List<Waypoint> waypoints2 = PathPlannerPath.waypointsFromPoses(
+                    new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle)),
+                    new Pose2d(midXhex + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midYhex - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), Rotation2d.fromDegrees(0))
+                );
+                PathPlannerPath path2 = new PathPlannerPath(waypoints2, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                paths[2*i+1] = path2;
+            }
+
+            return paths;
+        }
 
         public static Pose2d[] getReefPositions(DriverStation.Alliance alliance) {
             Pose2d[] REEF_POSITIONS = new Pose2d[12];
@@ -201,10 +257,10 @@ public final class Constants {
                 double angle1 = Math.PI / 6 + Math.PI / 3 * i;
                 double angle2 = Math.PI / 6 + Math.PI / 3 * (i + 1);
 
-                double x1 = centerX + radius * Math.cos(angle1);
-                double y1 = centerY + radius * Math.sin(angle1);
-                double x2 = centerX + radius * Math.cos(angle2);
-                double y2 = centerY + radius * Math.sin(angle2);
+                double x1 = centerX + pathRadius * Math.cos(angle1);
+                double y1 = centerY + pathRadius * Math.sin(angle1);
+                double x2 = centerX + pathRadius * Math.cos(angle2);
+                double y2 = centerY + pathRadius * Math.sin(angle2);
 
                 // Compute the midpoint of the side
                 double midX = (x1 + x2) / 2;
@@ -214,14 +270,12 @@ public final class Constants {
 
                 // Compute the angle to face away from the hexagon center
                 if(alliance == DriverStation.Alliance.Blue){
-                    System.out.println("Getting Blue");
                     double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
 
                     REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                     REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                }
+                } 
                 else{
-                    System.out.println("Getting Red");
                     double faceAngle = -Math.atan2(midY - centerY, midX - centerX);
 
                     REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));

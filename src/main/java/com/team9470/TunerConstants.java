@@ -15,6 +15,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.*;
@@ -58,7 +59,7 @@ public class TunerConstants {
     private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.FusedCANcoder;
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(120.0);
+    private static final Current kSlipCurrent = Amps.of(30.0);
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
@@ -120,8 +121,8 @@ public class TunerConstants {
 
 
     // pathfinding constraints
-    public static final double maxVelocity = kSpeedAt12Volts.in(MetersPerSecond)/4;
-    public static final double maxAcceleration = 9.812/4;
+    public static final double maxVelocity = kSpeedAt12Volts.in(MetersPerSecond)/2;
+    public static final double maxAcceleration = 9.812/2;
     public static final double maxAngularVelocity = 572.96; // degrees
     public static final double maxAngularAcceleration = 2480.33; // degrees
 
@@ -183,15 +184,19 @@ public class TunerConstants {
                     kBackRightXPos, kBackRightYPos, kInvertRightSide, kBackRightSteerMotorInverted, kBackRightEncoderInverted
             );
 
+    // STDDEVS
+    public static final Matrix<N3, N1> odometryStandardDeviation = new Matrix<>(VecBuilder.fill(0.003, 0.003, 0.002));
+    public static final Matrix<N3, N1> visionStandardDeviation = new Matrix<>(VecBuilder.fill(0.02, 0.02, 0.02));
+
 
     /**
      * Creates a CommandSwerveDrivetrain instance.
      * This should only be called once in your robot program,.
      */
     public static Swerve createDrivetrain() {
-        return new Swerve(
-                DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight
-        );
+        return new Swerve(DrivetrainConstants,
+                200, odometryStandardDeviation, visionStandardDeviation,
+                FrontLeft, FrontRight, BackLeft, BackRight);
     }
 
 

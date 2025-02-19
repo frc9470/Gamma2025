@@ -35,9 +35,9 @@ public class CoralManipulator extends SubsystemBase {
     @Override
     public void periodic() {
         coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
-//        if(Elevator.getInstance())
+        if(!hasCoral())
             funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
-//        else funnelMotor.stopMotor();
+        else funnelMotor.stopMotor();
 
         SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
         SmartDashboard.putBoolean("CoralManipulator/HasCoral", hasCoral());

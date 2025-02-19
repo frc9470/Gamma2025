@@ -231,18 +231,23 @@ public final class Constants {
                 double midXhex = (x1hex + x2hex) / 2;
                 double midYhex = (y1hex + y2hex) / 2;
 
+
+                System.out.println("Getting Blue");
                 double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
                 List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
                     new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle)),
                     new Pose2d(midXhex - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midYhex + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), Rotation2d.fromDegrees(0))
                 );
-                paths[2*i] = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                PathPlannerPath path1 = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                paths[2*i] = path1;
                 List<Waypoint> waypoints2 = PathPlannerPath.waypointsFromPoses(
                     new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle)),
                     new Pose2d(midXhex + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midYhex - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), Rotation2d.fromDegrees(0))
                 );
-                paths[2*i+1] = new PathPlannerPath(waypoints2, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                PathPlannerPath path2 = new PathPlannerPath(waypoints2, constraints, null, new GoalEndState(0.0, new Rotation2d(faceAngle)));
+                paths[2*i+1] = path2;
             }
+
             return paths;
         }
 
@@ -265,14 +270,12 @@ public final class Constants {
 
                 // Compute the angle to face away from the hexagon center
                 if(alliance == DriverStation.Alliance.Blue){
-                    System.out.println("Getting Blue");
                     double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
 
                     REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                     REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                }
+                } 
                 else{
-                    System.out.println("Getting Red");
                     double faceAngle = -Math.atan2(midY - centerY, midX - centerX);
 
                     REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));

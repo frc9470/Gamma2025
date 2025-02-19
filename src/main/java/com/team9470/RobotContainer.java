@@ -162,6 +162,8 @@ public class RobotContainer {
         xbox.rightTrigger()
                 .whileTrue(elevator.getCommand(coral).onlyIf(coral::hasCoral))
                 .onFalse(elevator.L0());
+        
+        xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1))); // Pathfind to closest reef position
 
         xbox.start().onTrue(new InstantCommand(leds::incrementAnimation));
 

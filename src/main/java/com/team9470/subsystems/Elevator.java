@@ -440,6 +440,14 @@ public class Elevator extends SubsystemBase {
         return getMoveToPositionCommand(ElevatorConstants.L4);
     }
 
+    public Command algaeL2() {
+        return getMoveToPositionCommand(ElevatorConstants.AL2);
+    }
+
+    public Command algaeL3() {
+        return getMoveToPositionCommand(ElevatorConstants.AL3);
+    }
+
     public Command intake(){
         return getMoveToPositionCommand(ElevatorConstants.INTAKE);
     }

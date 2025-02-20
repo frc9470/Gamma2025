@@ -11,7 +11,7 @@ public class TimedLEDState {
 	public static final TimedLEDState NO_VISION = new TimedLEDState("NO_VISION", Double.POSITIVE_INFINITY, Color.ORANGE);
 	public static final TimedLEDState EMERGENCY = new TimedLEDState("EMERGENCY", kFlashInterval, Color.RED, Color.off());
 	
-	public static final TimedLEDState CORAL_HELD_SHOT = new TimedLEDState("NOTE_HELD_SHOT", Double.POSITIVE_INFINITY, Color.GREEN);
+	public static final TimedLEDState CORAL_HELD_SHOT = new TimedLEDState("CORAL_HELD_SHOT", Double.POSITIVE_INFINITY, Color.GREEN);
 	public static final TimedLEDState CORAL_HELD_FERRY =	new TimedLEDState("NOTE_HELD_FERRY", Double.POSITIVE_INFINITY, Color.YELLOW);
 
 	public static final TimedLEDState ELEVATOR_LOADING = new TimedLEDState("ELEVATOR_LOADING", kFlashInterval, Color.RED, Color.off());

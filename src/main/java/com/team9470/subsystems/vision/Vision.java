@@ -84,7 +84,11 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        super.simulationPeriodic();
+        visionSim.update(Swerve.getInstance().getPose());
+    }
+
+    public boolean isFullyConnected(){
+        return devices.stream().allMatch(VisionDevice::isConnected);
     }
 
     public boolean isVisionDisabled() {

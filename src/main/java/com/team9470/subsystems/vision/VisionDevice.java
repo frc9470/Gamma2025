@@ -3,7 +3,6 @@ package com.team9470.subsystems.vision;
 import com.ctre.phoenix6.Utils;
 import com.team9470.FieldConstants;
 import com.team9470.subsystems.Swerve;
-import com.team9470.util.GeomUtil;
 import com.team9470.util.LogUtil;
 import com.team9470.util.Util;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -11,7 +10,9 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -28,14 +29,22 @@ public class VisionDevice {
     // private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
     private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
+    private final PhotonPoseEstimator secondPoseEstimator;
+
     public VisionDevice(String name, Transform3d transform) {
         this.photonCamera = new PhotonCamera(name);
         photonPoseEstimator = new PhotonPoseEstimator(
                 aprilTagFieldLayout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                transform// Robot to camera transform (adjust as needed)
+                transform
         );
         photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+
+        secondPoseEstimator = new PhotonPoseEstimator(
+                aprilTagFieldLayout,
+                PhotonPoseEstimator.PoseStrategy.PNP_DISTANCE_TRIG_SOLVE,
+                transform
+        );
 
     }
 
@@ -73,17 +82,9 @@ public class VisionDevice {
                 // Optional<Pose3d> tagPose = FieldLayout.kTagMap.getTagPose(tagId);
                 Optional<Pose3d> tagPose = aprilTagFieldLayout.getTagPose(tagId);
                 tagPose.ifPresent(tagPoses::add);
-
-                Transform3d bestTransform = target.getBestCameraToTarget();
-                double distance = bestTransform.getTranslation().getNorm();
-
-                // Add tx, ty observation
-                addTxTyObservation(new TxTyObservation(result.getTargets().get(0).getFiducialId(), 0, target.getYaw(), target.getPitch(), distance, timestamp));
             }
 
-            if (tagPoses.isEmpty()) {
-                return;
-            }
+            if (tagPoses.isEmpty()) return;
 
             // Calculate distances and statistics
             Pair<Double, Double> distanceStats = calculateDistanceStatistics(tagPoses, cameraPose);
@@ -108,6 +109,18 @@ public class VisionDevice {
 //            double rotationDegrees = calculateRotation(pose, Swerve.isRedAlliance());
 
 //        logRotation(rotationDegrees);
+
+            // tx, ty
+            secondPoseEstimator.addHeadingData(timestamp, robotPose.getRotation());
+            Optional<EstimatedRobotPose> singleTagEstimate = secondPoseEstimator.update(result);
+            if(singleTagEstimate.isEmpty()) return;
+            EstimatedRobotPose singleTagPose = singleTagEstimate.get();
+            PhotonTrackedTarget target = result.getTargets().get(0);
+
+            swerve.addTxTyPoseRecord(target.getFiducialId(),
+                            singleTagPose.estimatedPose.toPose2d(),
+                            target.getBestCameraToTarget().getTranslation().getNorm(),
+                            timestamp);
 
         }
     }
@@ -175,63 +188,6 @@ public class VisionDevice {
         }
     }
 
-    public void addTxTyObservation(TxTyObservation observation) {
-        Swerve swerve = Swerve.getInstance();
-        var txTyPoses = swerve.getTxTyPoses();
-
-        // Skip if current data for tag is newer
-        if (txTyPoses.containsKey(observation.tagId())
-                && txTyPoses.get(observation.tagId()).timestamp() >= observation.timestamp()) {
-            return;
-        }
-
-        // Get rotation at timestamp
-        var sample = swerve.samplePoseAt(observation.timestamp());
-        if (sample.isEmpty()) {
-            // exit if not there
-            return;
-        }
-        // scuffed latency compensation (odom doesnt exist)
-        // TODO: FIX PLEASE
-        Rotation2d robotRotation =
-                swerve.getPose().transformBy(new Transform2d(swerve.getPose(), sample.get())).getRotation();
-
-        double tx = observation.tx();
-        double ty = observation.ty();
-
-        // TODO DOUBLE CHECK if this is even right
-        Pose3d cameraPose = GeomUtil.toPose3d(photonPoseEstimator.getRobotToCameraTransform());
-
-        // Use 3D distance and tag angles to find robot pose
-        Translation2d camToTagTranslation =
-                new Pose3d(Translation3d.kZero, new Rotation3d(0, ty, -tx))
-                        .transformBy(
-                                new Transform3d(new Translation3d(observation.distance(), 0, 0), Rotation3d.kZero))
-                        .getTranslation()
-                        .rotateBy(new Rotation3d(0, cameraPose.getRotation().getY(), 0))
-                        .toTranslation2d();
-        Rotation2d camToTagRotation =
-                robotRotation.plus(
-                        cameraPose.toPose2d().getRotation().plus(camToTagTranslation.getAngle()));
-        var tagPose2d = tagPoses2d.get(observation.tagId());
-        if (tagPose2d == null) return;
-        Translation2d fieldToCameraTranslation =
-                new Pose2d(tagPose2d.getTranslation(), camToTagRotation.plus(Rotation2d.kPi))
-                        .transformBy(GeomUtil.toTransform2d(camToTagTranslation.getNorm(), 0.0))
-                        .getTranslation();
-        Pose2d robotPose =
-                new Pose2d(
-                        fieldToCameraTranslation, robotRotation.plus(cameraPose.toPose2d().getRotation()))
-                        .transformBy(new Transform2d(cameraPose.toPose2d(), Pose2d.kZero));
-        // Use gyro angle at time for robot rotation
-        robotPose = new Pose2d(robotPose.getTranslation(), robotRotation);
-
-        // Add transform to current odometry based pose for latency correction
-        txTyPoses.put(
-                observation.tagId(),
-                new Swerve.TxTyPoseRecord(robotPose, camToTagTranslation.getNorm(), observation.timestamp()));
-    }
-
 //    private void logRotation(double rotationDegrees) {
 //        SmartDashboard.putNumber("Vision Heading/" + mConstants.kTableName, rotationDegrees);
 //        VisionDeviceManager.getInstance().getMovingAverage().addNumber(rotationDegrees);
@@ -251,6 +207,10 @@ public class VisionDevice {
      */
     public PhotonPoseEstimator returnPoseEstimator() {
         return photonPoseEstimator;
+    }
+
+    public boolean isConnected() {
+        return photonCamera.isConnected();
     }
 
 

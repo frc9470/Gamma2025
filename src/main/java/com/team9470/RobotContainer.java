@@ -128,10 +128,10 @@ public class RobotContainer {
         // ALGAE
         // ALGAE DESCORE
         xbox.leftBumper().whileTrue(
-                elevator.L4().andThen(alg.deploy().alongWith(alg.spin())))
+                elevator.algaeL3().andThen(alg.deploy().alongWith(alg.spin())))
             .onFalse(elevator.L0());
         xbox.leftTrigger().whileTrue(
-                elevator.L3().andThen(alg.deploy().alongWith(alg.spin())))
+                elevator.algaeL2().andThen(alg.deploy().alongWith(alg.spin())))
             .onFalse(elevator.L0());
 
         // ALGAE GROUND INTAKE
@@ -164,8 +164,6 @@ public class RobotContainer {
                 .onFalse(elevator.L0());
         
         xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1))); // Pathfind to closest reef position
-
-        xbox.start().onTrue(new InstantCommand(leds::incrementAnimation));
 
     }
 

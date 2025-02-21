@@ -21,7 +21,8 @@ public class Autos {
     private final Swerve swerve;
 
     public Autos(AlgaeArm algaeArm, CoralManipulator coralManipulator, Elevator elevator, Swerve swerve) {
-        this.autoFactory = swerve.createAutoFactory();
+        this.autoFactory = swerve.createAutoFactory((sample, isStart) -> {
+        });
         this.algaeArm = algaeArm;
         this.coralManipulator = coralManipulator;
         this.elevator = elevator;

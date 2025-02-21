@@ -234,7 +234,6 @@ public final class Constants {
                 double midYhex = (y1hex + y2hex) / 2;
 
 
-                System.out.println("Getting Blue");
                 double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
                 List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
                     new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle)),
@@ -283,8 +282,6 @@ public final class Constants {
                     REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                     REEF_POSITIONS[2*i+1] = new Pose2d(fieldLength - midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
                 }
-                System.out.println(REEF_POSITIONS[2*i]);
-                System.out.println(REEF_POSITIONS[2*i+1]);
             }
 
             // Rotate the positions 4 spots clockwise.

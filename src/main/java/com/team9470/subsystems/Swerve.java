@@ -20,6 +20,7 @@ import com.team9470.FieldConstants;
 import com.team9470.FieldConstants.Reef;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
+import com.team9470.commands.DriveToPose;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
 import com.team9470.util.AllianceFlipUtil;
 import com.team9470.util.GeomUtil;
@@ -81,11 +82,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
-
-    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(10000000, 10000000);
-    private final ProfiledPIDController pidControllerX = new ProfiledPIDController(10, 0, 0, constraints);
-    private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
-    private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, constraints);
 
 
     /* Swerve requests to apply during SysId characterization */
@@ -196,7 +192,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
-        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -231,7 +226,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
-        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -274,7 +268,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
-        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -343,51 +336,14 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public Command getPathfindingCommand(){
-        return new Command() {
-            private Command pathfindingCommand;
+        return new DriveToPose(this);
+    }
 
-            @Override
-            public void initialize() {
-                if(curReefPos == null){
-                    pathfindClosestReefPos();
-                }
-                // Create the constraints to use while pathfinding
-                PathConstraints constraints = new PathConstraints(
-                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
-                        Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
-                // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0);
-
-                // Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-                PathPlannerPath[] paths = DriverAssistConstants.getPaths();
-                // Since AutoBuilder is configured, we can use it to build pathfinding commands
-                System.out.println("GGGGGGGGGGGGG");
-                pathfindingCommand = AutoBuilder.pathfindToPose(getDriveTarget(getPose(), curReefPos), constraints);
-                System.out.println(paths[curReefPosId].getPathPoses());
-                // pathfindingCommand = AutoBuilder.pathfindToPose(
-                //         curReefPos,
-                //         constraints,
-                //         0.0 // Goal end velocity in meters/sec
-                // );
-
-                pathfindingCommand.initialize();
-            }
-
-            @Override
-            public void execute() {
-                // Delegate execution to the pathfinding command.
-                pathfindingCommand.execute();
-            }
-
-            @Override
-            public boolean isFinished() {
-                return pathfindingCommand.isFinished();
-            }
-
-            @Override
-            public void end(boolean interrupted) {
-                pathfindingCommand.end(interrupted);
-            }
-        };
+    public Pose2d getCurReefPose(){
+        if(curReefPos == null){
+            pathfindClosestReefPos();
+        }
+        return curReefPos;
     }
 
     public void pathfindClosestReefPos() {
@@ -427,12 +383,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      * @return pathfinding command
      */
     public void setReefPos(int posId){
-        System.out.println("EEEEE");
         curReefPosId = posId;
         if(posId == -1){
             curReefPos = null;
         }
         else{
+            System.out.println("EEEEEEEEEEE");
             Pose2d[] reefPoses;
             // reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
             reefPoses = DriverAssistConstants.getReefPositions(Alliance.Blue);
@@ -440,23 +396,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             curReefPos = reefPoses[posId];
         }
     }
-
-    private static Pose2d getDriveTarget(Pose2d robot, Pose2d goal) {
-        // Final line up
-        var offset = robot.relativeTo(goal);
-        double yDistance = Math.abs(offset.getY());
-        double xDistance = Math.abs(offset.getX());
-        double shiftXT =
-            MathUtil.clamp(
-                (yDistance / (Reef.faceLength * 2)) + ((xDistance - 0.3) / (Reef.faceLength * 3)),
-                0.0,
-                1.0);
-        double shiftYT = MathUtil.clamp(offset.getX() / Reef.faceLength, 0.0, 1.0);
-        return goal.transformBy(
-            GeomUtil.toTransform2d(
-                -shiftXT * 1.5,
-                Math.copySign(shiftYT * 1.5 * 0.8, offset.getY())));
-  }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
@@ -545,26 +484,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             LogUtil.recordPose2d(
                     "RobotState/TxTyPoses/" + tag.ID,
                     pose.map(pose2d -> new Pose2d[]{pose2d}).orElseGet(() -> new Pose2d[]{}));
-        }
-
-        // Get the target pose
-        if(curReefPos != null){
-            Pose2d targetPose = getDriveTarget(getPose(), curReefPos);
-            // Pose2d targetPose = curReefPos;
-            Pose2d currentPose = getPose();
-            ChassisSpeeds curSpeeds = getState().Speeds;
-            field2d.setRobotPose(targetPose);
-            
-            double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
-            double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
-            double thetaSpeed = pidControllerOmega.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
-
-            ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                xSpeed, ySpeed, thetaSpeed, currentPose.getRotation()
-            );
-            setChassisSpeeds(speeds);
-            System.out.println(curReefPos);
-            System.out.println(getPose());
         }
     }
 

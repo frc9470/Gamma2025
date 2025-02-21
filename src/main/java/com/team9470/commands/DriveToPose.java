@@ -1,248 +1,78 @@
-// package com.team9470.commands;
+package com.team9470.commands;
 
-// import edu.wpi.first.math.MathUtil;
-// import edu.wpi.first.math.geometry.Pose2d;
-// import edu.wpi.first.math.geometry.Rotation2d;
-// import edu.wpi.first.math.geometry.Transform2d;
-// import edu.wpi.first.math.util.Units;
-// import edu.wpi.first.wpilibj.Timer;
-// import edu.wpi.first.wpilibj2.command.Command;
-// import edu.wpi.first.wpilibj2.command.Commands;
-// import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-// import edu.wpi.first.wpilibj2.command.button.Trigger;
-// import java.util.Optional;
-// import java.util.OptionalDouble;
-// import java.util.function.BooleanSupplier;
-// import java.util.function.DoubleSupplier;
-// import java.util.function.Function;
-// import java.util.function.Supplier;
-// import com.team9470.util.GeomUtil;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.math.geometry.Pose2d;
 
-// import com.team9470.subsystems.Swerve;
+import com.team9470.FieldConstants.Reef;
+import com.team9470.TunerConstants;
+import com.team9470.subsystems.Swerve;
+import com.team9470.util.GeomUtil;
+import com.team9470.util.LogUtil;
 
-// public class DriveToPose extends Command {
-//  private static final LoggedTunableNumber drivekP = new LoggedTunableNumber("DriveToPose/DrivekP");
-//  private static final LoggedTunableNumber drivekD = new LoggedTunableNumber("DriveToPose/DrivekD");
-//  private static final LoggedTunableNumber thetakP = new LoggedTunableNumber("DriveToPose/ThetakP");
-//  private static final LoggedTunableNumber thetakD = new LoggedTunableNumber("DriveToPose/ThetakD");
-//  private static final LoggedTunableNumber driveMaxVelocity =
-//      new LoggedTunableNumber("DriveToPose/DriveMaxVelocity");
-//  private static final LoggedTunableNumber driveMaxVelocitySlow =
-//      new LoggedTunableNumber("DriveToPose/DriveMaxVelocitySlow");
-//  private static final LoggedTunableNumber driveMaxAcceleration =
-//      new LoggedTunableNumber("DriveToPose/DriveMaxAcceleration");
-//  private static final LoggedTunableNumber thetaMaxVelocity =
-//      new LoggedTunableNumber("DriveToPose/ThetaMaxVelocity");
-//  private static final LoggedTunableNumber thetaMaxAcceleration =
-//      new LoggedTunableNumber("DriveToPose/ThetaMaxAcceleration");
-//  private static final LoggedTunableNumber driveTolerance =
-//      new LoggedTunableNumber("DriveToPose/DriveTolerance");
-//  private static final LoggedTunableNumber thetaTolerance =
-//      new LoggedTunableNumber("DriveToPose/ThetaTolerance");
-//  private static final LoggedTunableNumber ffMinRadius =
-//      new LoggedTunableNumber("DriveToPose/FFMinRadius");
-//  private static final LoggedTunableNumber ffMaxRadius =
-//      new LoggedTunableNumber("DriveToPose/FFMaxRadius");
+public class DriveToPose extends Command{
+    Swerve drivetrain;
+    Pose2d reefPose;
 
-//  static {
-//    drivekP.initDefault(0.75);
-//    drivekD.initDefault(0.0);
-//    thetakP.initDefault(4.0);
-//    thetakD.initDefault(0.0);
-//    driveMaxVelocity.initDefault(3.8);
-//    driveMaxAcceleration.initDefault(3.0);
-//    thetaMaxVelocity.initDefault(Units.degreesToRadians(360.0));
-//    thetaMaxAcceleration.initDefault(8.0);
-//    driveTolerance.initDefault(0.01);
-//    thetaTolerance.initDefault(Units.degreesToRadians(1.0));
-//    ffMinRadius.initDefault(0.1);
-//    ffMaxRadius.initDefault(0.15);
-//  }
+    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(TunerConstants.maxVelocity, TunerConstants.maxAcceleration);
+    TrapezoidProfile.Constraints rotationConstraints = new TrapezoidProfile.Constraints(TunerConstants.maxAngularVelocity, TunerConstants.maxAngularAcceleration);
 
-//  private final Swerve drive;
-//  private final Supplier<Pose2d> target;
+    private final ProfiledPIDController pidControllerX = new ProfiledPIDController(10, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, rotationConstraints);
 
-//  private final ProfiledPIDController driveController =
-//      new ProfiledPIDController(
-//          0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), Constants.loopPeriodSecs);
-//  private final ProfiledPIDController thetaController =
-//      new ProfiledPIDController(
-//          0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), Constants.loopPeriodSecs);
+    public DriveToPose(Swerve drivetrain){
+        this.drivetrain = drivetrain;
+        
+        addRequirements(drivetrain);
+    }
 
-//  private Translation2d lastSetpointTranslation = new Translation2d();
-//  private double driveErrorAbs = 0.0;
-//  private double thetaErrorAbs = 0.0;
-//  @Getter private boolean running = false;
-//  private Supplier<Pose2d> robot = Swerve.getInstance()::getPose;
+    @Override
+    public void initialize(){
+        this.reefPose = drivetrain.getCurReefPose();
+    }
 
-//  private Supplier<Translation2d> linearFF = () -> Translation2d.kZero;
-//  private DoubleSupplier omegaFF = () -> 0.0;
+    @Override
+    public void execute() {
+        Pose2d currentPose = drivetrain.getPose();
+        Pose2d targetPose = getDriveTarget(currentPose, reefPose);
+        // Pose2d targetPose = curReefPos;
+        LogUtil.recordPose2d("Ghost", targetPose);
+        
+        double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
+        double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
+        double thetaSpeed = pidControllerOmega.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
 
-//  public DriveToPose(Swerve drive, Supplier<Pose2d> target) {
-//    this.drive = drive;
-//    this.target = target;
+        ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            xSpeed, ySpeed, thetaSpeed, currentPose.getRotation()
+        );
+        drivetrain.setChassisSpeeds(speeds);
+    }
 
-//    // Enable continuous input for theta controller
-//    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    @Override
+    public boolean isFinished() {
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.1 && drivetrain.getPose().getRotation().getDegrees() == reefPose.getRotation().getDegrees();
+    }
 
-//    addRequirements(drive);
-//  }
+    private static Pose2d getDriveTarget(Pose2d robot, Pose2d goal) {
+        // Final line up
+        var offset = robot.relativeTo(goal);
+        double yDistance = Math.abs(offset.getY());
+        double xDistance = Math.abs(offset.getX());
+        double shiftXT =
+            MathUtil.clamp(
+                (yDistance / (Reef.faceLength * 2)) + ((xDistance - 0.3) / (Reef.faceLength * 3)),
+                0.0,
+                1.0);
+        double shiftYT = MathUtil.clamp(offset.getX() / Reef.faceLength, 0.0, 1.0);
+        return goal.transformBy(
+            GeomUtil.toTransform2d(
+                -shiftXT * 1.5,
+                Math.copySign(shiftYT * 1.5 * 0.8, offset.getY())));
+  }
 
-//  public DriveToPose(Swerve drive, Supplier<Pose2d> target, Supplier<Pose2d> robot) {
-//    this(drive, target);
-//    this.robot = robot;
-//  }
-
-//  public DriveToPose(
-//      Swerve drive,
-//      Supplier<Pose2d> target,
-//      Supplier<Pose2d> robot,
-//      Supplier<Translation2d> linearFF,
-//      DoubleSupplier omegaFF) {
-//    this(drive, target, robot);
-//    this.linearFF = linearFF;
-//    this.omegaFF = omegaFF;
-//  }
-
-//  @Override
-//  public void initialize() {
-//    Pose2d currentPose = robot.get();
-//    ChassisSpeeds fieldVelocity = drive.getChassisSpeeds();
-//    Translation2d linearFieldVelocity =
-//        new Translation2d(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
-//    driveController.reset(
-//        currentPose.getTranslation().getDistance(target.get().getTranslation()),
-//        Math.min(
-//            0.0,
-//            -linearFieldVelocity
-//                .rotateBy(
-//                    target
-//                        .get()
-//                        .getTranslation()
-//                        .minus(currentPose.getTranslation())
-//                        .getAngle()
-//                        .unaryMinus())
-//                .getX()));
-//    thetaController.reset(
-//        currentPose.getRotation().getRadians(), fieldVelocity.omegaRadiansPerSecond);
-//    lastSetpointTranslation = currentPose.getTranslation();
-//  }
-
-//  @Override
-//  public void execute() {
-//    running = true;
-
-//    // Update from tunable numbers
-//    if (driveMaxVelocity.hasChanged(hashCode())
-//        || driveMaxVelocitySlow.hasChanged(hashCode())
-//        || driveMaxAcceleration.hasChanged(hashCode())
-//        || driveTolerance.hasChanged(hashCode())
-//        || thetaMaxVelocity.hasChanged(hashCode())
-//        || thetaMaxAcceleration.hasChanged(hashCode())
-//        || thetaTolerance.hasChanged(hashCode())
-//        || drivekP.hasChanged(hashCode())
-//        || drivekD.hasChanged(hashCode())
-//        || thetakP.hasChanged(hashCode())
-//        || thetakD.hasChanged(hashCode())) {
-//      driveController.setP(drivekP.get());
-//      driveController.setD(drivekD.get());
-//      driveController.setConstraints(
-//          new TrapezoidProfile.Constraints(driveMaxVelocity.get(), driveMaxAcceleration.get()));
-//      driveController.setTolerance(driveTolerance.get());
-//      thetaController.setP(thetakP.get());
-//      thetaController.setD(thetakD.get());
-//      thetaController.setConstraints(
-//          new TrapezoidProfile.Constraints(thetaMaxVelocity.get(), thetaMaxAcceleration.get()));
-//      thetaController.setTolerance(thetaTolerance.get());
-//    }
-
-//    // Get current pose and target pose
-//    Pose2d currentPose = robot.get();
-//    Pose2d targetPose = target.get();
-
-//    // Calculate drive speed
-//    double currentDistance = currentPose.getTranslation().getDistance(targetPose.getTranslation());
-//    double ffScaler =
-//        MathUtil.clamp(
-//            (currentDistance - ffMinRadius.get()) / (ffMaxRadius.get() - ffMinRadius.get()),
-//            0.0,
-//            1.0);
-//    driveErrorAbs = currentDistance;
-//    driveController.reset(
-//        lastSetpointTranslation.getDistance(targetPose.getTranslation()),
-//        driveController.getSetpoint().velocity);
-//    double driveVelocityScalar =
-//        driveController.getSetpoint().velocity * ffScaler
-//            + driveController.calculate(driveErrorAbs, 0.0);
-//    if (currentDistance < driveController.getPositionTolerance()) driveVelocityScalar = 0.0;
-//    lastSetpointTranslation =
-//        new Pose2d(
-//                targetPose.getTranslation(),
-//                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
-//            .transformBy(GeomUtil.toTransform2d(driveController.getSetpoint().position, 0.0))
-//            .getTranslation();
-
-//    // Calculate theta speed
-//    double thetaVelocity =
-//        thetaController.getSetpoint().velocity * ffScaler
-//            + thetaController.calculate(
-//                currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
-//    thetaErrorAbs =
-//        Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
-//    if (thetaErrorAbs < thetaController.getPositionTolerance()) thetaVelocity = 0.0;
-
-//    Translation2d driveVelocity =
-//        new Pose2d(
-//                new Translation2d(),
-//                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
-//            .transformBy(GeomUtil.toTransform2d(driveVelocityScalar, 0.0))
-//            .getTranslation();
-
-//    // Scale feedback velocities by input ff
-//    final double linearS = linearFF.get().getNorm() * 3.0;
-//    final double thetaS = Math.abs(omegaFF.getAsDouble()) * 3.0;
-//    driveVelocity =
-//        driveVelocity.interpolate(linearFF.get().times(DriveConstants.maxLinearSpeed), linearS);
-//    thetaVelocity =
-//        MathUtil.interpolate(
-//            thetaVelocity, omegaFF.getAsDouble() * DriveConstants.maxAngularSpeed, thetaS);
-
-//    // Command speeds
-//    drive.runVelocity(
-//        ChassisSpeeds.fromFieldRelativeSpeeds(
-//            driveVelocity.getX(), driveVelocity.getY(), thetaVelocity, currentPose.getRotation()));
-
-//    // Log data
-//    Logger.recordOutput("DriveToPose/DistanceMeasured", currentDistance);
-//    Logger.recordOutput("DriveToPose/DistanceSetpoint", driveController.getSetpoint().position);
-//    Logger.recordOutput("DriveToPose/ThetaMeasured", currentPose.getRotation().getRadians());
-//    Logger.recordOutput("DriveToPose/ThetaSetpoint", thetaController.getSetpoint().position);
-//    Logger.recordOutput(
-//        "DriveToPose/Setpoint",
-//        new Pose2d(
-//            lastSetpointTranslation,
-//            Rotation2d.fromRadians(thetaController.getSetpoint().position)));
-//    Logger.recordOutput("DriveToPose/Goal", targetPose);
-//  }
-
-//  @Override
-//  public void end(boolean interrupted) {
-//    drive.stop();
-//    running = false;
-//    // Clear logs
-//    Logger.recordOutput("DriveToPose/Setpoint", new Pose2d[] {});
-//    Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {});
-//  }
-
-//  /** Checks if the robot is stopped at the final pose. */
-//  public boolean atGoal() {
-//    return running && driveController.atGoal() && thetaController.atGoal();
-//  }
-
-//  /** Checks if the robot pose is within the allowed drive and theta tolerances. */
-//  public boolean withinTolerance(double driveTolerance, Rotation2d thetaTolerance) {
-//    return running
-//        && Math.abs(driveErrorAbs) < driveTolerance
-//        && Math.abs(thetaErrorAbs) < thetaTolerance.getRadians();
-//  }
-// }
+}

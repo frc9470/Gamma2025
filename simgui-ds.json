@@ -4,16 +4,21 @@
       "visible": true
     }
   },
+  "Keyboard 1 Settings": {
+    "window": {
+      "visible": true
+    }
+  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
         {
-          "decKey": 82,
+          "decKey": 83,
           "incKey": 87
         },
         {
           "decKey": 65,
-          "incKey": 83
+          "incKey": 68
         },
         {
           "decKey": 69,
@@ -24,7 +29,7 @@
       "axisCount": 3,
       "buttonCount": 4,
       "buttonKeys": [
-        -1,
+        89,
         85,
         73,
         79,

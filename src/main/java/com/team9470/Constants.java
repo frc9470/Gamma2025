@@ -8,17 +8,15 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
-
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import static edu.wpi.first.units.Units.*;
-
-import java.nio.file.Path;
 import java.util.List;
+
+import static edu.wpi.first.units.Units.*;
 
 public final class Constants {
     public static class Global {
@@ -114,10 +112,10 @@ public final class Constants {
         public static final double KG = 0;
         public static final double KV = 0;
         public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
-        public static final Current ALGAE_IN_THRESHOLD = Amps.of(2); // Current
-        public static final Angle ANGLE_UP = Degrees.of(-30);
-        public static final Angle STOW_ANGLE = Degrees.of(93.98);
-        public static final Angle STOW_DOWN = Degrees.of(-80);
+        public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
+        public static final Angle DEPLOY_ANGLE = Degrees.of(-15);
+        public static final Angle STOW_UP = Degrees.of(93.98);
+        public static final Angle STOW_DOWN = Degrees.of(-95);
 
         public static final double CRUISE_VELOCITY = 10;
         public static final double ACCELERATION = 20;
@@ -125,7 +123,7 @@ public final class Constants {
 
         public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
         public static final Voltage HOMING_OUTPUT = Volts.of(7);
-        public static final Time HOMING_TIMEOUT = Seconds.of(0.5);
+        public static final Time HOMING_TIMEOUT = Seconds.of(10);
         public static final Angle HOMING_ANGLE = Degrees.of(93.98);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);

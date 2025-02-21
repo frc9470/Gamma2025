@@ -52,29 +52,38 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 
-
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
 public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
-    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
-    private static Swerve instance;
+    /**
+     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
+     * intaking and coral scoring.
+     */
 
+
+//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
+//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
+
+    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
+    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     private static final double SIM_LOOP_PERIOD = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.k180deg;
-
+    private static Swerve instance;
+    private static RobotConfig config;
+    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
     /* Swerve requests */
-    private final SwerveRequest.ApplyFieldSpeeds    applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
-
-
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -138,81 +147,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this
             )
     );
-    
-    private static RobotConfig config;
-
     public Pose2d curReefPos = null;
     public int curReefPosId = -1;
-
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
+    private final HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
 
-    private HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
-     */
-    public Swerve(
-            SwerveDrivetrainConstants drivetrainConstants,
-            SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, modules);
-        instance = this;
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        configAutoBuilder();
-        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
-            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
-        }
-    }
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on
-     *                                CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                 Constants for each specific module
-     */
-    public Swerve(
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        instance = this;
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        configAutoBuilder();
-        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
-            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
-        }
-    }
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -245,7 +186,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        try{
+        try {
             config = RobotConfig.fromGUISettings();
         } catch (Exception e) {
             e.printStackTrace();
@@ -256,13 +197,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         }
     }
 
-    /**
-     * Creates a new auto factory for this drivetrain.
-     *
-     * @return AutoFactory for this drivetrain
-     */
-    public AutoFactory createAutoFactory() {
-        return createAutoFactory((sample, isStart) -> {});
+    public static Swerve getInstance() {
+        if (instance == null) {
+            instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
     /**
@@ -284,7 +223,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     // For pathplanner
-    public void configAutoBuilder(){
+    public void configAutoBuilder() {
         AutoBuilder.configure(
                 this::getPose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
@@ -296,38 +235,28 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 ),
                 config, // The robot configuration
                 () -> {
-                // Boolean supplier that controls when the path will be mirrored for the red alliance
-                // This will flip the path being followed to the red side of the field.
-                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-                return getAlliance() == DriverStation.Alliance.Red ? true : false;
+                    return getAlliance() == Alliance.Red;
                 },
                 this // Reference to this subsystem to set requirements
         );
     }
 
-    public DriverStation.Alliance getAlliance(){
+    public DriverStation.Alliance getAlliance() {
         var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red ? DriverStation.Alliance.Red : DriverStation.Alliance.Blue;
-        }
-        return DriverStation.Alliance.Blue;
-    }
-    public void setChassisSpeeds(ChassisSpeeds speeds){
-        setControl(
-                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
-                                   .withVelocityY(speeds.vyMetersPerSecond)
-                                   .withRotationalRate(speeds.omegaRadiansPerSecond)
-        );
+        return alliance.orElse(Alliance.Blue);
     }
 
-    public Command getPathfindingCommand(){
+    public Command getPathfindingCommand() {
         return new Command() {
             private Command pathfindingCommand;
 
             @Override
             public void initialize() {
-                if(curReefPos == null){
+                if (curReefPos == null) {
                     pathfindClosestReefPos();
                 }
                 // Create the constraints to use while pathfinding
@@ -384,11 +313,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         int closestPoseId = -1;
         for (int i = 0; i < 12; i++) {
             Pose2d pose = paths[i].getPathPoses().get(0);
-            if(getAlliance() == Alliance.Red){
+            if (getAlliance() == Alliance.Red) {
                 pose = new Pose2d(
-                    DriverAssistConstants.fieldLength - pose.getX(),
-                    DriverAssistConstants.centerY*2 - pose.getY(),
-                    pose.getRotation().rotateBy(Rotation2d.fromDegrees(180))
+                        DriverAssistConstants.fieldLength - pose.getX(),
+                        DriverAssistConstants.centerY * 2 - pose.getY(),
+                        pose.getRotation().rotateBy(Rotation2d.fromDegrees(180))
                 );
             }
             double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
@@ -404,16 +333,14 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     /**
-     * 
      * @param posId ID os reef pos from 0-12
      * @return pathfinding command
      */
-    public void setReefPos(int posId){
+    public void setReefPos(int posId) {
         curReefPosId = posId;
-        if(posId == -1){
+        if (posId == -1) {
             curReefPos = null;
-        }
-        else{
+        } else {
             Pose2d[] reefPoses;
             // reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
             reefPoses = DriverAssistConstants.getReefPositions(Alliance.Blue);
@@ -421,8 +348,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             curReefPos = reefPoses[posId];
         }
     }
-
-
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
@@ -503,7 +428,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        if(curReefPos != null)
+        if (curReefPos != null)
             LogUtil.recordPose2d("Controls/ReefPos", curReefPos);
 
         for (var tag : FieldConstants.defaultAprilTagType.getLayout().getTags()) {
@@ -531,12 +456,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         m_simNotifier.startPeriodic(SIM_LOOP_PERIOD);
     }
 
-    public Pose2d getPose()
-    {
+    public Pose2d getPose() {
         return getState().Pose;
     }
 
-    public ChassisSpeeds getChassisSpeeds(){
+    public ChassisSpeeds getChassisSpeeds() {
         // Get the current swerve module states
         SwerveModuleState[] moduleStates = getState().ModuleStates;
 
@@ -545,44 +469,32 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return kinematics.toChassisSpeeds(moduleStates);
     }
 
-    public static Swerve getInstance(){
-        if(instance == null){
-            instance = TunerConstants.createDrivetrain();
-        }
-        return instance;
+    public void setChassisSpeeds(ChassisSpeeds speeds) {
+        setControl(
+                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                        .withVelocityY(speeds.vyMetersPerSecond)
+                        .withRotationalRate(speeds.omegaRadiansPerSecond)
+        );
     }
 
     /**
      * Get Twist2d of robot velocity
      */
-    public Twist2d getRobotTwist(){
+    public Twist2d getRobotTwist() {
         return new Twist2d(getChassisSpeeds().vxMetersPerSecond, getChassisSpeeds().vyMetersPerSecond, getChassisSpeeds().omegaRadiansPerSecond);
     }
 
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
-        if(visionPoseAcceptor.shouldAcceptVision(timestampSeconds, visionRobotPoseMeters, getPose(), getRobotTwist(), DriverStation.isAutonomous())){
+        if (visionPoseAcceptor.shouldAcceptVision(timestampSeconds, visionRobotPoseMeters, getPose(), getRobotTwist(), DriverStation.isAutonomous())) {
             super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
         }
     }
 
-    public void addTxTyPoseRecord(int id, Pose2d pose, double distance, double timestamp){
+    public void addTxTyPoseRecord(int id, Pose2d pose, double distance, double timestamp) {
         txTyPoses.put(id, new TxTyPoseRecord(pose, distance, timestamp));
     }
 
-    /**
-     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
-     * intaking and coral scoring.
-     */
-
-
-//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
-//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
-
-    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
-    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     public Pose2d getReefPose(int face, Pose2d finalPose) {
         final boolean isRed = AllianceFlipUtil.shouldFlip();
         var tagPose =
@@ -631,5 +543,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
 
-    public record TxTyPoseRecord(Pose2d pose, double distance, double timestamp) {}
+    public record TxTyPoseRecord(Pose2d pose, double distance, double timestamp) {
+    }
 }

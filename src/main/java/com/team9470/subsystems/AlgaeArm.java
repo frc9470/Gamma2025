@@ -124,12 +124,12 @@ public class AlgaeArm extends SubsystemBase {
                 AlgaeConstants.MIN_ANGLE.in(Radians),             // Minimum angle (radians)
                 AlgaeConstants.MAX_ANGLE.in(Radians),             // Maximum angle (radians)
                 false,                                            // Simulate gravity
-                -Math.PI/2, // starting angle
+                -Math.PI / 2, // starting angle
                 0.01, 0
         );
 
         // Scale the visual length (e.g., 1 meter = 10 mechanism units)
-        armLigament = mechanism.append(new MechanismLigament2d("Arm", AlgaeConstants.ARM_LENGTH.in(Meter)*3, -180));
+        armLigament = mechanism.append(new MechanismLigament2d("Arm", AlgaeConstants.ARM_LENGTH.in(Meter) * 3, -180));
     }
 
     @Override
@@ -194,6 +194,7 @@ public class AlgaeArm extends SubsystemBase {
         periodicIO.setpointRaw = setpointSignal.asSupplier().get();
         periodicIO.setpointVelocityRaw = setpointVelocitySignal.asSupplier().get();
         periodicIO.setpointAngularVelocity = RotationsPerSecond.of(setpointVelocitySignal.asSupplier().get());
+
     }
 
     /** Run homing state machine logic. */
@@ -202,7 +203,7 @@ public class AlgaeArm extends SubsystemBase {
             case IDLE:
                 // Example: if the arm is near its target (and a timeout has passed), start homing.
                 boolean timeOut = periodicIO.timestamp.minus(homingStartTime).gt(AlgaeConstants.HOMING_TIMEOUT);
-                if (AlgaeConstants.STOW_ANGLE.isNear(periodicIO.position, Degrees.of(5)) && timeOut) {
+                if (AlgaeConstants.STOW_UP.isNear(periodicIO.position, Degrees.of(5)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }
@@ -359,16 +360,17 @@ public class AlgaeArm extends SubsystemBase {
     }
 
     public Command deploy() {
-        return getMoveToAngleCommand(AlgaeConstants.ANGLE_UP);
+        return getMoveToAngleCommand(AlgaeConstants.DEPLOY_ANGLE);
     }
 
     public Command stow() {
-        return getMoveToAngleCommand(AlgaeConstants.STOW_ANGLE);
+        return getMoveToAngleCommand(AlgaeConstants.STOW_UP);
     }
 
     public Command stowDown() {
         return getMoveToAngleCommand(AlgaeConstants.STOW_DOWN);
     }
+
 
     public Command spin() {
         return runEnd(

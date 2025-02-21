@@ -11,8 +11,7 @@ public class Superstructure extends SubsystemBase {
     private final AlgaeArm algae;
     private final LEDs leds;
 
-    private int reef = 0;
-    private int level = 0;
+
 
     public Superstructure(Mechanism2d mech) {
         this.elevator = new Elevator(mech);
@@ -67,22 +66,16 @@ public class Superstructure extends SubsystemBase {
 
     // Return the algae bar if algae is not obtained (stow bar upwards).
     public Command algaeReturn() {
-        return algae.stow().onlyIf(() -> !algae.hasAlgae());
+        return algae.stow().onlyIf(() -> !algae.hasAlgae()).andThen(algae.deploy().onlyIf(algae::hasAlgae));
     }
 
     // Dealgify: move the elevator to the appropriate level (based on reef) and then
     // deploy the arm (with reverse spin) to remove algae.
-    public Command dealgify() {
-        int targetLevel = getAlgaeLevel(reef);
-        Command moveElevator = (targetLevel == 2) ? elevator.algaeL2() : elevator.algaeL3();
+    public Command dealgify(int level) {
+        Command moveElevator = (level == 2) ? elevator.algaeL2() : elevator.algaeL3();
         return moveElevator.alongWith(algae.deploy().alongWith(algae.reverse()));
     }
 
-    // Alternative dealgify command that allows an explicit level override.
-    public Command dealgify(int level) {
-        return (level == 2 ? elevator.algaeL2() : elevator.algaeL3())
-                .andThen(algae.deploy().alongWith(algae.reverse()));
-    }
 
     // Stow algae in default position (stow location 1).
     public Command stowAlgaeDefault() {
@@ -92,9 +85,13 @@ public class Superstructure extends SubsystemBase {
 
     // Stow algae in alternate position (stow location 2) for coral scoring:
     // Raise elevator to L2 and move algae below the coral manipulator.
-    public Command stowAlgaeForCoral() {
+    public Command raiseAndStow(int level) {
         // Assumes that algae.stowAlternate() is implemented to position the algae for coral scoring.
-        return elevator.algaeL2().andThen(algae.stowDown());
+        return elevator.getLevelCommand(level).alongWith(algae.stowDown());
+    }
+
+    public Command score() {
+        return coral.scoreCommand();
     }
 
     // Trigger the algae arm’s homing routine.
@@ -102,10 +99,6 @@ public class Superstructure extends SubsystemBase {
         return new InstantCommand(algae::triggerHoming);
     }
 
-    public int getAlgaeLevel(int reef){
-        // starting with (1, 2) = 3, then (3, 4) = 2, each reef alternates level between 2 and 3
-        return (reef+1)/2 % 2 == 0 ? 2 : 3;
-    }
 
     // Accessors for the individual subsystems.
     public Elevator getElevator() {
@@ -124,8 +117,4 @@ public class Superstructure extends SubsystemBase {
         return leds;
     }
 
-    // Update the reef value used for automatic level selection.
-    public void setReef(int reef) {
-        this.reef = reef;
-    }
 }

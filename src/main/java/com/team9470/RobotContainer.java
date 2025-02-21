@@ -3,6 +3,7 @@ package com.team9470;
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
@@ -36,6 +37,7 @@ public class RobotContainer {
 
     // Create the Superstructure instead of separate subsystems.
     private final Superstructure superstructure = new Superstructure(mech);
+    private final AutoScoring autoScoring = new AutoScoring();
 
     // ----------------      VISION     --------------------
     private final Vision vision = Vision.getInstance();
@@ -81,11 +83,11 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.leftBumper().whileTrue(superstructure.dealgify());
+        xbox.leftBumper().whileTrue(autoScoring.autoAlgae(superstructure));
 
-        xbox.rightBumper().whileTrue(superstructure.groundIntake());
+        xbox.rightBumper().whileTrue(superstructure.groundIntake()).onFalse(superstructure.algaeReturn());
         xbox.a().whileTrue(superstructure.processorScore()).onFalse(superstructure.algaeReturn());
-        xbox.povRight().whileTrue(superstructure.stowAlgaeForCoral());
+        xbox.povRight().whileTrue(superstructure.raiseAndStow(2));
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
 
         // Example of binding elevator level commands via the superstructure's elevator
@@ -93,21 +95,20 @@ public class RobotContainer {
             final int id = i;
             Trigger trig = new Trigger(() -> (id < 2) ? buttonBoard.getX() == Math.pow(-1.0, id + 1)
                     : buttonBoard.getY() == Math.pow(-1.0, id));
-            trig.whileTrue(new InstantCommand(() -> superstructure.getElevator().setLevel(id + 1)));
+            trig.whileTrue(new InstantCommand(() -> autoScoring.setLevel(id + 1)));
         }
 
         // Reef position bindings (remaining unchanged)
         for (int i = 0; i < 12; i++) {
             JoystickButton button = new JoystickButton(buttonBoard, 12 - i);
             final int id = i;
-            button.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(id)));
+            button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
         }
 
-        xbox.y().whileTrue(drivetrain.getPathfindingCommand());
         xbox.rightTrigger()
-                .whileTrue(superstructure.getElevator().getCommand(superstructure.getCoral())
+                .whileTrue(autoScoring.autoScore(superstructure)
                         .onlyIf(superstructure.getCoral()::hasCoral))
-                .onFalse(superstructure.getElevator().L0());
+                .onFalse(superstructure.algaeReturn().andThen(superstructure.getElevator().L0()));
 
         xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
     }

@@ -43,7 +43,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -157,6 +156,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private boolean m_hasAppliedOperatorPerspective = false;
     private final HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
 
+    private RobotConfig config;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -253,6 +253,14 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     public DriverStation.Alliance getAlliance() {
         var alliance = DriverStation.getAlliance();
         return alliance.orElse(Alliance.Blue);
+    }
+
+    public void setChassisSpeeds(ChassisSpeeds speeds) {
+        setControl(
+                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                        .withVelocityY(speeds.vyMetersPerSecond)
+                        .withRotationalRate(speeds.omegaRadiansPerSecond)
+        );
     }
 
     public Command getPathfindingCommand() {

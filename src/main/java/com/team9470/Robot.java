@@ -73,7 +73,9 @@ public class Robot extends TimedRobot
     
     
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+        robotContainer.periodic();
+    }
     
     
     @Override
@@ -88,7 +90,8 @@ public class Robot extends TimedRobot
     
     
     @Override
-    public void testPeriodic() {}
+    public void testPeriodic() {
+    }
     
     
     @Override

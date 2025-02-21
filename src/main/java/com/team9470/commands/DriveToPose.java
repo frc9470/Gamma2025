@@ -1,22 +1,26 @@
-//package com.team9470.commands;
-//
-//import com.team9470.subsystems.Swerve;
-//import com.team9470.util.GeomUtil;
-//import edu.wpi.first.math.MathUtil;
-//import edu.wpi.first.math.controller.ProfiledPIDController;
-//import edu.wpi.first.math.geometry.Pose2d;
-//import edu.wpi.first.math.geometry.Rotation2d;
-//import edu.wpi.first.math.geometry.Translation2d;
-//import edu.wpi.first.math.kinematics.ChassisSpeeds;
-//import edu.wpi.first.math.trajectory.TrapezoidProfile;
-//import edu.wpi.first.math.util.Units;
-//import edu.wpi.first.wpilibj2.command.Command;
-//import lombok.Getter;
-//
-//import java.util.function.DoubleSupplier;
-//import java.util.function.Supplier;
-//
-//public class DriveToPose extends Command {
+// package com.team9470.commands;
+
+// import edu.wpi.first.math.MathUtil;
+// import edu.wpi.first.math.geometry.Pose2d;
+// import edu.wpi.first.math.geometry.Rotation2d;
+// import edu.wpi.first.math.geometry.Transform2d;
+// import edu.wpi.first.math.util.Units;
+// import edu.wpi.first.wpilibj.Timer;
+// import edu.wpi.first.wpilibj2.command.Command;
+// import edu.wpi.first.wpilibj2.command.Commands;
+// import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+// import edu.wpi.first.wpilibj2.command.button.Trigger;
+// import java.util.Optional;
+// import java.util.OptionalDouble;
+// import java.util.function.BooleanSupplier;
+// import java.util.function.DoubleSupplier;
+// import java.util.function.Function;
+// import java.util.function.Supplier;
+// import com.team9470.util.GeomUtil;
+
+// import com.team9470.subsystems.Swerve;
+
+// public class DriveToPose extends Command {
 //  private static final LoggedTunableNumber drivekP = new LoggedTunableNumber("DriveToPose/DrivekP");
 //  private static final LoggedTunableNumber drivekD = new LoggedTunableNumber("DriveToPose/DrivekD");
 //  private static final LoggedTunableNumber thetakP = new LoggedTunableNumber("DriveToPose/ThetakP");
@@ -39,7 +43,7 @@
 //      new LoggedTunableNumber("DriveToPose/FFMinRadius");
 //  private static final LoggedTunableNumber ffMaxRadius =
 //      new LoggedTunableNumber("DriveToPose/FFMaxRadius");
-//
+
 //  static {
 //    drivekP.initDefault(0.75);
 //    drivekD.initDefault(0.0);
@@ -54,41 +58,41 @@
 //    ffMinRadius.initDefault(0.1);
 //    ffMaxRadius.initDefault(0.15);
 //  }
-//
+
 //  private final Swerve drive;
 //  private final Supplier<Pose2d> target;
-//
+
 //  private final ProfiledPIDController driveController =
 //      new ProfiledPIDController(
 //          0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), Constants.loopPeriodSecs);
 //  private final ProfiledPIDController thetaController =
 //      new ProfiledPIDController(
 //          0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), Constants.loopPeriodSecs);
-//
+
 //  private Translation2d lastSetpointTranslation = new Translation2d();
 //  private double driveErrorAbs = 0.0;
 //  private double thetaErrorAbs = 0.0;
 //  @Getter private boolean running = false;
 //  private Supplier<Pose2d> robot = Swerve.getInstance()::getPose;
-//
+
 //  private Supplier<Translation2d> linearFF = () -> Translation2d.kZero;
 //  private DoubleSupplier omegaFF = () -> 0.0;
-//
+
 //  public DriveToPose(Swerve drive, Supplier<Pose2d> target) {
 //    this.drive = drive;
 //    this.target = target;
-//
+
 //    // Enable continuous input for theta controller
 //    thetaController.enableContinuousInput(-Math.PI, Math.PI);
-//
+
 //    addRequirements(drive);
 //  }
-//
+
 //  public DriveToPose(Swerve drive, Supplier<Pose2d> target, Supplier<Pose2d> robot) {
 //    this(drive, target);
 //    this.robot = robot;
 //  }
-//
+
 //  public DriveToPose(
 //      Swerve drive,
 //      Supplier<Pose2d> target,
@@ -99,7 +103,7 @@
 //    this.linearFF = linearFF;
 //    this.omegaFF = omegaFF;
 //  }
-//
+
 //  @Override
 //  public void initialize() {
 //    Pose2d currentPose = robot.get();
@@ -123,11 +127,11 @@
 //        currentPose.getRotation().getRadians(), fieldVelocity.omegaRadiansPerSecond);
 //    lastSetpointTranslation = currentPose.getTranslation();
 //  }
-//
+
 //  @Override
 //  public void execute() {
 //    running = true;
-//
+
 //    // Update from tunable numbers
 //    if (driveMaxVelocity.hasChanged(hashCode())
 //        || driveMaxVelocitySlow.hasChanged(hashCode())
@@ -151,11 +155,11 @@
 //          new TrapezoidProfile.Constraints(thetaMaxVelocity.get(), thetaMaxAcceleration.get()));
 //      thetaController.setTolerance(thetaTolerance.get());
 //    }
-//
+
 //    // Get current pose and target pose
 //    Pose2d currentPose = robot.get();
 //    Pose2d targetPose = target.get();
-//
+
 //    // Calculate drive speed
 //    double currentDistance = currentPose.getTranslation().getDistance(targetPose.getTranslation());
 //    double ffScaler =
@@ -177,7 +181,7 @@
 //                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
 //            .transformBy(GeomUtil.toTransform2d(driveController.getSetpoint().position, 0.0))
 //            .getTranslation();
-//
+
 //    // Calculate theta speed
 //    double thetaVelocity =
 //        thetaController.getSetpoint().velocity * ffScaler
@@ -186,14 +190,14 @@
 //    thetaErrorAbs =
 //        Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
 //    if (thetaErrorAbs < thetaController.getPositionTolerance()) thetaVelocity = 0.0;
-//
+
 //    Translation2d driveVelocity =
 //        new Pose2d(
 //                new Translation2d(),
 //                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
 //            .transformBy(GeomUtil.toTransform2d(driveVelocityScalar, 0.0))
 //            .getTranslation();
-//
+
 //    // Scale feedback velocities by input ff
 //    final double linearS = linearFF.get().getNorm() * 3.0;
 //    final double thetaS = Math.abs(omegaFF.getAsDouble()) * 3.0;
@@ -202,12 +206,12 @@
 //    thetaVelocity =
 //        MathUtil.interpolate(
 //            thetaVelocity, omegaFF.getAsDouble() * DriveConstants.maxAngularSpeed, thetaS);
-//
+
 //    // Command speeds
 //    drive.runVelocity(
 //        ChassisSpeeds.fromFieldRelativeSpeeds(
 //            driveVelocity.getX(), driveVelocity.getY(), thetaVelocity, currentPose.getRotation()));
-//
+
 //    // Log data
 //    Logger.recordOutput("DriveToPose/DistanceMeasured", currentDistance);
 //    Logger.recordOutput("DriveToPose/DistanceSetpoint", driveController.getSetpoint().position);
@@ -220,7 +224,7 @@
 //            Rotation2d.fromRadians(thetaController.getSetpoint().position)));
 //    Logger.recordOutput("DriveToPose/Goal", targetPose);
 //  }
-//
+
 //  @Override
 //  public void end(boolean interrupted) {
 //    drive.stop();
@@ -229,16 +233,16 @@
 //    Logger.recordOutput("DriveToPose/Setpoint", new Pose2d[] {});
 //    Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {});
 //  }
-//
+
 //  /** Checks if the robot is stopped at the final pose. */
 //  public boolean atGoal() {
 //    return running && driveController.atGoal() && thetaController.atGoal();
 //  }
-//
+
 //  /** Checks if the robot pose is within the allowed drive and theta tolerances. */
 //  public boolean withinTolerance(double driveTolerance, Rotation2d thetaTolerance) {
 //    return running
 //        && Math.abs(driveErrorAbs) < driveTolerance
 //        && Math.abs(thetaErrorAbs) < thetaTolerance.getRadians();
 //  }
-//}
+// }

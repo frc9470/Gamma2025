@@ -60,6 +60,10 @@ public class RobotContainer {
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
 
+    public void periodic(){
+        drivetrain.periodic();
+    }
+
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
 

@@ -91,7 +91,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
 
-    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(TunerConstants.maxVelocity, TunerConstants.maxAcceleration);
+    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(10000000, 10000000);
     private final ProfiledPIDController pidControllerX = new ProfiledPIDController(10, 0, 0, constraints);
     private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
     private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, constraints);
@@ -477,7 +477,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
             double thetaSpeed = pidControllerOmega.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
 
-            ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, thetaSpeed);
+            ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                xSpeed, ySpeed, thetaSpeed, currentPose.getRotation()
+            );
             setChassisSpeeds(speeds);
             System.out.println(curReefPos);
             System.out.println(getPose());

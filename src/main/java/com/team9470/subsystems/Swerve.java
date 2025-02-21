@@ -279,7 +279,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public void updateClosestReefPos() {
-        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
+        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(getAlliance());
         // PathPlannerPath[] paths = DriverAssistConstants.getPaths();
         // Get the current robot pose at initialization.
         Pose2d currentPose = getPose();
@@ -322,8 +322,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         else{
             System.out.println("EEEEEEEEEEE");
             Pose2d[] reefPoses;
-            // reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-            reefPoses = DriverAssistConstants.getReefPositions(Alliance.Blue);
+            reefPoses = DriverAssistConstants.getReefPositions(getAlliance());
 
             curReefPos = reefPoses[posId];
         }

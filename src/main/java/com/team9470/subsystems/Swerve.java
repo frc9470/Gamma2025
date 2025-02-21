@@ -45,6 +45,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -162,6 +164,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     private HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
 
+    private final Field2d field2d = new Field2d();
+
+    
+
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -190,6 +196,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
+        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -224,6 +231,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
+        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -266,6 +274,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
+        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -418,6 +427,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      * @return pathfinding command
      */
     public void setReefPos(int posId){
+        System.out.println("EEEEE");
         curReefPosId = posId;
         if(posId == -1){
             curReefPos = null;
@@ -543,6 +553,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             // Pose2d targetPose = curReefPos;
             Pose2d currentPose = getPose();
             ChassisSpeeds curSpeeds = getState().Speeds;
+            field2d.setRobotPose(targetPose);
             
             double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
             double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());

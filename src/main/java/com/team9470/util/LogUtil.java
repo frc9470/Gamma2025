@@ -1,4 +1,4 @@
-package com.team9470;
+package com.team9470.util;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.*;

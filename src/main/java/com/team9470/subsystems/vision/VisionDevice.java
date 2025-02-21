@@ -1,9 +1,10 @@
 package com.team9470.subsystems.vision;
 
 import com.ctre.phoenix6.Utils;
-import com.team9470.LogUtil;
-import com.team9470.Util;
+import com.team9470.FieldConstants;
 import com.team9470.subsystems.Swerve;
+import com.team9470.util.LogUtil;
+import com.team9470.util.Util;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -19,9 +20,7 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class VisionDevice {
 
@@ -30,14 +29,22 @@ public class VisionDevice {
     // private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
     private static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
+    private final PhotonPoseEstimator secondPoseEstimator;
+
     public VisionDevice(String name, Transform3d transform) {
         this.photonCamera = new PhotonCamera(name);
         photonPoseEstimator = new PhotonPoseEstimator(
                 aprilTagFieldLayout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                transform// Robot to camera transform (adjust as needed)
+                transform
         );
         photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+
+        secondPoseEstimator = new PhotonPoseEstimator(
+                aprilTagFieldLayout,
+                PhotonPoseEstimator.PoseStrategy.PNP_DISTANCE_TRIG_SOLVE,
+                transform
+        );
 
     }
 
@@ -77,9 +84,7 @@ public class VisionDevice {
                 tagPose.ifPresent(tagPoses::add);
             }
 
-            if (tagPoses.isEmpty()) {
-                return;
-            }
+            if (tagPoses.isEmpty()) return;
 
             // Calculate distances and statistics
             Pair<Double, Double> distanceStats = calculateDistanceStatistics(tagPoses, cameraPose);
@@ -104,6 +109,19 @@ public class VisionDevice {
 //            double rotationDegrees = calculateRotation(pose, Swerve.isRedAlliance());
 
 //        logRotation(rotationDegrees);
+
+            // tx, ty
+            secondPoseEstimator.addHeadingData(timestamp, robotPose.getRotation());
+            Optional<EstimatedRobotPose> singleTagEstimate = secondPoseEstimator.update(result);
+            if(singleTagEstimate.isEmpty()) return;
+            EstimatedRobotPose singleTagPose = singleTagEstimate.get();
+            PhotonTrackedTarget target = result.getTargets().get(0);
+
+            swerve.addTxTyPoseRecord(target.getFiducialId(),
+                            singleTagPose.estimatedPose.toPose2d(),
+                            target.getBestCameraToTarget().getTranslation().getNorm(),
+                            timestamp);
+
         }
     }
 
@@ -156,6 +174,20 @@ public class VisionDevice {
         }
     }
 
+
+    private static final Map<Integer, Pose2d> tagPoses2d = new HashMap<>();
+
+    static {
+        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
+            tagPoses2d.put(
+                    i,
+                    AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded)
+                            .getTagPose(i)
+                            .map(Pose3d::toPose2d)
+                            .orElse(new Pose2d()));
+        }
+    }
+
 //    private void logRotation(double rotationDegrees) {
 //        SmartDashboard.putNumber("Vision Heading/" + mConstants.kTableName, rotationDegrees);
 //        VisionDeviceManager.getInstance().getMovingAverage().addNumber(rotationDegrees);
@@ -177,6 +209,13 @@ public class VisionDevice {
         return photonPoseEstimator;
     }
 
+    public boolean isConnected() {
+        return photonCamera.isConnected();
+    }
+
+
+    public record TxTyObservation(
+            int tagId, int camera, double tx, double ty, double distance, double timestamp) {}
 
 
 }

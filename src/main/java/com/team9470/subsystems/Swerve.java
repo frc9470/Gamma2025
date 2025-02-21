@@ -15,14 +15,18 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.team9470.Constants.DriverAssistConstants;
-import com.team9470.LogUtil;
+import com.team9470.FieldConstants;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
+import com.team9470.util.AllianceFlipUtil;
+import com.team9470.util.LogUtil;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -34,11 +38,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
-import java.sql.Driver;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Second;
@@ -141,6 +148,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
+    private HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
+
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -166,6 +175,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             e.printStackTrace();
         }
         configAutoBuilder();
+        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
+            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
+        }
     }
 
     /**
@@ -197,6 +209,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             e.printStackTrace();
         }
         configAutoBuilder();
+        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
+            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
+        }
     }
 
     /**
@@ -236,6 +251,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             e.printStackTrace();
         }
         configAutoBuilder();
+        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
+            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
+        }
     }
 
     /**
@@ -380,7 +398,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 closestPoseId = i;
             }
         }
-    
+
         curReefPos = closestPose;
         curReefPosId = closestPoseId;
     }
@@ -488,6 +506,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         if(curReefPos != null)
             LogUtil.recordPose2d("Controls/ReefPos", curReefPos);
 
+        for (var tag : FieldConstants.defaultAprilTagType.getLayout().getTags()) {
+            var pose = getTxTyPose(tag.ID);
+            LogUtil.recordPose2d(
+                    "RobotState/TxTyPoses/" + tag.ID,
+                    pose.map(pose2d -> new Pose2d[]{pose2d}).orElseGet(() -> new Pose2d[]{}));
+        }
 
     }
 
@@ -541,4 +565,71 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
         }
     }
+
+    public void addTxTyPoseRecord(int id, Pose2d pose, double distance, double timestamp){
+        txTyPoses.put(id, new TxTyPoseRecord(pose, distance, timestamp));
+    }
+
+    /**
+     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
+     * intaking and coral scoring.
+     */
+
+
+//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
+//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
+
+    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
+    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
+    public Pose2d getReefPose(int face, Pose2d finalPose) {
+        final boolean isRed = AllianceFlipUtil.shouldFlip();
+        var tagPose =
+                getTxTyPose(
+                        switch (face) {
+                            case 1 -> isRed ? 6 : 19;
+                            case 2 -> isRed ? 11 : 20;
+                            case 3 -> isRed ? 10 : 21;
+                            case 4 -> isRed ? 9 : 22;
+                            case 5 -> isRed ? 8 : 17;
+                            // 0
+                            default -> isRed ? 7 : 18;
+                        });
+        // Use estimated pose if tag pose is not present
+        if (tagPose.isEmpty()) return getPose();
+        // Use distance from estimated pose to final pose to get t value
+        final double t =
+                MathUtil.clamp(
+                        (getPose().getTranslation().getDistance(finalPose.getTranslation())
+                                - minDistanceTagPoseBlend)
+                                / (maxDistanceTagPoseBlend - minDistanceTagPoseBlend),
+                        0.0,
+                        1.0);
+        return getPose().interpolate(tagPose.get(), 1.0 - t);
+    }
+
+    public Optional<Pose2d> getTxTyPose(int tagId) {
+        if (!txTyPoses.containsKey(tagId)) {
+            DriverStation.reportError("No tag with id: " + tagId, true);
+            return Optional.empty();
+        }
+        var data = txTyPoses.get(tagId);
+        // Check if stale
+        if (Timer.getTimestamp() - data.timestamp() >= 0.5) {
+            return Optional.empty();
+        }
+        // Get odometry based pose at timestamp
+        var sample = samplePoseAt(data.timestamp());
+        // Latency compensate
+        // TODO: add odometry back in as separate pose
+        return sample.map(pose2d -> data.pose().plus(new Transform2d(pose2d, getState().Pose)));
+    }
+
+    public Map<Integer, TxTyPoseRecord> getTxTyPoses() {
+        return txTyPoses;
+    }
+
+
+    public record TxTyPoseRecord(Pose2d pose, double distance, double timestamp) {}
 }

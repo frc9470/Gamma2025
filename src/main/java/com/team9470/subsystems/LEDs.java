@@ -1,130 +1,159 @@
 package com.team9470.subsystems;
 
-import com.ctre.phoenix.led.*;
+import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.CANdle.VBatOutputMode;
+import com.ctre.phoenix.led.CANdleConfiguration;
+import com.ctre.phoenix.led.CANdleControlFrame;
+import com.ctre.phoenix.led.CANdleStatusFrame;
 import com.team9470.Ports;
+import com.team9470.led.Color;
+import com.team9470.led.TimedLEDState;
+import com.team9470.subsystems.vision.Vision;
+import com.team9470.util.AllianceFlipUtil;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDs extends SubsystemBase {
-    private final CANdle m_candle = new CANdle(Ports.CANdle.getDeviceNumber(), Ports.CANdle.getBus());
-    private final int LedCount = 300;
+    private static LEDs mInstance;
 
-    private Animation m_toAnimate = null;
-
-    public enum AnimationTypes {
-        ColorFlow,
-        Fire,
-        Larson,
-        Rainbow,
-        RgbFade,
-        SingleFade,
-        Strobe,
-        Twinkle,
-        TwinkleOff,
-        SetAll
+    public static LEDs getInstance() {
+        if (mInstance == null) {
+            mInstance = new LEDs();
+        }
+        return mInstance;
     }
-    private AnimationTypes m_currentAnimation;
+
+    private final int kNumLeds = 300;
+
+    private boolean mDisabled = false;
+    private final CANdle mCandle = new CANdle(Ports.CANdle.getDeviceNumber(), Ports.CANdle.getBus());
+    private LEDSection mLEDStatus = new LEDSection(0, kNumLeds);
 
     public LEDs() {
-        changeAnimation(AnimationTypes.SetAll);
         CANdleConfiguration configAll = new CANdleConfiguration();
-        configAll.statusLedOffWhenActive = true;
-        configAll.disableWhenLOS = false;
-        configAll.stripType = CANdle.LEDStripType.GRB;
-        configAll.brightnessScalar = 0.1;
-        configAll.vBatOutputMode = CANdle.VBatOutputMode.Modulated;
-        m_candle.configAllSettings(configAll, 100);
-    }
-
-    public void incrementAnimation() {
-        switch(m_currentAnimation) {
-            case ColorFlow: changeAnimation(AnimationTypes.Fire); break;
-            case Fire: changeAnimation(AnimationTypes.Larson); break;
-            case Larson: changeAnimation(AnimationTypes.Rainbow); break;
-            case Rainbow: changeAnimation(AnimationTypes.RgbFade); break;
-            case RgbFade: changeAnimation(AnimationTypes.SingleFade); break;
-            case SingleFade: changeAnimation(AnimationTypes.Strobe); break;
-            case Strobe: changeAnimation(AnimationTypes.Twinkle); break;
-            case Twinkle: changeAnimation(AnimationTypes.TwinkleOff); break;
-            case TwinkleOff: changeAnimation(AnimationTypes.ColorFlow); break;
-            case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
-        }
-    }
-    public void decrementAnimation() {
-        switch(m_currentAnimation) {
-            case ColorFlow: changeAnimation(AnimationTypes.TwinkleOff); break;
-            case Fire: changeAnimation(AnimationTypes.ColorFlow); break;
-            case Larson: changeAnimation(AnimationTypes.Fire); break;
-            case Rainbow: changeAnimation(AnimationTypes.Larson); break;
-            case RgbFade: changeAnimation(AnimationTypes.Rainbow); break;
-            case SingleFade: changeAnimation(AnimationTypes.RgbFade); break;
-            case Strobe: changeAnimation(AnimationTypes.SingleFade); break;
-            case Twinkle: changeAnimation(AnimationTypes.Strobe); break;
-            case TwinkleOff: changeAnimation(AnimationTypes.Twinkle); break;
-            case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
-        }
-    }
-    public void setColors() {
-        changeAnimation(AnimationTypes.SetAll);
-    }
-
-    /* Wrappers so we can access the CANdle from the subsystem */
-    public double getVbat() { return m_candle.getBusVoltage(); }
-    public double get5V() { return m_candle.get5VRailVoltage(); }
-    public double getCurrent() { return m_candle.getCurrent(); }
-    public double getTemperature() { return m_candle.getTemperature(); }
-    public void configBrightness(double percent) { m_candle.configBrightnessScalar(percent, 0); }
-    public void configLos(boolean disableWhenLos) { m_candle.configLOSBehavior(disableWhenLos, 0); }
-    public void configLedType(CANdle.LEDStripType type) { m_candle.configLEDType(type, 0); }
-    public void configStatusLedBehavior(boolean offWhenActive) { m_candle.configStatusLedState(offWhenActive, 0); }
-
-    public void changeAnimation(AnimationTypes toChange) {
-        m_currentAnimation = toChange;
-
-        switch(toChange)
-        {
-            case ColorFlow:
-                m_toAnimate = new ColorFlowAnimation(128, 20, 70, 0, 0.7, LedCount, ColorFlowAnimation.Direction.Forward);
-                break;
-            case Fire:
-                m_toAnimate = new FireAnimation(0.7, 0.7, LedCount, 0.7, 0.5);
-                break;
-            case Larson:
-                m_toAnimate = new LarsonAnimation(0, 255, 46, 0, 1, LedCount, LarsonAnimation.BounceMode.Front, 10);
-                break;
-            case Rainbow:
-                m_toAnimate = new RainbowAnimation(1, 0.1, LedCount);
-                break;
-            case RgbFade:
-                m_toAnimate = new RgbFadeAnimation(0.7, 0.4, LedCount);
-                break;
-            case SingleFade:
-                m_toAnimate = new SingleFadeAnimation(50, 2, 200, 0, 0.5, LedCount);
-                break;
-            case Strobe:
-                m_toAnimate = new StrobeAnimation(240, 10, 180, 0, 98.0 / 256.0, LedCount);
-                break;
-            case Twinkle:
-                m_toAnimate = new TwinkleAnimation(30, 70, 60, 0, 0.4, LedCount, TwinkleAnimation.TwinklePercent.Percent6);
-                break;
-            case TwinkleOff:
-                m_toAnimate = new TwinkleOffAnimation(70, 90, 175, 0, 0.8, LedCount, TwinkleOffAnimation.TwinkleOffPercent.Percent100);
-                break;
-            case SetAll:
-                m_toAnimate = null;
-                break;
-        }
-        System.out.println("Changed to " + m_currentAnimation.toString());
+        configAll.statusLedOffWhenActive = false;
+        configAll.disableWhenLOS = true;
+        configAll.stripType = LEDStripType.RGB;
+        configAll.brightnessScalar = 1.0;
+        configAll.vBatOutputMode = VBatOutputMode.Modulated;
+        mCandle.configAllSettings(configAll, 5000);
+        mCandle.setStatusFramePeriod(CANdleStatusFrame.CANdleStatusFrame_Status_1_General, 255);
+        mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_1_General, 10);
+        mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_2_ModulatedVBatOut, 255);
+        applyStates(TimedLEDState.DISABLE_BLUE);
     }
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-
-            m_candle.animate(m_toAnimate);
+        readPeriodicInputs();
+        outputTelemetry();
     }
 
-    @Override
-    public void simulationPeriodic() {
-        // This method will be called once per scheduler run during simulation
+    public void readPeriodicInputs() {
+        if (mDisabled) {
+            if (!Vision.getInstance().isFullyConnected()) {
+                applyStates(TimedLEDState.NO_VISION);
+            } else {
+                if (AllianceFlipUtil.shouldFlip()) {
+                    applyStates(TimedLEDState.DISABLE_RED);
+                } else {
+                    applyStates(TimedLEDState.DISABLE_BLUE);
+                }
+            }
+        }
+
+        double timestamp = Timer.getFPGATimestamp();
+        if (mLEDStatus.state.interval != Double.POSITIVE_INFINITY) {
+            if (timestamp - mLEDStatus.lastSwitchTime >= mLEDStatus.state.interval) {
+                mLEDStatus.nextColor();
+                mLEDStatus.lastSwitchTime = timestamp;
+            }
+        }
+
+        Color color = mLEDStatus.getWantedColor();
+        mCandle.setLEDs(color.r, color.g, color.b, 0, mLEDStatus.startIDx, 100);
+    }
+
+    // setter functions
+    public void applyStates(TimedLEDState TimedState) {
+        mLEDStatus.setState(TimedState);
+    }
+
+
+    public void outputTelemetry() {
+        SmartDashboard.putString("LED Status", mLEDStatus.state.name);
+        SmartDashboard.putString("LED Colors", mLEDStatus.getWantedColor().toString());
+    }
+
+    /**
+     * Updates the LEDs to a specific color or animation.
+     *
+     * @param wanted_state Wanted LED color/animation.
+     */
+    public Command stateRequest(TimedLEDState wanted_state) {
+        return new Command() {
+
+            @Override
+            public void execute() {
+                applyStates(wanted_state);
+            }
+
+            @Override
+            public boolean isFinished() {
+                return true;
+            }
+        };
+    }
+
+    // Class for holding information about each section
+    private class LEDSection {
+        private TimedLEDState state = TimedLEDState.OFF; // current TimedState
+        private double lastSwitchTime = 0.0; // timestampe of last color cycle
+        private int colorIndex = 0; // tracks current color in array
+        private int startIDx, LEDCount; // start and end of section
+
+        public LEDSection(int startIndex, int endIndex) {
+            startIDx = startIndex;
+            LEDCount = endIndex - startIndex;
+        }
+
+        public void setState(TimedLEDState wantedTimedState) {
+            if (wantedTimedState != state) {
+                colorIndex = 0;
+                lastSwitchTime = Timer.getFPGATimestamp();
+                state = wantedTimedState;
+            }
+        }
+
+        public Color getWantedColor() {
+            Color color;
+            try {
+                color = state.colors[colorIndex];
+            } catch (Exception e) {
+                color = Color.off();
+            }
+            return color;
+        }
+
+        // cycle to next color in array
+        public void nextColor() {
+            if (state.colors.length == 1) {
+                return;
+            }
+            if (colorIndex == state.colors.length - 1) {
+                colorIndex = 0;
+            } else {
+                colorIndex++;
+            }
+        }
+
+        public void reset() {
+            state = TimedLEDState.OFF;
+            lastSwitchTime = 0.0;
+            colorIndex = 0;
+        }
     }
 }

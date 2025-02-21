@@ -202,7 +202,7 @@ public final class Constants {
         public static final double centerX = 4.47675;
         public static final double centerY = 4.0259;
         public static final double radius = 1.51;
-        public static final double pathRadius = 1.8;
+        public static final double pathRadius = 1.51;
         public static final double pipeDistance = 0.1651;
         public static final double fieldLength = 17.548225;
         

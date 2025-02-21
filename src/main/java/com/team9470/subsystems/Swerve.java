@@ -5,6 +5,7 @@ import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -16,14 +17,17 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.team9470.Constants.DriverAssistConstants;
 import com.team9470.FieldConstants;
+import com.team9470.FieldConstants.Reef;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
 import com.team9470.util.AllianceFlipUtil;
+import com.team9470.util.GeomUtil;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -33,6 +37,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -74,12 +80,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
 
+    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(TunerConstants.maxVelocity, TunerConstants.maxAcceleration);
+    private final ProfiledPIDController pidControllerX = new ProfiledPIDController(10, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, constraints);
+
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.RobotCentric robotCentricRequest = new SwerveRequest.RobotCentric();
+    private final SwerveRequest.FieldCentric fieldCentricRequest = new SwerveRequest.FieldCentric();
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -340,10 +352,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 PathPlannerPath[] paths = DriverAssistConstants.getPaths();
                 // Since AutoBuilder is configured, we can use it to build pathfinding commands
                 System.out.println("GGGGGGGGGGGGG");
-                pathfindingCommand = AutoBuilder.pathfindThenFollowPath(
-                        paths[curReefPosId],
-                        constraints
-                );
+                pathfindingCommand = AutoBuilder.pathfindToPose(getDriveTarget(getPose(), curReefPos), constraints);
                 System.out.println(paths[curReefPosId].getPathPoses());
                 // pathfindingCommand = AutoBuilder.pathfindToPose(
                 //         curReefPos,
@@ -373,8 +382,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public void pathfindClosestReefPos() {
-        // Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-        PathPlannerPath[] paths = DriverAssistConstants.getPaths();
+        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
+        // PathPlannerPath[] paths = DriverAssistConstants.getPaths();
         // Get the current robot pose at initialization.
         Pose2d currentPose = getPose();
 
@@ -383,7 +392,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         Pose2d closestPose = null;
         int closestPoseId = -1;
         for (int i = 0; i < 12; i++) {
-            Pose2d pose = paths[i].getPathPoses().get(0);
+            Pose2d pose = reefPoses[i];
             if(getAlliance() == Alliance.Red){
                 pose = new Pose2d(
                     DriverAssistConstants.fieldLength - pose.getX(),
@@ -422,7 +431,22 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         }
     }
 
-
+    private static Pose2d getDriveTarget(Pose2d robot, Pose2d goal) {
+        // Final line up
+        var offset = robot.relativeTo(goal);
+        double yDistance = Math.abs(offset.getY());
+        double xDistance = Math.abs(offset.getX());
+        double shiftXT =
+            MathUtil.clamp(
+                (yDistance / (Reef.faceLength * 2)) + ((xDistance - 0.3) / (Reef.faceLength * 3)),
+                0.0,
+                1.0);
+        double shiftYT = MathUtil.clamp(offset.getX() / Reef.faceLength, 0.0, 1.0);
+        return goal.transformBy(
+            GeomUtil.toTransform2d(
+                -shiftXT * 1.5,
+                Math.copySign(shiftYT * 1.5 * 0.8, offset.getY())));
+  }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
@@ -513,6 +537,22 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     pose.map(pose2d -> new Pose2d[]{pose2d}).orElseGet(() -> new Pose2d[]{}));
         }
 
+        // Get the target pose
+        if(curReefPos != null){
+            Pose2d targetPose = getDriveTarget(getPose(), curReefPos);
+            // Pose2d targetPose = curReefPos;
+            Pose2d currentPose = getPose();
+            ChassisSpeeds curSpeeds = getState().Speeds;
+            
+            double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
+            double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
+            double thetaSpeed = pidControllerOmega.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
+
+            ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, thetaSpeed);
+            setChassisSpeeds(speeds);
+            System.out.println(curReefPos);
+            System.out.println(getPose());
+        }
     }
 
     private void startSimThread() {

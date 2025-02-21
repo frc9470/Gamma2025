@@ -125,7 +125,7 @@ public class Autos {
     }
 
     public AutoRoutine getThreeCoralTest() {
-        AutoRoutine routine = autoFactory.newRoutine("4C Test");
+        AutoRoutine routine = autoFactory.newRoutine("3C Test");
 
         // Trajectories
         AutoTrajectory toC9 = routine.trajectory("TC-9", 0);

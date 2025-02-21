@@ -7,6 +7,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.math.geometry.Pose2d;
+import java.util.function.Supplier;
 
 import com.team9470.FieldConstants.Reef;
 import com.team9470.TunerConstants;
@@ -16,6 +17,7 @@ import com.team9470.util.LogUtil;
 
 public class DriveToPose extends Command{
     Swerve drivetrain;
+    Supplier<Pose2d> reefPoseSupplier;
     Pose2d reefPose;
 
     TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(TunerConstants.maxVelocity, TunerConstants.maxAcceleration);
@@ -25,22 +27,22 @@ public class DriveToPose extends Command{
     private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
     private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, rotationConstraints);
 
-    public DriveToPose(Swerve drivetrain){
+    public DriveToPose(Supplier<Pose2d> reefPoseSuppler, Swerve drivetrain){
+        this.reefPoseSupplier = reefPoseSuppler;
         this.drivetrain = drivetrain;
-        
         addRequirements(drivetrain);
     }
 
     @Override
     public void initialize(){
-        this.reefPose = drivetrain.getCurReefPose();
+        this.reefPose = reefPoseSupplier.get();
     }
 
     @Override
     public void execute() {
         Pose2d currentPose = drivetrain.getPose();
         Pose2d targetPose = getDriveTarget(currentPose, reefPose);
-        // Pose2d targetPose = curReefPos;
+        // Pose2d targetPose = reefPose;
         LogUtil.recordPose2d("Ghost", targetPose);
         
         double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());

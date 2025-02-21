@@ -44,7 +44,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -58,35 +57,24 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 
+
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
 public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
-    /**
-     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
-     * intaking and coral scoring.
-     */
+    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
+    private static Swerve instance;
 
-
-//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
-//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
-
-    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
-    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     private static final double SIM_LOOP_PERIOD = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.k180deg;
-    private static Swerve instance;
-    private static RobotConfig config;
-    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
+
     /* Swerve requests */
-    private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final SwerveRequest.ApplyFieldSpeeds    applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
@@ -156,11 +144,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     );
     public Pose2d curReefPos = null;
     public int curReefPosId = -1;
+
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
     private final HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
 
+    private RobotConfig config;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -204,11 +194,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         }
     }
 
-    public static Swerve getInstance() {
-        if (instance == null) {
-            instance = TunerConstants.createDrivetrain();
-        }
-        return instance;
+    /**
+     * Creates a new auto factory for this drivetrain.
+     *
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory() {
+        return createAutoFactory((sample, isStart) -> {});
     }
 
     /**
@@ -252,14 +244,22 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         );
     }
 
+    public void setChassisSpeeds(ChassisSpeeds speeds) {
+        setControl(
+                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                        .withVelocityY(speeds.vyMetersPerSecond)
+                        .withRotationalRate(speeds.omegaRadiansPerSecond)
+        );
+    }
+
     public DriverStation.Alliance getAlliance() {
         var alliance = DriverStation.getAlliance();
         return alliance.orElse(Alliance.Blue);
     }
 
-    public Command getPathfindingCommand(){
-        return new DriveToPose(this);
-    }
+    // public Command getPathfindingCommand(){
+    //     return new DriveToPose(() -> getCurReefPose(), this);
+    // }
 
     public Pose2d getCurReefPose(){
         if(curReefPos == null){
@@ -300,6 +300,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     /**
+     * 
      * @param posId ID os reef pos from 0-12
      * @return pathfinding command
      */
@@ -434,12 +435,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return kinematics.toChassisSpeeds(moduleStates);
     }
 
-    public void setChassisSpeeds(ChassisSpeeds speeds) {
-        setControl(
-                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
-                        .withVelocityY(speeds.vyMetersPerSecond)
-                        .withRotationalRate(speeds.omegaRadiansPerSecond)
-        );
+    public static Swerve getInstance(){
+        if(instance == null){
+            instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
     /**
@@ -460,6 +460,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         txTyPoses.put(id, new TxTyPoseRecord(pose, distance, timestamp));
     }
 
+    /**
+     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
+     * intaking and coral scoring.
+     */
+
+//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
+//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
+
+    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
+    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     public Pose2d getReefPose(int face, Pose2d finalPose) {
         final boolean isRed = AllianceFlipUtil.shouldFlip();
         var tagPose =

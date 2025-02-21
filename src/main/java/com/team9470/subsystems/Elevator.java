@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static com.team9470.Constants.ElevatorConstants.*;
@@ -102,7 +101,6 @@ public class Elevator extends SubsystemBase {
     private final Mechanism2d mechanism;
     private final MechanismRoot2d elevatorRoot;
     private final MechanismLigament2d elevatorLigament;
-    private int curLevel = 0;
 
     /**
      * Container for inputs and outputs that we want to log.
@@ -361,8 +359,6 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putString("Elevator/HomingState", periodicIO.homingState.toString());
         SmartDashboard.putBoolean("Elevator/NeedsHoming", needsHoming);
 
-        // Level Select
-        SmartDashboard.putNumber("Controls/Level", curLevel);
 
         // Mechanism 2D output
         elevatorLigament.setLength(Math.max(0.58, 0.58 + periodicIO.positionMeters.in(Meters)));
@@ -452,53 +448,15 @@ public class Elevator extends SubsystemBase {
         return getMoveToPositionCommand(ElevatorConstants.INTAKE);
     }
 
-    public void setLevel(int level){
-        curLevel = level;
-    }
 
-    public Command getCommand(CoralManipulator coral){
-        class ElevatorCommand extends Command{
-            private Command cmd;
-            private CoralManipulator coral;
-
-            public ElevatorCommand(CoralManipulator coral){
-                this.coral = coral;
-            }
-
-            @Override
-            public void initialize() {
-                if(curLevel == 0){
-                    cmd = Commands.none();
-                }
-                else{
-                    Command[] cmdList = {
-                        L1().andThen(coral.scoreCommand()),
-                        L2().andThen(coral.scoreCommand()),
-                        L3().andThen(coral.scoreCommand()),
-                        L4().andThen(coral.scoreCommand())
-                    };
-                    cmd = cmdList[curLevel-1];
-                    cmd.initialize();
-                }
-            }
-
-            @Override
-            public void execute() {
-                // Delegate execution to the pathfinding command.
-                cmd.execute();
-            }
-
-            @Override
-            public boolean isFinished() {
-                return cmd.isFinished();
-            }
-
-            @Override
-            public void end(boolean interrupted) {
-                cmd.end(interrupted);
-            }
+    public Command getLevelCommand(int level){
+        return switch (level) {
+            case 1 -> L1();
+            case 2 -> L2();
+            case 3 -> L3();
+            case 4 -> L4();
+            default -> L0();
         };
-        return new ElevatorCommand(coral);
     }
 
 

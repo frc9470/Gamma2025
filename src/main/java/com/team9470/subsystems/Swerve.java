@@ -5,7 +5,6 @@ import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -38,7 +37,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -46,7 +44,6 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -166,73 +163,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     private final Field2d field2d = new Field2d();
 
-    
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
-     */
-    public Swerve(
-            SwerveDrivetrainConstants drivetrainConstants,
-            SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, modules);
-        instance = this;
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        configAutoBuilder();
-        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
-            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
-        }
-        SmartDashboard.putData("Ghost", field2d);
-    }
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on
-     *                                CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                 Constants for each specific module
-     */
-    public Swerve(
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        instance = this;
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        configAutoBuilder();
-        for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
-            txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
-        }
-        SmartDashboard.putData("Ghost", field2d);
-    }
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -274,7 +204,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
-        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -321,7 +250,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 // This will flip the path being followed to the red side of the field.
                 // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-                return getAlliance() == DriverStation.Alliance.Red ? true : false;
+                return getAlliance() == Alliance.Red;
                 },
                 this // Reference to this subsystem to set requirements
         );
@@ -349,7 +278,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             @Override
             public void initialize() {
                 if(curReefPos == null){
-                    pathfindClosestReefPos();
+                    updateClosestReefPos();
                 }
                 // Create the constraints to use while pathfinding
                 PathConstraints constraints = new PathConstraints(
@@ -390,7 +319,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         };
     }
 
-    public void pathfindClosestReefPos() {
+    public void updateClosestReefPos() {
         Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
         // PathPlannerPath[] paths = DriverAssistConstants.getPaths();
         // Get the current robot pose at initialization.
@@ -550,10 +479,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         // Get the target pose
         if(curReefPos != null){
             Pose2d targetPose = getDriveTarget(getPose(), curReefPos);
+            LogUtil.recordPose2d("Controls/TargetPose", targetPose);
             // Pose2d targetPose = curReefPos;
             Pose2d currentPose = getPose();
             ChassisSpeeds curSpeeds = getState().Speeds;
-            field2d.setRobotPose(targetPose);
             
             double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
             double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
@@ -627,7 +556,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
      * intaking and coral scoring.
      */
-
 
 //    private static final LoggedTunableNumber minDistanceTagPoseBlend =
 //            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));

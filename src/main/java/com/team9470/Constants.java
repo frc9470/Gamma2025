@@ -298,5 +298,7 @@ public final class Constants {
 
             return rotatedPositions;
         }
+
+        public static Distance RAISE_DISTANCE = Meters.of(.6);
     }
 }

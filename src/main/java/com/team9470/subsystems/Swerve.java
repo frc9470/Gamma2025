@@ -5,7 +5,6 @@ import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -38,7 +37,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -46,7 +44,6 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -70,13 +67,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
     private static Swerve instance;
 
-//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
-//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
-
-    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
-    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     private static final double SIM_LOOP_PERIOD = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
@@ -208,7 +198,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         for (int i = 1; i <= FieldConstants.aprilTagCount; i++) {
             txTyPoses.put(i, new TxTyPoseRecord(new Pose2d(), Double.POSITIVE_INFINITY, -1.0));
         }
-        SmartDashboard.putData("Ghost", field2d);
     }
 
     /**
@@ -272,8 +261,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
             @Override
             public void initialize() {
-                if (curReefPos == null) {
-                    pathfindClosestReefPos();
+                if(curReefPos == null){
+                    updateClosestReefPos();
                 }
                 // Create the constraints to use while pathfinding
                 PathConstraints constraints = new PathConstraints(
@@ -314,8 +303,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         };
     }
 
-    public void pathfindClosestReefPos() {
-//        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
+    public void updateClosestReefPos() {
+        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
         PathPlannerPath[] paths = DriverAssistConstants.getPaths();
         // Get the current robot pose at initialization.
         Pose2d currentPose = getPose();
@@ -350,7 +339,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      * @param posId ID os reef pos from 0-12
      * @return pathfinding command
      */
-    public void setReefPos(int posId) {
     public void setReefPos(int posId){
         System.out.println("EEEEE");
         curReefPosId = posId;
@@ -474,6 +462,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         // Get the target pose
         if(curReefPos != null){
             Pose2d targetPose = getDriveTarget(getPose(), curReefPos);
+            LogUtil.recordPose2d("Controls/TargetPose", targetPose);
             // Pose2d targetPose = curReefPos;
             Pose2d currentPose = getPose();
             ChassisSpeeds curSpeeds = getState().Speeds;
@@ -521,20 +510,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return kinematics.toChassisSpeeds(moduleStates);
     }
 
-    public void setChassisSpeeds(ChassisSpeeds speeds) {
-        setControl(
-                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
-                        .withVelocityY(speeds.vyMetersPerSecond)
-                        .withRotationalRate(speeds.omegaRadiansPerSecond)
-        );
-    }
-
-    public void setChassisSpeeds(ChassisSpeeds speeds) {
-        setControl(
-                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
-                        .withVelocityY(speeds.vyMetersPerSecond)
-                        .withRotationalRate(speeds.omegaRadiansPerSecond)
-        );
+    public static Swerve getInstance(){
+        if(instance == null){
+            instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
     /**
@@ -555,6 +535,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         txTyPoses.put(id, new TxTyPoseRecord(pose, distance, timestamp));
     }
 
+    /**
+     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
+     * intaking and coral scoring.
+     */
+
+//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
+//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
+
+    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
+    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     public Pose2d getReefPose(int face, Pose2d finalPose) {
         final boolean isRed = AllianceFlipUtil.shouldFlip();
         var tagPose =

@@ -266,8 +266,6 @@ public final class Constants {
                 double midX = (x1 + x2) / 2;
                 double midY = (y1 + y2) / 2;
 
-
-
                 // Compute the angle to face away from the hexagon center
                 if(alliance == DriverStation.Alliance.Blue){
                     double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
@@ -299,51 +297,6 @@ public final class Constants {
 //            }
 
             return rotatedPositions;
-        }
-    }
-
-    public static class PoseMath {
-        public static Distance kFieldLength = Inches.of(651.223);
-        public static Distance kFieldWidth = Inches.of(323.277);
-
-        public static Pose2d handleAllianceFlip(Pose2d blue_pose, boolean is_red_alliance) {
-            if (is_red_alliance) {
-                blue_pose = mirrorAboutX(blue_pose, kFieldLength.in(Meters) / 2.0);
-            }
-            return blue_pose;
-        }
-
-        public static Translation2d handleAllianceFlip(Translation2d blue_translation, boolean is_red_alliance) {
-            if (is_red_alliance) {
-                blue_translation = mirrorAboutX(blue_translation,kFieldLength.in(Meters) / 2.0);
-            }
-            return blue_translation;
-        }
-
-        public static Rotation2d handleAllianceFlip(Rotation2d blue_rotation, boolean is_red_alliance) {
-            if (is_red_alliance) {
-                blue_rotation = mirrorAboutX(blue_rotation);
-            }
-            return blue_rotation;
-        }
-
-        public static double distanceFromAllianceWall(double x_coordinate, boolean is_red_alliance) {
-            if (is_red_alliance) {
-                return kFieldLength.in(Meters) - x_coordinate;
-            }
-            return x_coordinate;
-        }
-
-        public static Pose2d mirrorAboutX(Pose2d pose, double xValue) {
-            return new Pose2d(mirrorAboutX(pose.getTranslation(), xValue), mirrorAboutX(pose.getRotation()));
-        }
-
-        public static Translation2d mirrorAboutX(Translation2d translation, double xValue) {
-            return new Translation2d(xValue + (xValue - translation.getX()), translation.getY());
-        }
-
-        public static Rotation2d mirrorAboutX(Rotation2d rotation) {
-            return new Rotation2d(-rotation.getCos(), -rotation.getSin());
         }
     }
 }

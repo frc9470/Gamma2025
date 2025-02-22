@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.Supplier;
 
 public class Superstructure extends SubsystemBase {
     private final Elevator elevator;
@@ -90,6 +91,10 @@ public class Superstructure extends SubsystemBase {
         return elevator.getLevelCommand(level).alongWith(algae.stowDown());
     }
 
+    public Command raise(int level){
+        return elevator.getLevelCommand(level);
+    }
+    
     public Command score() {
         return coral.scoreCommand();
     }

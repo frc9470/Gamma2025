@@ -1,6 +1,7 @@
 package com.team9470.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -28,6 +29,7 @@ public class DriveToPose extends Command{
     private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, rotationConstraints);
 
     public DriveToPose(Supplier<Pose2d> reefPoseSuppler, Swerve drivetrain){
+        pidControllerOmega.enableContinuousInput(-Math.PI, Math.PI);
         this.reefPoseSupplier = reefPoseSuppler;
         this.drivetrain = drivetrain;
         addRequirements(drivetrain);
@@ -36,6 +38,11 @@ public class DriveToPose extends Command{
     @Override
     public void initialize(){
         this.reefPose = reefPoseSupplier.get();
+        Pose2d currentPose = drivetrain.getPose();
+
+        pidControllerX.reset(currentPose.getX());
+        pidControllerY.reset(currentPose.getY());
+        pidControllerOmega.reset(currentPose.getRotation().getRadians());
     }
 
     @Override
@@ -44,6 +51,7 @@ public class DriveToPose extends Command{
         Pose2d targetPose = getDriveTarget(currentPose, reefPose);
         // Pose2d targetPose = reefPose;
         LogUtil.recordPose2d("Ghost", targetPose);
+        LogUtil.recordPose2d("Current Reef Pose", reefPose);
         
         double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
         double ySpeed = pidControllerY.calculate(currentPose.getY(), targetPose.getY());
@@ -57,7 +65,12 @@ public class DriveToPose extends Command{
 
     @Override
     public boolean isFinished() {
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.1 && drivetrain.getPose().getRotation().getDegrees() == reefPose.getRotation().getDegrees();
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 && drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees() <= 2;
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        drivetrain.setChassisSpeeds(new ChassisSpeeds(0, 0, 0));
     }
 
     private static Pose2d getDriveTarget(Pose2d robot, Pose2d goal) {

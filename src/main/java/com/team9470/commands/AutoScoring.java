@@ -7,7 +7,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import java.util.Set;
 
 import static edu.wpi.first.units.Units.Meters;
 
@@ -21,12 +23,10 @@ public class AutoScoring {
     }
 
     public Command autoScore(Superstructure superstructure){
-        System.out.println("EEEEEEEEE");
         return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
                 .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
-                .andThen(superstructure.raiseAndStow(coralObjective.level))
+                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
                 .andThen(superstructure.score());
-
     }
 
     public Command autoAlgae(Superstructure superstructure){
@@ -65,7 +65,6 @@ public class AutoScoring {
             // starting with (1, 2) = 3, then (3, 4) = 2, each reef alternates level between 2 and 3
             return (branchId+2)/2 % 2 == 0 ? 2 : 3;
         }
-
 
         public CoralObjective updateBranchId(int branchId){
             return new CoralObjective(branchId, level);

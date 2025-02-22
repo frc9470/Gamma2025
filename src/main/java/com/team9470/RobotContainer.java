@@ -106,9 +106,9 @@ public class RobotContainer {
         }
 
         xbox.y()
-                .whileTrue(autoScoring.autoScore(superstructure)
-                        .onlyIf(superstructure.getCoral()::hasCoral))
-                .onFalse(superstructure.algaeReturn().andThen(superstructure.getElevator().L0()));
+                .whileTrue(autoScoring.autoScore(superstructure))
+                       // .onlyIf(superstructure.getCoral()::hasCoral))
+                .onFalse(superstructure.getElevator().L0());
 
         xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
     }

@@ -5,10 +5,10 @@ import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+
 import java.util.Set;
 
 import static edu.wpi.first.units.Units.Meters;
@@ -24,15 +24,17 @@ public class AutoScoring {
 
     public Command autoScore(Superstructure superstructure){
         return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
-                .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
-                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
+                .alongWith(
+                        new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
+                            .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
+                )
                 .andThen(superstructure.score());
     }
 
     public Command autoAlgae(Superstructure superstructure){
         return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
                 .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
-                .andThen(superstructure.dealgify(coralObjective.getAlgaeLevel()));
+                .andThen(new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure)));
     }
 
     private boolean closeEnough(CoralObjective objective, Distance distance){
@@ -44,17 +46,40 @@ public class AutoScoring {
     // Update the reef value used for automatic level selection.
     public void setBranch(int branchId) {
         coralObjective = coralObjective.updateBranchId(branchId);
+        System.out.println("Branch ID: " + branchId);
     }
 
     public void setLevel(int level) {
         coralObjective = coralObjective.updateLevel(level);
     }
 
+    public void updateClosestReefPos() {
+        Pose2d[] reefPoses = Constants.DriverAssistConstants.getReefPositions();
+        // Get the current robot pose at initialization.
+        Pose2d currentPose = Swerve.getInstance().getPose();
+
+        // Find the closest reef pose.
+        double shortestDistance = Double.MAX_VALUE;
+        int closestPoseId = -1;
+        for (int i = 0; i < 12; i++) {
+            Pose2d pose = reefPoses[i];
+            double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestPoseId = i;
+            }
+        }
+        setBranch(closestPoseId);
+
+    }
+
+    // Starting facing the driver station, moving counterclockwise
     public record CoralObjective(int branchId, int level){
         public static final CoralObjective NONE = new CoralObjective(0, 0);
 
         public Pose2d getScoringPose(){
-            return Constants.DriverAssistConstants.getReefPositions(DriverStation.Alliance.Red)[branchId];
+            if (level == 1) return Constants.DriverAssistConstants.getL1Pose(this);
+            return Constants.DriverAssistConstants.getReefPositions()[branchId];
         }
 
         public int getFace(){

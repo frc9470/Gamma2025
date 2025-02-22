@@ -39,7 +39,7 @@ public class LEDs extends SubsystemBase {
         configAll.stripType = LEDStripType.RGB;
         configAll.brightnessScalar = 1.0;
         configAll.vBatOutputMode = VBatOutputMode.Modulated;
-        mCandle.configAllSettings(configAll, 5000);
+        mCandle.configAllSettings(configAll, 200);
         mCandle.setStatusFramePeriod(CANdleStatusFrame.CANdleStatusFrame_Status_1_General, 255);
         mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_1_General, 10);
         mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_2_ModulatedVBatOut, 255);

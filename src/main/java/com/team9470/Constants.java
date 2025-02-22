@@ -8,10 +8,11 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.team9470.commands.AutoScoring;
+import com.team9470.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.util.List;
@@ -250,7 +251,7 @@ public final class Constants {
             return paths;
         }
 
-        public static Pose2d[] getReefPositions(DriverStation.Alliance alliance) {
+        public static Pose2d[] getReefPositions() {
             Pose2d[] REEF_POSITIONS = new Pose2d[12];
             for (int i = 0; i < 6; i++) {
                 double angle1 = Math.PI / 6 + Math.PI / 3 * i;
@@ -266,28 +267,22 @@ public final class Constants {
                 double midY = (y1 + y2) / 2;
 
                 // Compute the angle to face away from the hexagon center
-                if(alliance == DriverStation.Alliance.Blue){
-                    double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
+                double faceAngle = Math.atan2(midY - centerY, midX - centerX) + Math.PI;
 
-                    REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                    REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                } 
-                else{
-                    double faceAngle = -Math.atan2(midY - centerY, midX - centerX);
-
-                    REEF_POSITIONS[2*i] = new Pose2d(fieldLength - midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                    REEF_POSITIONS[2*i+1] = new Pose2d(fieldLength - midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
-                }
+                REEF_POSITIONS[2*i] = new Pose2d(midX - pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY + pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                REEF_POSITIONS[2*i+1] = new Pose2d(midX + pipeDistance * Math.sin(Math.PI / 3 * (i-2)), midY - pipeDistance * Math.cos(Math.PI / 3 * (i-2)), new Rotation2d(faceAngle));
+                REEF_POSITIONS[2*i] = AllianceFlipUtil.apply(REEF_POSITIONS[2*i]);
+                REEF_POSITIONS[2*i+1] = AllianceFlipUtil.apply(REEF_POSITIONS[2*i+1]);
             }
 
             // Rotate the positions 4 spots clockwise.
             Pose2d[] rotatedPositions = new Pose2d[12];
             for (int i = 0; i < 12; i++) {
-                int newIndex = (i + 4 + 12) % 12;
+                int newIndex = (i + 8 + 12) % 12;
                 rotatedPositions[newIndex] = REEF_POSITIONS[i];
             }
 
-            // Flip positions for red alliance using the provided helper.
+                // Flip positions for red alliance using the provided helper.
 //            boolean isRedAlliance = (alliance == DriverStation.Alliance.Red);
 //            for (int i = 0; i < 12; i++) {
 //                rotatedPositions[i] = handleAllianceFlip(rotatedPositions[i], isRedAlliance);
@@ -297,5 +292,18 @@ public final class Constants {
         }
 
         public static Distance RAISE_DISTANCE = Meters.of(.6);
+
+        public static final Distance l1AlignOffsetX = Meters.of(0.5);
+        public static final Distance l1AlignOffsetY = Meters.of(0.3);
+        public static final Angle l1AlignOffsetDegrees = Degrees.of(170);
+
+        public static Pose2d getL1Pose(AutoScoring.CoralObjective coralObjective) {
+            int face = coralObjective.branchId() / 2;
+            return AllianceFlipUtil.apply(FieldConstants.Reef.centerFaces[5-face].transformBy(
+                    new Transform2d(
+                            l1AlignOffsetX,
+                            l1AlignOffsetY.times(coralObjective.branchId() % 2 == 0 ? 1.0 : -1.0),
+                            (Rotation2d) l1AlignOffsetDegrees.times(coralObjective.branchId() % 2 == 0 ? 1.0 : -1.0))));
+        }
     }
 }

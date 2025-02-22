@@ -225,8 +225,6 @@ public class FieldConstants {
 		private final String layoutString;
 	}
 
-	public record CoralObjective(int branchId, ReefLevel reefLevel) {}
-
 	public record AlgaeObjective(int id) {}
 
 	@RequiredArgsConstructor

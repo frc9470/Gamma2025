@@ -110,6 +110,6 @@ public class RobotContainer {
                        // .onlyIf(superstructure.getCoral()::hasCoral))
                 .onFalse(superstructure.getElevator().L0());
 
-        xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
+        xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }
 }

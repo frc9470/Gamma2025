@@ -12,22 +12,16 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.team9470.Constants.DriverAssistConstants;
 import com.team9470.FieldConstants;
-import com.team9470.FieldConstants.Reef;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
-import com.team9470.commands.DriveToPose;
 import com.team9470.subsystems.vision.VisionPoseAcceptor;
 import com.team9470.util.AllianceFlipUtil;
-import com.team9470.util.GeomUtil;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -37,7 +31,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -257,64 +250,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return alliance.orElse(Alliance.Blue);
     }
 
-    // public Command getPathfindingCommand(){
-    //     return new DriveToPose(() -> getCurReefPose(), this);
-    // }
 
-    public Pose2d getCurReefPose(){
-        if(curReefPos == null){
-            updateClosestReefPos();
-        }
-        return curReefPos;
-    }
-
-    public void updateClosestReefPos() {
-        Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(getAlliance());
-        // PathPlannerPath[] paths = DriverAssistConstants.getPaths();
-        // Get the current robot pose at initialization.
-        Pose2d currentPose = getPose();
-
-        // Find the closest reef pose.
-        double shortestDistance = Double.MAX_VALUE;
-        Pose2d closestPose = null;
-        int closestPoseId = -1;
-        for (int i = 0; i < 12; i++) {
-            Pose2d pose = reefPoses[i];
-            if(getAlliance() == Alliance.Red){
-                pose = new Pose2d(
-                        DriverAssistConstants.fieldLength - pose.getX(),
-                        DriverAssistConstants.centerY * 2 - pose.getY(),
-                        pose.getRotation().rotateBy(Rotation2d.fromDegrees(180))
-                );
-            }
-            double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestPose = pose;
-                closestPoseId = i;
-            }
-        }
-
-        curReefPos = closestPose;
-        curReefPosId = closestPoseId;
-    }
-
-    /**
-     * 
-     * @param posId ID os reef pos from 0-12
-     * @return pathfinding command
-     */
-    public void setReefPos(int posId) {
-        curReefPosId = posId;
-        if (posId == -1) {
-            curReefPos = null;
-        } else {
-            Pose2d[] reefPoses;
-            reefPoses = DriverAssistConstants.getReefPositions(getAlliance());
-
-            curReefPos = reefPoses[posId];
-        }
-    }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.

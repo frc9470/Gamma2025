@@ -303,7 +303,7 @@ public final class Constants {
                     new Transform2d(
                             l1AlignOffsetX,
                             l1AlignOffsetY.times(coralObjective.branchId() % 2 == 0 ? 1.0 : -1.0),
-                            (Rotation2d) l1AlignOffsetDegrees.times(coralObjective.branchId() % 2 == 0 ? 1.0 : -1.0))));
+                            new Rotation2d(l1AlignOffsetDegrees.times(coralObjective.branchId() % 2 == 0 ? 1.0 : -1.0)))));
         }
     }
 }

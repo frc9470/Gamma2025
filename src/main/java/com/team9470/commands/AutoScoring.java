@@ -3,13 +3,18 @@ package com.team9470.commands;
 import com.team9470.Constants;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
+import com.team9470.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import java.util.Set;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Meters;
 
@@ -22,13 +27,37 @@ public class AutoScoring {
         this.drivetrain = drivetrain;
     }
 
-    public Command autoScore(Superstructure superstructure){
-        return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
+    public Command autoScore(Superstructure superstructure, CommandXboxController driverJoystick) {
+        // Create feedforward lambdas using raw joystick values.
+        // Linear feedforward: directly use axes 0 and 1.
+        Supplier<Translation2d> linearFF = () ->
+                new Translation2d(driverJoystick.getLeftX(), driverJoystick.getLeftY()).times(AllianceFlipUtil.shouldFlip() ? -1 : 1);
+        // Angular feedforward: square the value while preserving the sign.
+        DoubleSupplier omegaFF = () ->
+                Math.copySign(Math.pow(driverJoystick.getRawAxis(4), 2), driverJoystick.getRawAxis(4));
+
+        // First drive to the scoring position while raising the superstructure.
+        Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain, linearFF, omegaFF)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
-                            .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
-                )
-                .andThen(superstructure.score());
+                                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
+                );
+
+        return driveToScore.andThen(superstructure.score());
+    }
+
+    private Pose2d computeDriveBackPose(Pose2d scoringPose) {
+        // Drive backward 1 meter relative to the scoring pose.
+        Translation2d backOffset = new Translation2d(-.5, 0.0).rotateBy(scoringPose.getRotation());
+        return new Pose2d(scoringPose.getTranslation().plus(backOffset), scoringPose.getRotation());
+    }
+
+    public Command driveBack(){
+        Pose2d scoringPose = coralObjective.getScoringPose();
+        Pose2d driveBackPose = computeDriveBackPose(scoringPose);
+
+        return new DriveToPose(() -> driveBackPose, drivetrain);
+
     }
 
     public Command autoAlgae(Superstructure superstructure){
@@ -87,8 +116,8 @@ public class AutoScoring {
         }
 
         public int getAlgaeLevel(){
-            // starting with (1, 2) = 3, then (3, 4) = 2, each reef alternates level between 2 and 3
-            return (branchId+2)/2 % 2 == 0 ? 2 : 3;
+            // starting with (0, 1) = 3, then (2, 3) = 2, each reef alternates level between 2 and 3
+            return (branchId)/2 % 2 == 0 ? 3 : 2;
         }
 
         public CoralObjective updateBranchId(int branchId){

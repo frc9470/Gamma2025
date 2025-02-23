@@ -54,6 +54,7 @@ public class RobotContainer {
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("3C Test", autos::getThreeCoralTest);
+        autoChooser.addRoutine("3CTNW", autos::getThreeCoralTopNoWait);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
         autoChooser.addRoutine("3BC Test", autos::getBottomThreeCoralTest);
         autoChooser.select("2C Test");
@@ -65,6 +66,7 @@ public class RobotContainer {
 
     public void periodic(){
         drivetrain.periodic();
+
     }
 
     private void configureBindings() {

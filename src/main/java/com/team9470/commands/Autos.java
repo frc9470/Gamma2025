@@ -4,10 +4,9 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import com.team9470.subsystems.*;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.team9470.util.LogUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Autos {
@@ -40,7 +39,6 @@ public class Autos {
     int count = 0;
     public Command scoreL4WaitLower(Command driveAway, double delay){
         return elevator.L4()
-                .andThen(new InstantCommand(() -> SmartDashboard.putNumber("Auto L4 Count", ++count)))
                 .andThen(
                     coralManipulator.scoreCommand().withTimeout(SCORING_DELAY)
                 )
@@ -263,6 +261,118 @@ public class Autos {
 
 
 
+
+        return routine;
+    }
+
+    public AutoRoutine getThreeCoralTop() {
+        AutoRoutine routine = autoFactory.newRoutine("3CT Test");
+
+        // Trajectories
+        AutoTrajectory startToC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("BC-1", 1);
+        AutoTrajectory toC12 = routine.trajectory("BC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("BC-12", 1);
+        AutoTrajectory toC11 = routine.trajectory("BC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("BC-11", 1);
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC1.resetOdometry(),
+                        startToC1.cmd()
+                )
+        );
+
+//        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        startToC1.done().onTrue(
+                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+        );
+
+        C1toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC12.cmd())
+        );
+
+//        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        toC12.done().onTrue(
+                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+        );
+
+        C12toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC11.cmd())
+        );
+
+//        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        toC11.done().onTrue(
+                scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
+        );
+
+
+
+
+        return routine;
+    }
+
+    public AutoRoutine getThreeCoralTopNoWait() {
+        AutoRoutine routine = autoFactory.newRoutine("3CTNW Test");
+
+
+        // Trajectories
+        AutoTrajectory startToC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("BC-1", 1);
+        AutoTrajectory toC12 = routine.trajectory("BC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("BC-12", 1);
+        AutoTrajectory toC11 = routine.trajectory("BC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("BC-11", 1);
+
+        LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC1.resetOdometry(),
+                        startToC1.cmd()
+                )
+        );
+
+//        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        startToC1.done().onTrue(
+                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+        );
+
+        C1toSource.done().onTrue(
+                toC12.cmd()
+        );
+
+//        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        toC12.done().onTrue(
+                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+        );
+
+        C12toSource.done().onTrue(
+                toC11.cmd()
+        );
+
+//        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+//                elevator.L4()
+//        );
+
+        toC11.done().onTrue(
+                scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
+        );
 
         return routine;
     }

@@ -13,43 +13,46 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static edu.wpi.first.units.Units.Volts;
 
-
 /**
- * CoralManipulator - Pranesh
- * Subsystem Requirements:
- * - move wheels forward or backward with command
- * - use a sensor to detect if a coral is in the manipulator
- * - one motor
+ * By default, the coral manipulator runs `coastUnless()`. This runs the coral manipulator unless
+ * a coral is detected, or another command overrides it.
  */
 public class CoralManipulator extends SubsystemBase {
+    /** ELECTRONICS */
     private final TalonFX coralMotor = TalonFXFactory.createDefaultTalon(Ports.CORAL_INTAKE);
     private final TalonFX funnelMotor = TalonFXFactory.createDefaultTalon(Ports.FUNNEL);
     private final DigitalInput coralSensor = new DigitalInput(Ports.CORAL_BREAK);
+
+    /** ensures coral stops at the right position in coral manipulator, not just at the instant it gets detected.
+     *
+     * (tune `Constants.CoralConstants.BREAK_TIMEOUT` to adjust how far after a rising edge to wait
+     * until `coralBreak` becomes true) */
     private final DelayedBoolean coralBreak = new DelayedBoolean(Timer.getFPGATimestamp(), CoralConstants.BREAK_TIMEOUT, sensorTrue());
 
     public CoralManipulator() {
-
         setDefaultCommand(coastUnless());
     }
 
     @Override
     public void periodic() {
+        // updates the delayed boolean with whether the coral is in the manipulator
         coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
-        if(!hasCoral())
-            funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
+
+        // if there isn't coral, the funnel needs to be running to accept any incoming coral
+        if (!hasCoral()) funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
+            // if there is, great! stop the funnel, as it's not necessary
         else funnelMotor.stopMotor();
 
         SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
         SmartDashboard.putBoolean("CoralManipulator/HasCoral", hasCoral());
-
-
-
     }
 
-    // it works!
     /**
      * The beambreak is true if the beambreak is NOT "broken" (i.e. something is NOT detected)
      * The beambreak returns false if the beambreak IS "broken" (i.e. something IS detected)
+     *
+     * This function should NOT be used directly -- use the DelayedBoolean to ensure the coral manipulator stops
+     * only a bit after the coral is detected
      *
      * @return Whether coral is currently in the intake or not
      */
@@ -57,13 +60,23 @@ public class CoralManipulator extends SubsystemBase {
         return !coralSensor.get();
     }
 
+    /**
+     * A wrapper function for `sensorTrue()` that implements `DelayedBoolean` functionality
+     *
+     * @return Whether coral is PROPERLY in the intake or not
+     */
     public boolean hasCoral() {
         return coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
     }
 
-    public Command coastUnless(){
+    /**
+     * Runs the coral manipulator unless a coral is detected, or another command overrides it.
+     *
+     * @return The command to run this functionality
+     */
+    public Command coastUnless() {
         return this.run(() -> {
-            if(hasCoral()){
+            if (hasCoral()) {
                 coralMotor.setVoltage(CoralConstants.HOLD_SPEED.in(Volts));
             } else {
                 coralMotor.setVoltage(CoralConstants.COAST_SPEED.in(Volts));
@@ -71,15 +84,28 @@ public class CoralManipulator extends SubsystemBase {
         });
     }
 
+    /**
+     * DRIVER CONTROLLED COMMAND --> runs the coral manipulator to score
+     *
+     * @return
+     */
     public Command scoreCommand(){
         return this.run(() -> coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)));
     }
 
-
+    /**
+     * DRIVER CONTROLLED COMMAND --> runs the coral manipulator in reverse, either to remove a stuck coral
+     * or if the coral has gone too far into the coral manipulator
+     *
+     * @return
+     */
     public Command reverseCommand() {
         return this.runEnd(
-                () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
-                , coralMotor::stopMotor
+            // reverses coral!
+            () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
+            // brakes the motor at the end, so the coral doesn't just end up misaligning but in reverse
+            , coralMotor::stopMotor
         );
     }
 }
+//:3

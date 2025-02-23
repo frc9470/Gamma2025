@@ -3,10 +3,7 @@ package com.team9470.commands;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import com.team9470.subsystems.AlgaeArm;
-import com.team9470.subsystems.CoralManipulator;
-import com.team9470.subsystems.Elevator;
-import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,14 +16,16 @@ public class Autos {
     private final CoralManipulator coralManipulator;
     private final Elevator elevator;
     private final Swerve swerve;
+    private final Superstructure superstructure;
 
-    public Autos(AlgaeArm algaeArm, CoralManipulator coralManipulator, Elevator elevator, Swerve swerve) {
+    public Autos(Superstructure superstructure, Swerve swerve) {
         this.autoFactory = swerve.createAutoFactory((sample, isStart) -> {
         });
-        this.algaeArm = algaeArm;
-        this.coralManipulator = coralManipulator;
-        this.elevator = elevator;
+        this.algaeArm = superstructure.getAlgae();
+        this.coralManipulator = superstructure.getCoral();
+        this.elevator = superstructure.getElevator();
         this.swerve = swerve;
+        this.superstructure = superstructure;
     }
 
     public static final double SCORING_DELAY = 0.3;
@@ -208,4 +207,61 @@ public class Autos {
 
         return routine;
     }
+
+    public AutoRoutine getBottomThreeCoralTest() {
+        AutoRoutine routine = autoFactory.newRoutine("B3C Test");
+
+        // Trajectories
+        AutoTrajectory startToC5 = routine.trajectory("S-5");
+        AutoTrajectory C5toSource = routine.trajectory("BC-5", 1);
+        AutoTrajectory toC7 = routine.trajectory("BC-7", 0);
+        AutoTrajectory C7toSource = routine.trajectory("BC-7", 1);
+        AutoTrajectory toC8 = routine.trajectory("BC-8", 0);
+        AutoTrajectory C8toSource = routine.trajectory("BC-8", 1);
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC5.resetOdometry(),
+                        startToC5.cmd()
+                )
+        );
+
+        startToC5.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        startToC5.done().onTrue(
+                scoreL4WaitLower(C5toSource.cmd(), SCORING_DELAY)
+        );
+
+        C5toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC7.cmd())
+        );
+
+        toC7.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC7.done().onTrue(
+                scoreL4WaitLower(C7toSource.cmd(), SCORING_DELAY)
+        );
+
+        C7toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC8.cmd())
+        );
+
+        toC8.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC8.done().onTrue(
+                scoreL4WaitLower(C8toSource.cmd(), SCORING_DELAY)
+        );
+
+
+
+
+        return routine;
+    }
+
 }

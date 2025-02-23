@@ -25,14 +25,11 @@ public final class Constants {
         public static final boolean disableHAL = false;
     }
 
-    // TODO: change camera constants
     public static class VisionConstants {
         public static final Transform3d FRONT_LEFT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.290427), Units.Inches.of(12.710), Units.Inches.of(+8.803138),
                 new Rotation3d(0, Math.toRadians(-28.125), Math.toRadians(-45)));
         public static final Transform3d FRONT_RIGHT_CAMERA_OFFSET = new Transform3d(Units.Inches.of(+12.290427), Units.Inches.of(-12.710), Units.Inches.of(+8.803138),
                 new Rotation3d(0, Math.toRadians(-28.125), Math.toRadians(45)));
-
-
     }
 
     public static final class ElevatorConstants {
@@ -62,18 +59,19 @@ public final class Constants {
         public static final Voltage HOMING_OUTPUT = Units.Volts.of(-2.0);
         public static final LinearVelocity HOMING_MAX_VELOCITY = Units.MetersPerSecond.of(0.1);
         public static final Distance HOMING_ZONE = Meters.of(0.1);
-        public static final Time HOMING_TIMEOUT = Units.Seconds.of(0.5);
+        public static final Time HOMING_TIMEOUT = Units.Seconds.of(10);
 
         // Current limits
         public static final double STALL_CURRENT = 40; // example
 
         public static final Distance HOME_POSITION = Meters.of(0);
+        public static final Distance L0 = Meters.of(0.00);
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
         public static final Distance L3 = Meters.of(.76);
-        public static final Distance L4 = Meters.of(1.42);
-        public static final Distance AL2 = Meters.of(.6);
-        public static final Distance AL3 = Meters.of(.9);
+        public static final Distance L4 = Meters.of(1.39);
+        public static final Distance AL2 = Meters.of(.45);
+        public static final Distance AL3 = Meters.of(.75);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -114,7 +112,8 @@ public final class Constants {
         public static final double KV = 0;
         public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
         public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
-        public static final Angle DEPLOY_ANGLE = Degrees.of(-15);
+        public static final Angle DEPLOY_ANGLE = Degrees.of(-20);
+        public static final Angle GROUND_ANGLE = Degrees.of(-50);
         public static final Angle STOW_UP = Degrees.of(93.98);
         public static final Angle STOW_DOWN = Degrees.of(-95);
 
@@ -174,12 +173,12 @@ public final class Constants {
     public static final class CoralConstants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
-        public static final Voltage FUNNEL_SPEED = Volts.of(-3);
-        public static final Voltage HOLD_SPEED = Volts.of(-.6);
+        public static final Voltage FUNNEL_SPEED = Volts.of(-5);
+        public static final Voltage HOLD_SPEED = Volts.of(-0.6);
         public static final double BREAK_TIMEOUT = .1;
     }
 
-    public static final class DriverAssistConstants { // TODO: maybe you can use hexagon math to calculate these? also, there are TWELVE positions per reef, not six. im also sure theres a flipper method in fieldconstants, but you may have to check.
+    public static final class DriverAssistConstants {
         // public static final Pose2d[] BLUE_REEF_POSITIONS = { // {x (m), y (m), angle (rad)}
         //     new Pose2d(3.7454309463500977, 5.406795501708984, new Rotation2d(-1.0584074157409784)),
         //     new Pose2d(2.9004666805267334, 4.025999546051025, new Rotation2d(0)),

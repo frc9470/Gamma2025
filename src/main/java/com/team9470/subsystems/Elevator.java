@@ -271,7 +271,7 @@ public class Elevator extends SubsystemBase {
                 boolean timeOut = periodicIO.timestamp
                         .minus(homingStartTime)
                         .gt(ElevatorConstants.HOMING_TIMEOUT);
-                if (HOME_POSITION.equals(targetPosition) && targetPosition.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
+                if (L0.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }
@@ -417,7 +417,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command L0() {
-        return getMoveToPositionCommand(ElevatorConstants.HOME_POSITION);
+        return getMoveToPositionCommand(ElevatorConstants.L0);
     }
 
     public Command L1(){

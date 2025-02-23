@@ -43,7 +43,7 @@ public class RobotContainer {
     private final Vision vision = Vision.getInstance();
 
     // ---------------- AUTONOMOUS --------------------
-    private final Autos autos = new Autos(null, superstructure.getCoral(), superstructure.getElevator(), drivetrain);
+    private final Autos autos = new Autos(superstructure, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
 
     CommandXboxController xbox = new CommandXboxController(0);
@@ -55,6 +55,7 @@ public class RobotContainer {
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("3C Test", autos::getThreeCoralTest);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
+        autoChooser.addRoutine("3BC Test", autos::getBottomThreeCoralTest);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);
@@ -83,9 +84,11 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.leftBumper().whileTrue(autoScoring.autoAlgae(superstructure));
+        xbox.leftBumper().whileTrue(autoScoring.autoAlgaeNoDrive(superstructure))
+                .onFalse(superstructure.getElevator().L0());
 
-        xbox.rightBumper().whileTrue(superstructure.groundIntake()).onFalse(superstructure.algaeReturn());
+        // xbox.rightBumper().whileTrue(superstructure.groundIntake()).onFalse(superstructure.algaeReturn());
+        xbox.rightBumper().whileTrue(superstructure.groundIntake());
         xbox.a().whileTrue(superstructure.processorScore()).onFalse(superstructure.algaeReturn());
         xbox.povRight().whileTrue(superstructure.raiseAndStow(2));
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
@@ -100,15 +103,18 @@ public class RobotContainer {
 
         // Reef position bindings (remaining unchanged)
         for (int i = 0; i < 12; i++) {
-            JoystickButton button = new JoystickButton(buttonBoard, 12 - i);
+            JoystickButton button = new JoystickButton(buttonBoard, i+1);
             final int id = i;
             button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
         }
 
-        xbox.y()
+        xbox.rightTrigger()
                 .whileTrue(autoScoring.autoScore(superstructure, xbox))
                        // .onlyIf(superstructure.getCoral()::hasCoral))
                 .onFalse(/*autoScoring.driveBack().andThen(*/superstructure.getElevator().L0()/*)*/);
+
+        xbox.y()
+                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure));
 
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }

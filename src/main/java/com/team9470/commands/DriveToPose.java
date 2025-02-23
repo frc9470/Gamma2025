@@ -105,7 +105,7 @@ public class DriveToPose extends Command {
     @Override
     public boolean isFinished() {
         // Finish when both translation and rotation are within tolerances.
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 &&
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.01 &&
                 Math.abs(drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees()) <= 2;
     }
 

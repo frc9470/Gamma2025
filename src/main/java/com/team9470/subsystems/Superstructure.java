@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.Supplier;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class Superstructure extends SubsystemBase {
     private final Elevator elevator;
@@ -53,7 +53,7 @@ public class Superstructure extends SubsystemBase {
 
     // Ground intake: deploy and spin to acquire algae.
     public Command groundIntake() {
-        return algae.deploy().alongWith(algae.spin());
+        return algae.groundDeploy().alongWith(algae.reverse());
     }
 
     // Processor scoring: deploy outwards and reverse spin.
@@ -62,19 +62,19 @@ public class Superstructure extends SubsystemBase {
         // Example with drivetrain (uncomment if drivetrain command available):
         // return algae.deploy().alongWith(algae.reverse())
         //         .andThen(new InstantCommand(() -> drivetrain.driveBackward()));
-        return algae.deploy().alongWith(algae.reverse());
+        return algae.groundDeploy().alongWith(algae.spin());
     }
 
     // Return the algae bar if algae is not obtained (stow bar upwards).
     public Command algaeReturn() {
-        return algae.stow().onlyIf(() -> !algae.hasAlgae()).andThen(algae.deploy().onlyIf(algae::hasAlgae));
+        return algae.stow();
     }
 
     // Dealgify: move the elevator to the appropriate level (based on reef) and then
     // deploy the arm (with reverse spin) to remove algae.
     public Command dealgify(int level) {
         Command moveElevator = (level == 2) ? elevator.algaeL2() : elevator.algaeL3();
-        return moveElevator.alongWith(algae.deploy().alongWith(algae.reverse()));
+        return moveElevator.alongWith(algae.deploy().alongWith(algae.spin()));
     }
 
 
@@ -102,6 +102,10 @@ public class Superstructure extends SubsystemBase {
     // Trigger the algae arm’s homing routine.
     public Command triggerAlgaeHoming() {
         return new InstantCommand(algae::triggerHoming);
+    }
+
+    public Command waitForIntake() {
+        return new WaitUntilCommand(coral::hasCoral);
     }
 
 

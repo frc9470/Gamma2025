@@ -34,16 +34,20 @@ public class AutoScoring {
                 new Translation2d(driverJoystick.getLeftX(), driverJoystick.getLeftY()).times(AllianceFlipUtil.shouldFlip() ? -1 : 1);
         // Angular feedforward: square the value while preserving the sign.
         DoubleSupplier omegaFF = () ->
-                Math.copySign(Math.pow(driverJoystick.getRawAxis(4), 2), driverJoystick.getRawAxis(4));
+                Math.copySign(Math.pow(driverJoystick.getRightX(), 2), driverJoystick.getLeftX());
 
         // First drive to the scoring position while raising the superstructure.
         Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain, linearFF, omegaFF)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
+                                .andThen(superstructure.waitForIntake())
                                 .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
                 );
-
         return driveToScore.andThen(superstructure.score());
+    }
+
+    public Command autoScoreNoDrive(Superstructure superstructure) {
+        return new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).andThen(superstructure.score());
     }
 
     private Pose2d computeDriveBackPose(Pose2d scoringPose) {
@@ -64,6 +68,10 @@ public class AutoScoring {
         return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
                 .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
                 .andThen(new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure)));
+    }
+
+    public Command autoAlgaeNoDrive(Superstructure superstructure){
+        return new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure));
     }
 
     private boolean closeEnough(CoralObjective objective, Distance distance){

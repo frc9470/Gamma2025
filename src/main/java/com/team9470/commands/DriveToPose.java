@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import java.util.function.DoubleSupplier;
@@ -28,8 +29,8 @@ public class DriveToPose extends Command {
     TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(TunerConstants.maxVelocity, TunerConstants.maxAcceleration);
     TrapezoidProfile.Constraints rotationConstraints = new TrapezoidProfile.Constraints(TunerConstants.maxAngularVelocity, TunerConstants.maxAngularAcceleration);
 
-    private final ProfiledPIDController pidControllerX = new ProfiledPIDController(10, 0, 0, constraints);
-    private final ProfiledPIDController pidControllerY = new ProfiledPIDController(10, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerX = new ProfiledPIDController(7, 0, 0, constraints);
+    private final ProfiledPIDController pidControllerY = new ProfiledPIDController(7, 0, 0, constraints);
     private final ProfiledPIDController pidControllerOmega = new ProfiledPIDController(7, 0, 0, rotationConstraints);
 
     // Feedforward suppliers (default to zero feedforward)
@@ -105,7 +106,10 @@ public class DriveToPose extends Command {
     @Override
     public boolean isFinished() {
         // Finish when both translation and rotation are within tolerances.
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.01 &&
+        SmartDashboard.putNumber("DriveToPose/Error", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()));
+        if (drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 &&
+                Math.abs(drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees()) <= 2) System.out.println("AUTOALIGN DONE");
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 &&
                 Math.abs(drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees()) <= 2;
     }
 

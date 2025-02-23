@@ -3,7 +3,6 @@ package com.team9470.commands;
 import com.team9470.Constants;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
-import com.team9470.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
@@ -13,8 +12,6 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import java.util.Set;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Meters;
 
@@ -29,19 +26,19 @@ public class AutoScoring {
 
     public Command autoScore(Superstructure superstructure, CommandXboxController driverJoystick) {
         // Create feedforward lambdas using raw joystick values.
-        // Linear feedforward: directly use axes 0 and 1.
-        Supplier<Translation2d> linearFF = () ->
-                new Translation2d(driverJoystick.getLeftX(), driverJoystick.getLeftY()).times(AllianceFlipUtil.shouldFlip() ? -1 : 1);
-        // Angular feedforward: square the value while preserving the sign.
-        DoubleSupplier omegaFF = () ->
-                Math.copySign(Math.pow(driverJoystick.getRightX(), 2), driverJoystick.getLeftX());
+//        // Linear feedforward: directly use axes 0 and 1.
+//        Supplier<Translation2d> linearFF = () ->
+//                new Translation2d(driverJoystick.getLeftX(), driverJoystick.getLeftY()).times(AllianceFlipUtil.shouldFlip() ? -1 : 1);
+//        // Angular feedforward: square the value while preserving the sign.
+//        DoubleSupplier omegaFF = () ->
+//                Math.copySign(Math.pow(driverJoystick.getRightX(), 2), driverJoystick.getLeftX());
 
         // First drive to the scoring position while raising the superstructure.
-        Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain, linearFF, omegaFF).asProxy()
+        Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
                                 .andThen(superstructure.waitForIntake().asProxy())
-                                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).asProxy())
+                                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
                 );
         return driveToScore.andThen(superstructure.score().asProxy());
     }
@@ -76,7 +73,7 @@ public class AutoScoring {
 
     private boolean closeEnough(CoralObjective objective, Distance distance){
         Pose2d scoringPose = objective.getScoringPose();
-        Pose2d currentPose = Swerve.getInstance().getReefPose(objective.getFace(), scoringPose);
+        Pose2d currentPose = Swerve.getInstance().getPose();
         return currentPose.getTranslation().getDistance(scoringPose.getTranslation()) < distance.in(Meters);
     }
 

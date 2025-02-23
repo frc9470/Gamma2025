@@ -69,7 +69,7 @@ public final class Constants {
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
         public static final Distance L3 = Meters.of(.76);
-        public static final Distance L4 = Meters.of(1.39);
+        public static final Distance L4 = Meters.of(1.41);
         public static final Distance AL2 = Meters.of(.45);
         public static final Distance AL3 = Meters.of(.75);
         public static final Distance INTAKE = Meters.of(0);

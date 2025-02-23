@@ -128,6 +128,9 @@ public class Autos {
         AutoRoutine routine = autoFactory.newRoutine("3C Test");
 
         // Trajectories
+        AutoTrajectory startC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("TC-1");
+
         AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
         AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
         AutoTrajectory toC10 = routine.trajectory("TC-10", 0);

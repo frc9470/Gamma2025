@@ -37,13 +37,13 @@ public class AutoScoring {
                 Math.copySign(Math.pow(driverJoystick.getRightX(), 2), driverJoystick.getLeftX());
 
         // First drive to the scoring position while raising the superstructure.
-        Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain, linearFF, omegaFF)
+        Command driveToScore = new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain, linearFF, omegaFF).asProxy()
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
-                                .andThen(superstructure.waitForIntake())
-                                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)))
+                                .andThen(superstructure.waitForIntake().asProxy())
+                                .andThen(new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).asProxy())
                 );
-        return driveToScore.andThen(superstructure.score());
+        return driveToScore.andThen(superstructure.score().asProxy());
     }
 
     public Command autoScoreNoDrive(Superstructure superstructure) {

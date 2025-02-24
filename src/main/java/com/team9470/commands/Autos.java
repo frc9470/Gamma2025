@@ -7,6 +7,7 @@ import com.team9470.subsystems.*;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Autos {
@@ -28,7 +29,7 @@ public class Autos {
     }
 
     public static final double SCORING_DELAY = 0.3;
-    private static final double ELEVATOR_DELAY = 0.5;
+    private static final double ELEVATOR_DELAY = 0.7;
 
     public Command scoreL4(){
         return elevator.L4().andThen(
@@ -36,7 +37,6 @@ public class Autos {
                 .andThen(elevator.L0());
     }
 
-    int count = 0;
     public Command scoreL4WaitLower(Command driveAway, double delay){
         return elevator.L4()
                 .andThen(
@@ -49,6 +49,13 @@ public class Autos {
                         )
                 );
 
+    }
+
+    public Command scoreL4AutoWaitLower(Command driveAway, double delay, int branchID){
+        return AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(branchID, 4), swerve).andThen(driveAway
+                .alongWith(
+                        new WaitCommand(delay).andThen(elevator.L0())
+                ));
     }
 
     public Command scoreCoral() {
@@ -259,79 +266,21 @@ public class Autos {
                 scoreL4WaitLower(C8toSource.cmd(), SCORING_DELAY)
         );
 
-
-
-
         return routine;
     }
 
     public AutoRoutine getThreeCoralTop() {
         AutoRoutine routine = autoFactory.newRoutine("3CT Test");
 
-        // Trajectories
-        AutoTrajectory startToC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("BC-1", 1);
-        AutoTrajectory toC12 = routine.trajectory("BC-12", 0);
-        AutoTrajectory C12toSource = routine.trajectory("BC-12", 1);
-        AutoTrajectory toC11 = routine.trajectory("BC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("BC-11", 1);
-
-        routine.active().onTrue(
-                Commands.sequence(
-                        startToC1.resetOdometry(),
-                        startToC1.cmd()
-                )
-        );
-
-//        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
-
-        startToC1.done().onTrue(
-                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
-        );
-
-        C1toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC12.cmd())
-        );
-
-//        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
-
-        toC12.done().onTrue(
-                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
-        );
-
-        C12toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC11.cmd())
-        );
-
-//        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
-
-        toC11.done().onTrue(
-                scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
-        );
-
-
-
-
-        return routine;
-    }
-
-    public AutoRoutine getThreeCoralTopNoWait() {
-        AutoRoutine routine = autoFactory.newRoutine("3CTNW Test");
-
 
         // Trajectories
         AutoTrajectory startToC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("BC-1", 1);
-        AutoTrajectory toC12 = routine.trajectory("BC-12", 0);
-        AutoTrajectory C12toSource = routine.trajectory("BC-12", 1);
-        AutoTrajectory toC11 = routine.trajectory("BC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("BC-11", 1);
+        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
+        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
+        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
 
         LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
 
@@ -342,36 +291,111 @@ public class Autos {
                 )
         );
 
-//        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
+        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
 
         startToC1.done().onTrue(
                 scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
         );
 
         C1toSource.done().onTrue(
-                toC12.cmd()
+                superstructure.waitForIntake().andThen(toC12.cmd())
         );
 
-//        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
+        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
 
         toC12.done().onTrue(
-                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+                scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
         );
 
         C12toSource.done().onTrue(
-                toC11.cmd()
+                superstructure.waitForIntake().andThen(toC11.cmd())
         );
 
-//        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-//                elevator.L4()
-//        );
+        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
 
         toC11.done().onTrue(
                 scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
+        );
+
+        C11toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC10.cmd())
+        );
+
+        toC10.done().onTrue(
+            scoreL4()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getThreeCoralTopAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("3CTA Test");
+
+
+        // Trajectories
+        AutoTrajectory startToC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
+        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
+        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+
+        LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC1.resetOdometry(),
+                        startToC1.cmd()
+                )
+        );
+
+        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        startToC1.done().onTrue(
+                scoreL4AutoWaitLower(C1toSource.cmd(), SCORING_DELAY, 9)
+        );
+
+        C1toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC12.cmd())
+        );
+
+        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+
+        toC12.done().onTrue(
+                scoreL4AutoWaitLower(C12toSource.cmd(), SCORING_DELAY, 10)
+        );
+
+        C12toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC11.cmd())
+        );
+
+        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC11.done().onTrue(
+                scoreL4AutoWaitLower(C11toSource.cmd(), SCORING_DELAY, 11)
+        );
+
+        C11toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC10.cmd())
+        );
+
+        toC10.done().onTrue(
+                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 12)
         );
 
         return routine;

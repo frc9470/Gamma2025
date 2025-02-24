@@ -127,7 +127,7 @@ public final class Constants {
         public static final Angle HOMING_ANGLE = Degrees.of(93.98);
 
         public static final Voltage INTAKE_OUTPUT = Volts.of(4);
-        public static final Voltage HOLDING_OUTPUT = Volts.of(-1);
+        public static final Voltage HOLDING_OUTPUT = Volts.of(-2);
 
         public static final double GEAR_RATIO = 4.2;
 

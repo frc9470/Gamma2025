@@ -106,11 +106,12 @@ public class DriveToPose extends Command {
     @Override
     public boolean isFinished() {
         // Finish when both translation and rotation are within tolerances.
-        SmartDashboard.putNumber("DriveToPose/Error", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()));
-        if (drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 &&
-                Math.abs(drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees()) <= 2) System.out.println("AUTOALIGN DONE");
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02 &&
-                Math.abs(drivetrain.getPose().getRotation().getDegrees() - reefPose.getRotation().getDegrees()) <= 2;
+        SmartDashboard.putNumber("DriveToPose/TranslationError", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()));
+        SmartDashboard.putNumber("DriveToPose/HeadingError", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()));
+        SmartDashboard.putBoolean("DriveToPose/TranslationAligned", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02);
+        SmartDashboard.putBoolean("DriveToPose/HeadingAligned", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 2);
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.01 &&
+                Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 1;
     }
 
     @Override

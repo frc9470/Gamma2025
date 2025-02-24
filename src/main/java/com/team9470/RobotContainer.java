@@ -54,7 +54,8 @@ public class RobotContainer {
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("3C Test", autos::getThreeCoralTest);
-        autoChooser.addRoutine("3CTNW", autos::getThreeCoralTopNoWait);
+        autoChooser.addRoutine("3CT", autos::getThreeCoralTop);
+        autoChooser.addRoutine("3CTA", autos::getThreeCoralTopAuto);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
         autoChooser.addRoutine("3BC Test", autos::getBottomThreeCoralTest);
         autoChooser.select("2C Test");
@@ -111,7 +112,7 @@ public class RobotContainer {
         }
 
         xbox.rightTrigger()
-                .whileTrue(autoScoring.autoScore(superstructure, xbox))
+                .whileTrue(autoScoring.autoScore(superstructure))
                        // .onlyIf(superstructure.getCoral()::hasCoral))
                 .onFalse(/*autoScoring.driveBack().andThen(*/superstructure.getElevator().L0()/*)*/);
 

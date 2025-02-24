@@ -90,7 +90,10 @@ public class CoralManipulator extends SubsystemBase {
      * @return
      */
     public Command scoreCommand(){
-        return this.run(() -> coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)));
+        return this.run(() -> {
+            coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts));
+            System.out.println("ATTEMPTING TO SCORE");
+        });
     }
 
     /**

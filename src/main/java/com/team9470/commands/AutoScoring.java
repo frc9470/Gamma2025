@@ -47,6 +47,17 @@ public class AutoScoring {
         return driveToScore.andThen(superstructure.score().asProxy());
     }
 
+    public static Command autoScore(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
+        // First drive to the scoring position while raising the superstructure.
+        Command driveToScore = new DriveToPose(() -> objective.getScoringPose(), drivetrain)
+                .alongWith(
+                        new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
+                                .andThen(superstructure.waitForIntake().asProxy())
+                                .andThen(new DeferredCommand(() -> superstructure.raise(objective.level), Set.of(superstructure)).asProxy())
+                );
+        return driveToScore.andThen(superstructure.score().asProxy());
+    }
+
     public Command autoScoreNoDrive(Superstructure superstructure) {
         return new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).andThen(superstructure.score());
     }

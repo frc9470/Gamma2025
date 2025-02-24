@@ -363,6 +363,10 @@ public class AlgaeArm extends SubsystemBase {
         return getMoveToAngleCommand(AlgaeConstants.DEPLOY_ANGLE);
     }
 
+    public Command groundDeploy(){
+        return getMoveToAngleCommand(AlgaeConstants.GROUND_ANGLE);
+    }
+
     public Command stow() {
         return getMoveToAngleCommand(AlgaeConstants.STOW_UP);
     }
@@ -375,7 +379,7 @@ public class AlgaeArm extends SubsystemBase {
     public Command spin() {
         return runEnd(
                 () -> setRollerSpeed(AlgaeConstants.INTAKE_OUTPUT),
-                () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT)
+                () -> setRollerSpeed(AlgaeConstants.HOLDING_OUTPUT.unaryMinus())
         );
     }
     public Command reverse() {

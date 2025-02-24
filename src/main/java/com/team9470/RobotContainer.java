@@ -3,6 +3,7 @@ package com.team9470;
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
@@ -36,12 +37,13 @@ public class RobotContainer {
 
     // Create the Superstructure instead of separate subsystems.
     private final Superstructure superstructure = new Superstructure(mech);
+    private final AutoScoring autoScoring = new AutoScoring(drivetrain);
 
     // ----------------      VISION     --------------------
     private final Vision vision = Vision.getInstance();
 
     // ---------------- AUTONOMOUS --------------------
-    private final Autos autos = new Autos(null, superstructure.getCoral(), superstructure.getElevator(), drivetrain);
+    private final Autos autos = new Autos(superstructure, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
 
     CommandXboxController xbox = new CommandXboxController(0);
@@ -52,12 +54,20 @@ public class RobotContainer {
 
         autoChooser.addRoutine("4C Test", autos::getFourCoralTest);
         autoChooser.addRoutine("3C Test", autos::getThreeCoralTest);
+        autoChooser.addRoutine("3CT", autos::getThreeCoralTop);
+        autoChooser.addRoutine("3CTA", autos::getThreeCoralTopAuto);
         autoChooser.addRoutine("2C Test", autos::getTwoCoralTest);
+        autoChooser.addRoutine("3BC Test", autos::getBottomThreeCoralTest);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);
 
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+    }
+
+    public void periodic(){
+        drivetrain.periodic();
+
     }
 
     private void configureBindings() {
@@ -77,11 +87,13 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.leftBumper().whileTrue(superstructure.dealgify());
+        xbox.leftBumper().whileTrue(autoScoring.autoAlgaeNoDrive(superstructure))
+                .onFalse(superstructure.getElevator().L0());
 
+        // xbox.rightBumper().whileTrue(superstructure.groundIntake()).onFalse(superstructure.algaeReturn());
         xbox.rightBumper().whileTrue(superstructure.groundIntake());
         xbox.a().whileTrue(superstructure.processorScore()).onFalse(superstructure.algaeReturn());
-        xbox.povRight().whileTrue(superstructure.stowAlgaeForCoral());
+        xbox.povRight().whileTrue(superstructure.raiseAndStow(2));
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
 
         // Example of binding elevator level commands via the superstructure's elevator
@@ -89,22 +101,24 @@ public class RobotContainer {
             final int id = i;
             Trigger trig = new Trigger(() -> (id < 2) ? buttonBoard.getX() == Math.pow(-1.0, id + 1)
                     : buttonBoard.getY() == Math.pow(-1.0, id));
-            trig.whileTrue(new InstantCommand(() -> superstructure.getElevator().setLevel(id + 1)));
+            trig.whileTrue(new InstantCommand(() -> autoScoring.setLevel(id + 1)));
         }
 
         // Reef position bindings (remaining unchanged)
         for (int i = 0; i < 12; i++) {
-            JoystickButton button = new JoystickButton(buttonBoard, 12 - i);
+            JoystickButton button = new JoystickButton(buttonBoard, i+1);
             final int id = i;
-            button.whileTrue(new InstantCommand(() -> drivetrain.setReefPos(id)));
+            button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
         }
 
-        xbox.y().whileTrue(drivetrain.getPathfindingCommand());
         xbox.rightTrigger()
-                .whileTrue(superstructure.getElevator().getCommand(superstructure.getCoral())
-                        .onlyIf(superstructure.getCoral()::hasCoral))
-                .onFalse(superstructure.getElevator().L0());
+                .whileTrue(autoScoring.autoScore(superstructure))
+                       // .onlyIf(superstructure.getCoral()::hasCoral))
+                .onFalse(/*autoScoring.driveBack().andThen(*/superstructure.getElevator().L0()/*)*/);
 
-        xbox.rightStick().whileTrue(new InstantCommand(() -> drivetrain.setReefPos(-1)));
+        xbox.y()
+                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure));
+
+        xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }
 }

@@ -12,9 +12,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.team9470.Constants.DriverAssistConstants;
 import com.team9470.FieldConstants;
 import com.team9470.TunerConstants;
 import com.team9470.TunerConstants.TunerSwerveDrivetrain;
@@ -52,35 +49,24 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 
+
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
 public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
-    /**
-     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
-     * intaking and coral scoring.
-     */
+    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
+    private static Swerve instance;
 
-
-//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
-//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
-//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
-
-    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
-    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     private static final double SIM_LOOP_PERIOD = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d BLUE_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.k180deg;
-    private static Swerve instance;
-    private static RobotConfig config;
-    private final VisionPoseAcceptor visionPoseAcceptor = new VisionPoseAcceptor();
+
     /* Swerve requests */
-    private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final SwerveRequest.ApplyFieldSpeeds    applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
@@ -89,6 +75,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.RobotCentric robotCentricRequest = new SwerveRequest.RobotCentric();
+    private final SwerveRequest.FieldCentric fieldCentricRequest = new SwerveRequest.FieldCentric();
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -149,11 +136,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     );
     public Pose2d curReefPos = null;
     public int curReefPosId = -1;
+
     private double m_lastSimTime;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
     private final HashMap<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();
 
+    private RobotConfig config;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -197,11 +186,13 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         }
     }
 
-    public static Swerve getInstance() {
-        if (instance == null) {
-            instance = TunerConstants.createDrivetrain();
-        }
-        return instance;
+    /**
+     * Creates a new auto factory for this drivetrain.
+     *
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory() {
+        return createAutoFactory((sample, isStart) -> {});
     }
 
     /**
@@ -239,9 +230,17 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     // This will flip the path being followed to the red side of the field.
                     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-                    return getAlliance() == Alliance.Red;
+                return getAlliance() == Alliance.Red;
                 },
                 this // Reference to this subsystem to set requirements
+        );
+    }
+
+    public void setChassisSpeeds(ChassisSpeeds speeds) {
+        setControl(
+                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
+                        .withVelocityY(speeds.vyMetersPerSecond)
+                        .withRotationalRate(speeds.omegaRadiansPerSecond)
         );
     }
 
@@ -250,104 +249,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return alliance.orElse(Alliance.Blue);
     }
 
-    public Command getPathfindingCommand() {
-        return new Command() {
-            private Command pathfindingCommand;
 
-            @Override
-            public void initialize() {
-                if (curReefPos == null) {
-                    pathfindClosestReefPos();
-                }
-                // Create the constraints to use while pathfinding
-                PathConstraints constraints = new PathConstraints(
-                        TunerConstants.maxVelocity, TunerConstants.maxAcceleration,
-                        Units.degreesToRadians(TunerConstants.maxAngularVelocity), Units.degreesToRadians(TunerConstants.maxAngularAcceleration));
-                // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0);
-
-                // Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-                PathPlannerPath[] paths = DriverAssistConstants.getPaths();
-                // Since AutoBuilder is configured, we can use it to build pathfinding commands
-                System.out.println("GGGGGGGGGGGGG");
-                pathfindingCommand = AutoBuilder.pathfindThenFollowPath(
-                        paths[curReefPosId],
-                        constraints
-                );
-                System.out.println(paths[curReefPosId].getPathPoses());
-                // pathfindingCommand = AutoBuilder.pathfindToPose(
-                //         curReefPos,
-                //         constraints,
-                //         0.0 // Goal end velocity in meters/sec
-                // );
-
-                pathfindingCommand.initialize();
-            }
-
-            @Override
-            public void execute() {
-                // Delegate execution to the pathfinding command.
-                pathfindingCommand.execute();
-            }
-
-            @Override
-            public boolean isFinished() {
-                return pathfindingCommand.isFinished();
-            }
-
-            @Override
-            public void end(boolean interrupted) {
-                pathfindingCommand.end(interrupted);
-            }
-        };
-    }
-
-    public void pathfindClosestReefPos() {
-        // Pose2d[] reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-        PathPlannerPath[] paths = DriverAssistConstants.getPaths();
-        // Get the current robot pose at initialization.
-        Pose2d currentPose = getPose();
-
-        // Find the closest reef pose.
-        double shortestDistance = Double.MAX_VALUE;
-        Pose2d closestPose = null;
-        int closestPoseId = -1;
-        for (int i = 0; i < 12; i++) {
-            Pose2d pose = paths[i].getPathPoses().get(0);
-            if (getAlliance() == Alliance.Red) {
-                pose = new Pose2d(
-                        DriverAssistConstants.fieldLength - pose.getX(),
-                        DriverAssistConstants.centerY * 2 - pose.getY(),
-                        pose.getRotation().rotateBy(Rotation2d.fromDegrees(180))
-                );
-            }
-            double distance = currentPose.getTranslation().getDistance(pose.getTranslation());
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestPose = pose;
-                closestPoseId = i;
-            }
-        }
-
-        curReefPos = closestPose;
-        curReefPosId = closestPoseId;
-    }
-
-    /**
-     * @param posId ID os reef pos from 0-12
-     * @return pathfinding command
-     */
-    public void setReefPos(int posId) {
-        curReefPosId = posId;
-        if (posId == -1) {
-            curReefPos = null;
-        } else {
-            Pose2d[] reefPoses;
-            // reefPoses = DriverAssistConstants.getReefPositions(DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red);
-            reefPoses = DriverAssistConstants.getReefPositions(Alliance.Blue);
-
-            curReefPos = reefPoses[posId];
-        }
-    }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
@@ -437,7 +339,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     "RobotState/TxTyPoses/" + tag.ID,
                     pose.map(pose2d -> new Pose2d[]{pose2d}).orElseGet(() -> new Pose2d[]{}));
         }
-
     }
 
     private void startSimThread() {
@@ -469,12 +370,11 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         return kinematics.toChassisSpeeds(moduleStates);
     }
 
-    public void setChassisSpeeds(ChassisSpeeds speeds) {
-        setControl(
-                robotCentricRequest.withVelocityX(speeds.vxMetersPerSecond)
-                        .withVelocityY(speeds.vyMetersPerSecond)
-                        .withRotationalRate(speeds.omegaRadiansPerSecond)
-        );
+    public static Swerve getInstance(){
+        if(instance == null){
+            instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
     /**
@@ -495,6 +395,18 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         txTyPoses.put(id, new TxTyPoseRecord(pose, distance, timestamp));
     }
 
+    /**
+     * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
+     * intaking and coral scoring.
+     */
+
+//    private static final LoggedTunableNumber minDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MinDistanceTagPoseBlend", Units.inchesToMeters(24.0));
+//    private static final LoggedTunableNumber maxDistanceTagPoseBlend =
+//            new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
+
+    public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
+    public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
     public Pose2d getReefPose(int face, Pose2d finalPose) {
         final boolean isRed = AllianceFlipUtil.shouldFlip();
         var tagPose =

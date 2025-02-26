@@ -47,6 +47,16 @@ public class AutoScoring {
         return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
     }
 
+    public static Command autoScoreWithTimeout(Superstructure superstructure, CoralObjective objective, Swerve drivetrain, double timeout) {
+        // First drive to the scoring position while raising the superstructure.
+        Command driveToScore = new DriveToPose(objective::getScoringPose, drivetrain)
+                .alongWith(
+                        new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
+                                .andThen(superstructure.waitForIntake().asProxy())
+                                .andThen(new DeferredCommand(() -> superstructure.raise(objective.level), Set.of(superstructure)).asProxy())
+                );
+        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());
+    }
     public Command autoScoreNoDrive(Superstructure superstructure) {
         return new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).andThen(superstructure.score());
     }
@@ -75,7 +85,7 @@ public class AutoScoring {
         return new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure));
     }
 
-    private boolean closeEnough(CoralObjective objective, Distance distance){
+    private static boolean closeEnough(CoralObjective objective, Distance distance){
         Pose2d scoringPose = objective.getScoringPose();
         Pose2d currentPose = Swerve.getInstance().getPose();
         return currentPose.getTranslation().getDistance(scoringPose.getTranslation()) < distance.in(Meters);

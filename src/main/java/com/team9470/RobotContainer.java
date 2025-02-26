@@ -117,7 +117,7 @@ public class RobotContainer {
                 .onFalse(/*autoScoring.driveBack().andThen(*/superstructure.getElevator().L0()/*)*/);
 
         xbox.y()
-                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure));
+                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));
 
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }

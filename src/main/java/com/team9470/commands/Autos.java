@@ -52,7 +52,7 @@ public class Autos {
     }
 
     public Command scoreL4AutoWaitLower(Command driveAway, double delay, int branchID){
-        return AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(branchID, 4), swerve).andThen(driveAway
+        return AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(branchID, 4), swerve, SCORING_DELAY).andThen(driveAway
                 .alongWith(
                         new WaitCommand(delay).andThen(elevator.L0())
                 ));

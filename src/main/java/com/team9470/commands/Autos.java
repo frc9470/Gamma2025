@@ -3,14 +3,11 @@ package com.team9470.commands;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import com.team9470.FieldConstants;
 import com.team9470.subsystems.*;
+import com.team9470.util.AllianceFlipUtil;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -65,8 +62,11 @@ public class Autos {
     }
 
     public Command alignToSourceAndWait() {
-        Pose2d sourcePose = FieldConstants.CoralStation.rightCenterFace.transformBy(new Transform2d(new Translation2d(0, Units.inchesToMeters(20)), Rotation2d.fromDegrees(144.011 - 90)));
-        return new DriveToPose(() -> sourcePose, swerve).withDeadline(superstructure.waitForIntake());
+        Pose2d sourcePose = AllianceFlipUtil.apply(
+                new Pose2d(1.629029631614685, 7.376053314208984, Rotation2d.fromDegrees(-54))
+        );
+
+        return new DriveToPose(() -> sourcePose, swerve)/*.withDeadline(superstructure.waitForIntake())*/;
     }
 
     public Command scoreCoral() {
@@ -261,7 +261,44 @@ public class Autos {
         AutoRoutine routine = autoFactory.newRoutine("3CTP");
 
         AutoTrajectory startToC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
+        AutoTrajectory C1back = routine.trajectory("TC-1", 1);
+        AutoTrajectory to11Score = routine.trajectory("SCORE 11 P");
+        AutoTrajectory to12Score = routine.trajectory("SCORE 12 P");
+        AutoTrajectory C11back = routine.trajectory("TC-11", 1);
+        AutoTrajectory C12back = routine.trajectory("TC-12", 1);
+
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC1.resetOdometry(),
+                        startToC1.cmd()
+                )
+        );
+
+        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+        startToC1.done().onTrue(
+                scoreL4AutoWaitLower(C1back.cmd(), SCORING_DELAY, 9)
+        );
+
+        C1back.done().onTrue(
+                alignToSourceAndWait().andThen(to11Score.cmd())
+        );
+
+        to11Score.done().onTrue(
+                scoreL4AutoWaitLower(C11back.cmd(), SCORING_DELAY, 10)
+        );
+
+        C11back.done().onTrue(
+                alignToSourceAndWait().andThen(to12Score.cmd())
+        );
+
+        to12Score.done().onTrue(
+                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 11)
+        );
+
+
 
         return routine;
     }

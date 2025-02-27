@@ -13,6 +13,8 @@ public class TimedLEDState {
 
 	public static final TimedLEDState NO_CORAL = new TimedLEDState("NO_CORAL", Double.POSITIVE_INFINITY, Color.RED);
 	public static final TimedLEDState HAS_CORAL = new TimedLEDState("HAS_CORAL", Double.POSITIVE_INFINITY, Color.GREEN);
+	public static final TimedLEDState CORAL_OBTAINED = new TimedLEDState("CORAL_OBTAINED", kFlashInterval, Color.GREEN, Color.off());
+
 //	// some sort of blinking for aligning
 //	public static final TimedLEDState ALIGNING = new TimedLEDState("ALIGNING", kFlashInterval, Color.BLUE, Color.GREEN);
 //	// aligned

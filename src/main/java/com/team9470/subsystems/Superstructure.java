@@ -18,7 +18,7 @@ public class Superstructure extends SubsystemBase {
         this.elevator = new Elevator(mech);
         this.coral = new CoralManipulator();
         this.algae = new AlgaeArm(elevator.getElevatorLigament());
-        this.leds = new LEDs();
+        this.leds = LEDs.getInstance();
     }
 
     // Returns a command to reverse the coral manipulator.

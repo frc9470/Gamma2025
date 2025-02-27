@@ -32,6 +32,8 @@ public class LEDs extends SubsystemBase {
     private final CANdle mCandle = new CANdle(Ports.CANdle.getDeviceNumber(), Ports.CANdle.getBus());
     private LEDSection mLEDStatus = new LEDSection(0, kNumLeds);
 
+    public boolean hasCoral = false;
+
     public LEDs() {
         CANdleConfiguration configAll = new CANdleConfiguration();
         configAll.statusLedOffWhenActive = false;
@@ -62,6 +64,12 @@ public class LEDs extends SubsystemBase {
                 } else {
                     applyStates(TimedLEDState.DISABLE_BLUE);
                 }
+            }
+        } else {
+            if (hasCoral) {
+                applyStates(TimedLEDState.HAS_CORAL);
+            } else {
+                applyStates(TimedLEDState.NO_CORAL);
             }
         }
 

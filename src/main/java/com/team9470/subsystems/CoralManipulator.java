@@ -24,10 +24,11 @@ public class CoralManipulator extends SubsystemBase {
     private final DigitalInput coralSensor = new DigitalInput(Ports.CORAL_BREAK);
 
     /** ensures coral stops at the right position in coral manipulator, not just at the instant it gets detected.
-     *
      * (tune `Constants.CoralConstants.BREAK_TIMEOUT` to adjust how far after a rising edge to wait
      * until `coralBreak` becomes true) */
     private final DelayedBoolean coralBreak = new DelayedBoolean(Timer.getFPGATimestamp(), CoralConstants.BREAK_TIMEOUT, sensorTrue());
+
+    private final LEDs leds = LEDs.getInstance();
 
     public CoralManipulator() {
         setDefaultCommand(coastUnless());
@@ -43,6 +44,8 @@ public class CoralManipulator extends SubsystemBase {
             // if there is, great! stop the funnel, as it's not necessary
         else funnelMotor.stopMotor();
 
+        leds.hasCoral = sensorTrue();
+
         SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
         SmartDashboard.putBoolean("CoralManipulator/HasCoral", hasCoral());
     }
@@ -50,7 +53,6 @@ public class CoralManipulator extends SubsystemBase {
     /**
      * The beambreak is true if the beambreak is NOT "broken" (i.e. something is NOT detected)
      * The beambreak returns false if the beambreak IS "broken" (i.e. something IS detected)
-     *
      * This function should NOT be used directly -- use the DelayedBoolean to ensure the coral manipulator stops
      * only a bit after the coral is detected
      *
@@ -86,8 +88,6 @@ public class CoralManipulator extends SubsystemBase {
 
     /**
      * DRIVER CONTROLLED COMMAND --> runs the coral manipulator to score
-     *
-     * @return
      */
     public Command scoreCommand(){
         return this.run(() -> {
@@ -99,8 +99,6 @@ public class CoralManipulator extends SubsystemBase {
     /**
      * DRIVER CONTROLLED COMMAND --> runs the coral manipulator in reverse, either to remove a stuck coral
      * or if the coral has gone too far into the coral manipulator
-     *
-     * @return
      */
     public Command reverseCommand() {
         return this.runEnd(

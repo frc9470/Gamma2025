@@ -52,7 +52,6 @@ public class AutoScoring {
         Command driveToScore = new DriveToPose(objective::getScoringPose, drivetrain)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
-                                .andThen(superstructure.waitForIntake().asProxy())
                                 .andThen(new DeferredCommand(() -> superstructure.raise(objective.level), Set.of(superstructure)).asProxy())
                 );
         return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());

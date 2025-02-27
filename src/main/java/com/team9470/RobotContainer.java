@@ -54,6 +54,7 @@ public class RobotContainer {
 
         autoChooser.addRoutine("3CT", autos::getThreeCoralTop);
         autoChooser.addRoutine("3CTA", autos::getThreeCoralTopAutoAlign);
+        autoChooser.addRoutine("3CTP", autos::getThreeCoralTopAutoPathing);
         autoChooser.addRoutine("3BC Test", autos::getBottomThreeCoralTest);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);

@@ -3,8 +3,14 @@ package com.team9470.commands;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import com.team9470.FieldConstants;
 import com.team9470.subsystems.*;
 import com.team9470.util.LogUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -58,162 +64,13 @@ public class Autos {
                 ));
     }
 
+    public Command alignToSourceAndWait() {
+        Pose2d sourcePose = FieldConstants.CoralStation.rightCenterFace.transformBy(new Transform2d(new Translation2d(0, Units.inchesToMeters(20)), Rotation2d.fromDegrees(144.011 - 90)));
+        return new DriveToPose(() -> sourcePose, swerve).withDeadline(superstructure.waitForIntake());
+    }
+
     public Command scoreCoral() {
         return coralManipulator.scoreCommand();
-    }
-
-    public AutoRoutine getFourCoralTest() {
-        AutoRoutine routine = autoFactory.newRoutine("4C Test");
-
-        // Trajectories
-        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
-        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
-        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
-        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
-        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
-        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
-        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
-
-        routine.active().onTrue(
-            Commands.sequence(
-                    toC9.resetOdometry(),
-                    toC9.cmd()
-            )
-        );
-
-        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC9.done().onTrue(
-            scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
-        );
-
-        toC10.done().onTrue(
-            scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
-        );
-
-        toC11.done().onTrue(
-            scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
-        );
-
-        toC12.done().onTrue(
-            scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
-        );
-
-        C9toSource.done().onTrue(
-                toC10.cmd()
-        );
-
-        C10toSource.done().onTrue(
-                toC11.cmd()
-        );
-
-        C11toSource.done().onTrue(
-                toC12.cmd()
-        );
-
-        return routine;
-    }
-
-    public AutoRoutine getThreeCoralTest() {
-        AutoRoutine routine = autoFactory.newRoutine("3C Test");
-
-        // Trajectories
-        AutoTrajectory startC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("TC-1");
-
-        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
-        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
-        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
-        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
-        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
-
-        routine.active().onTrue(
-            Commands.sequence(
-                    toC9.resetOdometry(),
-                    toC9.cmd()
-            )
-        );
-
-        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-            elevator.L4()
-        );
-
-        toC9.done().onTrue(
-            scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
-        );
-
-        toC10.done().onTrue(
-            scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
-        );
-
-        toC11.done().onTrue(
-            scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
-        );
-
-        C9toSource.done().onTrue(
-                toC10.cmd()
-        );
-
-        C10toSource.done().onTrue(
-                toC11.cmd()
-        );
-
-        return routine;
-    }
-
-    public AutoRoutine getTwoCoralTest() {
-        AutoRoutine routine = autoFactory.newRoutine("2C Test");
-
-        // Trajectories
-        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
-        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
-        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
-        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
-
-        routine.active().onTrue(
-            Commands.sequence(
-                    toC9.resetOdometry(),
-                    toC9.cmd()
-            )
-        );
-
-        toC9.done().onTrue(
-                scoreL4WaitLower(C9toSource.cmd(), 0.5)
-        );
-
-        C9toSource.done().onTrue(
-                toC10.cmd()
-        );
-
-        toC10.done().onTrue(
-                scoreL4WaitLower(C10toSource.cmd(), 0.5)
-        );
-
-        return routine;
     }
 
     public AutoRoutine getBottomThreeCoralTest() {
@@ -335,9 +192,8 @@ public class Autos {
         return routine;
     }
 
-    public AutoRoutine getThreeCoralTopAuto() {
-        AutoRoutine routine = autoFactory.newRoutine("3CTA Test");
-
+    public AutoRoutine getThreeCoralTopAutoAlign() {
+        AutoRoutine routine = autoFactory.newRoutine("3CTA");
 
         // Trajectories
         AutoTrajectory startToC1 = routine.trajectory("S-1");
@@ -397,6 +253,15 @@ public class Autos {
         toC10.done().onTrue(
                 scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 12)
         );
+
+        return routine;
+    }
+
+    public AutoRoutine getThreeCoralTopAutoPathing() {
+        AutoRoutine routine = autoFactory.newRoutine("3CTP");
+
+        AutoTrajectory startToC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
 
         return routine;
     }

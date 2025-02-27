@@ -11,6 +11,7 @@ import com.team9470.led.Color;
 import com.team9470.led.TimedLEDState;
 import com.team9470.subsystems.vision.Vision;
 import com.team9470.util.AllianceFlipUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,14 +33,16 @@ public class LEDs extends SubsystemBase {
     private final CANdle mCandle = new CANdle(Ports.CANdle.getDeviceNumber(), Ports.CANdle.getBus());
     private LEDSection mLEDStatus = new LEDSection(0, kNumLeds);
 
-    public LEDs() {
+    public boolean hasCoral = false;
+
+    private LEDs() {
         CANdleConfiguration configAll = new CANdleConfiguration();
         configAll.statusLedOffWhenActive = false;
         configAll.disableWhenLOS = true;
         configAll.stripType = LEDStripType.RGB;
         configAll.brightnessScalar = 1.0;
         configAll.vBatOutputMode = VBatOutputMode.Modulated;
-        mCandle.configAllSettings(configAll, 200);
+        mCandle.configAllSettings(configAll, 500);
         mCandle.setStatusFramePeriod(CANdleStatusFrame.CANdleStatusFrame_Status_1_General, 255);
         mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_1_General, 10);
         mCandle.setControlFramePeriod(CANdleControlFrame.CANdle_Control_2_ModulatedVBatOut, 255);
@@ -52,8 +55,11 @@ public class LEDs extends SubsystemBase {
         outputTelemetry();
     }
 
+    boolean lastCoral;
+    double lastCoralTicks = 0;
+
     public void readPeriodicInputs() {
-        if (mDisabled) {
+        if (DriverStation.isDisabled()) {
             if (!Vision.getInstance().isFullyConnected()) {
                 applyStates(TimedLEDState.NO_VISION);
             } else {
@@ -63,6 +69,23 @@ public class LEDs extends SubsystemBase {
                     applyStates(TimedLEDState.DISABLE_BLUE);
                 }
             }
+        } else {
+            if (hasCoral != lastCoral && hasCoral){
+                lastCoralTicks = 0;
+            }
+            if(lastCoralTicks < 85){
+                applyStates(TimedLEDState.CORAL_OBTAINED);
+            }
+            else {
+                if (hasCoral) {
+                    applyStates(TimedLEDState.HAS_CORAL);
+                } else {
+                    applyStates(TimedLEDState.NO_CORAL);
+                }
+            }
+            lastCoral = hasCoral;
+            lastCoralTicks ++;
+
         }
 
         double timestamp = Timer.getFPGATimestamp();

@@ -251,11 +251,70 @@ public class Autos {
         );
 
         toC10.done().onTrue(
-                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 12)
+                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 0)
         );
 
         return routine;
     }
+
+    public AutoRoutine getThreeCoralBottomAutoAlign() {
+        AutoRoutine routine = autoFactory.newRoutine("3CBA");
+
+        // Trajectories
+        AutoTrajectory startToC5 = routine.trajectory("S-5");
+        AutoTrajectory C5toSource = routine.trajectory("BC-5", 1);
+        AutoTrajectory toC7 = routine.trajectory("BC-7", 0);
+        AutoTrajectory C7toSource = routine.trajectory("BC-7", 1);
+        AutoTrajectory toC8 = routine.trajectory("BC-8", 0);
+        AutoTrajectory C8toSource = routine.trajectory("BC-8", 1);
+
+        LogUtil.recordPose2d("autostart", startToC5.getInitialPose().get());
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC5.resetOdometry(),
+                        startToC5.cmd()
+                )
+        );
+
+        startToC5.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        startToC5.done().onTrue(
+                scoreL4AutoWaitLower(C5toSource.cmd(), SCORING_DELAY, 5)
+        );
+
+        C5toSource.done().onTrue(
+//                superstructure.waitForIntake().andThen(toC7.cmd())
+                toC7.cmd()
+        );
+
+        toC7.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC7.done().onTrue(
+                scoreL4AutoWaitLower(C7toSource.cmd(), SCORING_DELAY, 3)
+        );
+
+        C7toSource.done().onTrue(
+//                superstructure.waitForIntake().andThen(toC8.cmd())
+                toC8.cmd()
+        );
+
+        toC8.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC8.done().onTrue(
+                scoreL4AutoWaitLower(C8toSource.cmd(), SCORING_DELAY, 2)
+        );
+
+        return routine;
+    }
+
+
 
     public AutoRoutine getThreeCoralTopAutoPathing() {
         AutoRoutine routine = autoFactory.newRoutine("3CTP");
@@ -297,9 +356,30 @@ public class Autos {
         to12Score.done().onTrue(
                 scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 11)
         );
+        return routine;
+    }
 
+    public AutoRoutine getOneCoral(){
+        AutoRoutine routine = autoFactory.newRoutine("1C");
+        routine.active().onTrue(
+                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 7)
+        );
+        return routine;
+    }
 
+    // use when no vision
+    public AutoRoutine getOneCoralChoreo(){
+        AutoRoutine routine = autoFactory.newRoutine("1CC");
+        AutoTrajectory startToC3 = routine.trajectory("S-3");
 
+        routine.active().onTrue(
+                startToC3.resetOdometry()
+                        .andThen(startToC3.cmd())
+        );
+
+        startToC3.done().onTrue(
+                scoreL4WaitLower(new InstantCommand(), SCORING_DELAY)
+        );
         return routine;
     }
 

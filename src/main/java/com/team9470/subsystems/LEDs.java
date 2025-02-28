@@ -31,7 +31,7 @@ public class LEDs extends SubsystemBase {
 
     private boolean mDisabled = false;
     private final CANdle mCandle = new CANdle(Ports.CANdle.getDeviceNumber(), Ports.CANdle.getBus());
-    private LEDSection mLEDStatus = new LEDSection(0, kNumLeds);
+    private final LEDSection mLEDStatus = new LEDSection(0, kNumLeds);
 
     public boolean hasCoral = false;
 
@@ -97,7 +97,7 @@ public class LEDs extends SubsystemBase {
         }
 
         Color color = mLEDStatus.getWantedColor();
-        mCandle.setLEDs(color.r, color.g, color.b, 0, mLEDStatus.startIDx, 100);
+        mCandle.setLEDs(color.r, color.g, color.b, 0, mLEDStatus.startIDx, kNumLeds);
     }
 
     // setter functions

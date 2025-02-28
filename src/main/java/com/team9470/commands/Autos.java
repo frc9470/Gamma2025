@@ -8,12 +8,14 @@ import com.team9470.util.AllianceFlipUtil;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Autos {
+public class Autos extends SubsystemBase{
     private final AutoFactory autoFactory;
     private final AlgaeArm algaeArm;
     private final CoralManipulator coralManipulator;
@@ -301,6 +303,16 @@ public class Autos {
 
 
         return routine;
+    }
+
+    public Command getBasicAutoCommand() {
+        ChassisSpeeds initial_speed = new ChassisSpeeds(1, 0, 0);
+        ChassisSpeeds final_speed = new ChassisSpeeds(0, 0, 0);
+
+        return this.runEnd(
+            () -> swerve.setChassisSpeeds(initial_speed),
+            () -> swerve.setChassisSpeeds(final_speed)
+        );
     }
 
 }

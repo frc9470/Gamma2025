@@ -110,7 +110,7 @@ public class DriveToPose extends Command {
         SmartDashboard.putNumber("DriveToPose/HeadingError", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()));
         SmartDashboard.putBoolean("DriveToPose/TranslationAligned", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02);
         SmartDashboard.putBoolean("DriveToPose/HeadingAligned", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 2);
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.01 &&
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.015 &&
                 Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 1;
     }
 

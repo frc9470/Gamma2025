@@ -96,6 +96,13 @@ public class CoralManipulator extends SubsystemBase {
         });
     }
 
+    public Command scoreSlow(){
+        return this.run(() -> {
+            coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts)/2);
+            System.out.println("ATTEMPTING TO SCORE");
+        });
+    }
+
     /**
      * DRIVER CONTROLLED COMMAND --> runs the coral manipulator in reverse, either to remove a stuck coral
      * or if the coral has gone too far into the coral manipulator

@@ -6,6 +6,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
+import java.util.function.Supplier;
+
 public class Superstructure extends SubsystemBase {
     private final Elevator elevator;
     private final CoralManipulator coral;
@@ -94,6 +96,11 @@ public class Superstructure extends SubsystemBase {
     public Command raise(int level){
         return elevator.getLevelCommand(level);
     }
+
+    public Command raise(Supplier<Integer> getLevel){
+        return elevator.getLevelCommand(getLevel.get());
+    }
+
     
     public Command score() {
         return coral.scoreCommand();

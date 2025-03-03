@@ -286,8 +286,7 @@ public class Autos {
         );
 
         C5toSource.done().onTrue(
-//                superstructure.waitForIntake().andThen(toC7.cmd())
-                toC7.cmd()
+                superstructure.waitForIntake().andThen(toC7.cmd())
         );
 
         toC7.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
@@ -299,8 +298,7 @@ public class Autos {
         );
 
         C7toSource.done().onTrue(
-//                superstructure.waitForIntake().andThen(toC8.cmd())
-                toC8.cmd()
+                superstructure.waitForIntake().andThen(toC8.cmd())
         );
 
         toC8.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
@@ -361,8 +359,13 @@ public class Autos {
 
     public AutoRoutine getOneCoral(){
         AutoRoutine routine = autoFactory.newRoutine("1C");
+
+        AutoTrajectory startToC3 = routine.trajectory("S-3");
         routine.active().onTrue(
-                scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 7)
+                startToC3.resetOdometry().andThen(
+                        scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 7)
+                )
+
         );
         return routine;
     }

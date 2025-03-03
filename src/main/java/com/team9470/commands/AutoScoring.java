@@ -24,16 +24,16 @@ public class AutoScoring {
     }
 
     public Command autoScore(Superstructure superstructure) {
-        // Create feedforward lambdas using raw joystick values.
-//        // Linear feedforward: directly use axes 0 and 1.
-//        Supplier<Translation2d> linearFF = () ->
-//                new Translation2d(driverJoystick.getLeftX(), driverJoystick.getLeftY()).times(AllianceFlipUtil.shouldFlip() ? -1 : 1);
-//        // Angular feedforward: square the value while preserving the sign.
-//        DoubleSupplier omegaFF = () ->
-//                Math.copySign(Math.pow(driverJoystick.getRightX(), 2), driverJoystick.getLeftX());
-
-        // First drive to the scoring position while raising the superstructure.
-        return autoScore(superstructure, coralObjective, drivetrain);
+        return new DeferredCommand(() -> {
+            Command driveToScore = new DriveToPose(coralObjective::getScoringPose, drivetrain)
+                    .alongWith(
+                            new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))
+                                    .andThen(superstructure.waitForIntake().asProxy())
+                                    .andThen(superstructure.raise(coralObjective.level).asProxy())
+                    );
+            System.out.println("Scoring with coralobjective: " + coralObjective);
+            return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
+        }, Set.of(drivetrain));
     }
 
     public static Command autoScore(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
@@ -44,7 +44,9 @@ public class AutoScoring {
                                 .andThen(superstructure.waitForIntake().asProxy())
                                 .andThen(new DeferredCommand(() -> superstructure.raise(objective.level), Set.of(superstructure)).asProxy())
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
+        if(objective.level == 1){
+            return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
+        } else return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
     }
 
     public static Command autoScoreWithTimeout(Superstructure superstructure, CoralObjective objective, Swerve drivetrain, double timeout) {
@@ -52,7 +54,7 @@ public class AutoScoring {
         Command driveToScore = new DriveToPose(objective::getScoringPose, drivetrain)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
-                                .andThen(new DeferredCommand(() -> superstructure.raise(objective.level), Set.of(superstructure)).asProxy())
+                                .andThen(new DeferredCommand(() -> superstructure.raise(objective::level), Set.of(superstructure)).asProxy())
                 );
         return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());
     }

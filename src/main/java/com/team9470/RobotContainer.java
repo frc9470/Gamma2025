@@ -102,15 +102,15 @@ public class RobotContainer {
             final int id = i;
             Trigger trig = new Trigger(() -> (id < 2) ? buttonBoard.getX() == Math.pow(-1.0, id + 1)
                     : buttonBoard.getY() == Math.pow(-1.0, id));
-            trig.whileTrue(new InstantCommand(() -> autoScoring.setLevel(id + 1)));
+            trig.whileTrue(new InstantCommand(() -> autoScoring.overrideLevel(id + 1)));
         }
 
         // Reef position bindings (remaining unchanged)
-        for (int i = 0; i < 12; i++) {
-            JoystickButton button = new JoystickButton(buttonBoard, i+1);
-            final int id = i;
-            button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
-        }
+        // for (int i = 0; i < 12; i++) {
+        //     JoystickButton button = new JoystickButton(buttonBoard, i+1);
+        //     final int id = i;
+        //     button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
+        // }
 
         xbox.rightTrigger()
                 .whileTrue(autoScoring.autoScore(superstructure))
@@ -120,6 +120,6 @@ public class RobotContainer {
         xbox.y()
                         .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));
 
-        xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
+        // xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }
 }

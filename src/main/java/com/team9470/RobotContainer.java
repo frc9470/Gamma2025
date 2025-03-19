@@ -113,9 +113,8 @@ public class RobotContainer {
         }
 
         xbox.rightTrigger()
-                .whileTrue(autoScoring.autoScore(superstructure))
-                       // .onlyIf(superstructure.getCoral()::hasCoral))
-                .onFalse(/*autoScoring.driveBack().andThen(*/superstructure.getElevator().L0()/*)*/);
+                .whileTrue(superstructure.getElevator().L4()).onFalse(superstructure.getElevator().L0());
+
 
         xbox.y()
                         .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));

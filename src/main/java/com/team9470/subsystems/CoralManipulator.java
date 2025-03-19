@@ -31,6 +31,8 @@ public class CoralManipulator extends SubsystemBase {
     private final LEDs leds = LEDs.getInstance();
 
     public CoralManipulator() {
+        coralMotor.getConfigurator().apply(CoralConstants.getMotorConfig());
+        funnelMotor.getConfigurator().apply(CoralConstants.getMotorConfig());
         setDefaultCommand(coastUnless());
     }
 

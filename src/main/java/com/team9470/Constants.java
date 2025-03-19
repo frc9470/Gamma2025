@@ -1,5 +1,6 @@
 package com.team9470;
 
+import com.ctre.phoenix6.configs.AudioConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -40,19 +41,18 @@ public final class Constants {
                 Units.Inches.of(22 * 0.25).times(2);
         public static final double rotationsPerMeter = 1.0 / DIST_PER_ROTATION.in(Meters);
         public static final double GEAR_RATIO = 6.0;
-        public static final double MASS = 9.072;
+        public static final double MASS = 3.46;
         public static final double DRUM_RADIUS = DIST_PER_ROTATION.in(Meter) / (2 * Math.PI);
 
         // Gains
-        public static final double kP = 7;
-        public static final double kG = 0.38;
-        public static final double kV = 0.85;
-        public static final double kA = 0.01;
+        public static final double kP = 27;
+        public static final double kG = 0.23;
+        public static final double kD = 1;
         // etc...
 
         // Motion config
-        public static final LinearVelocity CRUISE_VELOCITY = Units.MetersPerSecond.of(2.0);
-        public static final LinearAcceleration ACCELERATION = MetersPerSecondPerSecond.of(10.0);
+        public static final LinearVelocity CRUISE_VELOCITY = Units.MetersPerSecond.of(4.44);
+        public static final LinearAcceleration ACCELERATION = MetersPerSecondPerSecond.of(35.37);
         public static final double JERK = 0;
 
         // Homing
@@ -69,7 +69,7 @@ public final class Constants {
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.4);
         public static final Distance L3 = Meters.of(.76);
-        public static final Distance L4 = Meters.of(1.415);
+        public static final Distance L4 = Meters.of(1.51);
         public static final Distance AL2 = Meters.of(.45);
         public static final Distance AL3 = Meters.of(.75);
         public static final Distance INTAKE = Meters.of(0);
@@ -82,17 +82,15 @@ public final class Constants {
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION.in(MetersPerSecondPerSecond) * rotationsPerMeter;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-            config.Slot0.kV = kV;
-            config.Slot0.kA = kA;
             config.Slot0.kP = kP;
             config.Slot0.kI = 0.0;
-            config.Slot0.kD = 0.0;
+            config.Slot0.kD = kD;
             config.Slot0.kG = kG;
-            config.Slot0.kS = 0.0;
+            config.Slot0.kS = 0.05;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            config.CurrentLimits.StatorCurrentLimit = 90;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }
@@ -175,9 +173,18 @@ public final class Constants {
     public static final class CoralConstants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(3);
         public static final Voltage COAST_SPEED = Volts.of(2);
-        public static final Voltage FUNNEL_SPEED = Volts.of(-5);
-        public static final Voltage HOLD_SPEED = Volts.of(-0.6);
-        public static final double BREAK_TIMEOUT = .13;
+        public static final Voltage FUNNEL_SPEED = Volts.of(-3);
+        public static final Voltage HOLD_SPEED = Volts.of(-0.1);
+        public static final double BREAK_TIMEOUT = .1;
+
+        public static TalonFXConfiguration getMotorConfig() {
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            return config;
+        }
     }
 
     public static final class DriverAssistConstants {

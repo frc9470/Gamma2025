@@ -15,12 +15,11 @@ import java.util.Set;
 import static edu.wpi.first.units.Units.Meters;
 
 public class AutoScoring {
-
     private ScoringState scoringState = ScoringState.DEFAULT;
     private static Swerve drivetrain;
 
     public AutoScoring(Swerve drivetrain){
-        this.drivetrain = drivetrain;
+        AutoScoring.drivetrain = drivetrain;
     }
 
     public Command autoScore(Superstructure superstructure) {
@@ -79,7 +78,7 @@ public class AutoScoring {
 
     public Command autoAlgae(Superstructure superstructure){
         CoralObjective coralObjective = scoringState.getOptimalObjective();
-        return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
+        return new DriveToPose(coralObjective::getScoringPose, drivetrain)
                 .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
                 .andThen(new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure)));
     }

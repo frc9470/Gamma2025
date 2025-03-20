@@ -1,7 +1,7 @@
 
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2025.3.1"
+    id "edu.wpi.first.GradleRIO" version "2025.3.2"
     id "idea"
 }
 
@@ -71,6 +71,8 @@ dependencies {
 
     implementation 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
+
+    implementation 'com.google.code.gson:gson:2.11.0'
 
     testImplementation platform("org.junit:junit-bom:5.10.1")
     testImplementation "org.junit.jupiter:junit-jupiter-api"

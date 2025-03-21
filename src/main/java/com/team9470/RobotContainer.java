@@ -88,13 +88,7 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.leftBumper().whileTrue(autoScoring.autoAlgaeNoDrive(superstructure))
-                .onFalse(superstructure.getElevator().L0());
-
-        // xbox.rightBumper().whileTrue(superstructure.groundIntake()).onFalse(superstructure.algaeReturn());
-        xbox.rightBumper().whileTrue(superstructure.groundIntake());
-        xbox.a().whileTrue(superstructure.processorScore()).onFalse(superstructure.algaeReturn());
-        xbox.povRight().whileTrue(superstructure.raiseAndStow(2));
+        xbox.povRight().whileTrue(superstructure.algaeUp()).onFalse(superstructure.algaeDown());
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
 
         // Example of binding elevator level commands via the superstructure's elevator
@@ -113,7 +107,7 @@ public class RobotContainer {
         }
 
         xbox.rightTrigger()
-                .whileTrue(superstructure.getElevator().L4()).onFalse(superstructure.getElevator().L0());
+                .whileTrue(superstructure.getElevator().L4().andThen(superstructure.score())).onFalse(superstructure.getElevator().L0());
 
 
         xbox.y()

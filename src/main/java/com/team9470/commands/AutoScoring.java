@@ -76,16 +76,6 @@ public class AutoScoring {
 
     }
 
-    public Command autoAlgae(Superstructure superstructure){
-        return new DriveToPose(() -> coralObjective.getScoringPose(), drivetrain)
-                .alongWith(new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE)))
-                .andThen(new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure)));
-    }
-
-    public Command autoAlgaeNoDrive(Superstructure superstructure){
-        return new DeferredCommand(() -> superstructure.dealgify(coralObjective.getAlgaeLevel()), Set.of(superstructure));
-    }
-
     private static boolean closeEnough(CoralObjective objective, Distance distance){
         Pose2d scoringPose = objective.getScoringPose();
         Pose2d currentPose = Swerve.getInstance().getPose();

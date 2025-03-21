@@ -1,6 +1,5 @@
 package com.team9470;
 
-import com.ctre.phoenix6.configs.AudioConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -65,13 +64,11 @@ public final class Constants {
         public static final double STALL_CURRENT = 40; // example
 
         public static final Distance HOME_POSITION = Meters.of(0);
-        public static final Distance L0 = Meters.of(0.00);
-        public static final Distance L1 = Meters.of(0.2);
-        public static final Distance L2 = Meters.of(.4);
-        public static final Distance L3 = Meters.of(.76);
-        public static final Distance L4 = Meters.of(1.51);
-        public static final Distance AL2 = Meters.of(.45);
-        public static final Distance AL3 = Meters.of(.75);
+        public static final Distance L0 = Meters.of(0.0); // INTAKE
+        public static final Distance L1 = Meters.of(0.28);
+        public static final Distance L2 = Meters.of(.48);
+        public static final Distance L3 = Meters.of(.84);
+        public static final Distance L4 = Meters.of(1.49);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -105,14 +102,7 @@ public final class Constants {
     }
 
     public static final class AlgaeConstants {
-        public static final double KS = 0;
-        public static final double KG = 0;
-        public static final double KV = 0;
-        public static final Angle CORAL_THRESHOLD = Degrees.of(-26); // Angle in degrees
-        public static final Current ALGAE_IN_THRESHOLD = Amps.of(5); // Current
-        public static final Angle DEPLOY_ANGLE = Degrees.of(-20);
-        public static final Angle GROUND_ANGLE = Degrees.of(-50);
-        public static final Angle STOW_UP = Degrees.of(93.98);
+        public static final Angle STOW_UP = Degrees.of(90);
         public static final Angle STOW_DOWN = Degrees.of(-95);
 
         public static final double CRUISE_VELOCITY = 10;
@@ -120,16 +110,13 @@ public final class Constants {
         public static final double JERK = 0;
 
         public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
-        public static final Voltage HOMING_OUTPUT = Volts.of(7);
+        public static final Voltage HOMING_OUTPUT = Volts.of(-.5);
         public static final Time HOMING_TIMEOUT = Seconds.of(10);
-        public static final Angle HOMING_ANGLE = Degrees.of(93.98);
+        public static final Angle HOMING_ANGLE = Degrees.of(-90);
 
-        public static final Voltage INTAKE_OUTPUT = Volts.of(4);
-        public static final Voltage HOLDING_OUTPUT = Volts.of(-2);
+        public static final double GEAR_RATIO = 10;
 
-        public static final double GEAR_RATIO = 4.2;
-
-        public static final double STALL_CURRENT = 80; // Amps
+        public static final double STALL_CURRENT = 30; // Amps
 
         // sim stuff
         public static final Mass ARM_MASS = Kilogram.of(6.252); // kg
@@ -144,13 +131,11 @@ public final class Constants {
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kV = 0.48;
-            config.Slot0.kA = 0.08;
             config.Slot0.kP = 15;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
-            config.Slot0.kG = 0.64;
-            config.Slot0.kS = 0.2;
+            config.Slot0.kG = 0.07;
+            config.Slot0.kS = 0.0;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;

@@ -7,6 +7,8 @@ import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.sim.ButtonBoardPub;
+import com.team9470.subsystems.sim.ButtonBoardSub;
 import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -46,6 +48,9 @@ public class RobotContainer {
     private final Autos autos = new Autos(superstructure, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
 
+    private final ButtonBoardPub publisher = new ButtonBoardPub(logger);
+    private final ButtonBoardSub subscriber = new ButtonBoardSub(logger);
+
     CommandXboxController xbox = new CommandXboxController(0);
     Joystick buttonBoard = new Joystick(1);
 
@@ -69,6 +74,7 @@ public class RobotContainer {
     public void periodic(){
         drivetrain.periodic();
 
+        // autoScoring
     }
 
     private void configureBindings() {

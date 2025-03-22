@@ -26,7 +26,6 @@
     "windows": {
       "/Pose": {
         "bottom": 1638,
-        "builtin": "2025 Reefscape",
         "height": 8.051901817321777,
         "left": 534,
         "right": 3466,
@@ -38,7 +37,6 @@
       },
       "/SmartDashboard/VisionSystemSim-main/Sim Field": {
         "bottom": 1638,
-        "builtin": "2025 Reefscape",
         "height": 8.051901817321777,
         "left": 534,
         "right": 3466,

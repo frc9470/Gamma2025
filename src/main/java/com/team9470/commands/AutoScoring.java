@@ -24,6 +24,7 @@ public class AutoScoring {
 
     public Command autoScore(Superstructure superstructure) {
         CoralObjective coralObjective = scoringState.getOptimalObjective();
+        
         return new DeferredCommand(() -> {
             Command driveToScore = new DriveToPose(coralObjective::getScoringPose, drivetrain)
                     .alongWith(
@@ -149,7 +150,8 @@ public class AutoScoring {
             double shortestDistance = Double.MAX_VALUE;
             int closestPoseId = -1;
             for (int i = 0; i < 12; i++) {
-                if(corals[level-1][i]){
+                // if coral is already scored here, can't select!
+                if (corals[level-1][i]) {
                     continue;
                 }
                 Pose2d pose = reefPoses[i];
@@ -159,7 +161,10 @@ public class AutoScoring {
                     closestPoseId = i;
                 }
             }
+             
             return new CoralObjective(closestPoseId, level);
+
+            // 0 -> top right red, left branch
         }
     }
     

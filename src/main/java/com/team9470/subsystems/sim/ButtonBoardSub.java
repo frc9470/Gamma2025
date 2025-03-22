@@ -21,7 +21,7 @@ public class ButtonBoardSub extends SubsystemBase {
         return mInstance;
     }
 
-    private ButtonBoardSub(Telemetry logger) {
+    public ButtonBoardSub(Telemetry logger) {
         this.logger = logger;
 
         coralInfoSub = logger.coralInfo.getTopic().subscribe("");

@@ -111,7 +111,7 @@ public class RobotContainer {
         }
 
         xbox.rightTrigger()
-                .whileTrue(superstructure.getElevator().L4().andThen(superstructure.score())).onFalse(superstructure.getElevator().L0());
+                .whileTrue(autoScoring.autoScore(superstructure)).onFalse(superstructure.getElevator().L0());
 
 
         xbox.y()

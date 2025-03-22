@@ -9,20 +9,20 @@ import { NT4_Client } from "./NT4.js";
 
 // ***** NETWORKTABLES *****
 
-const toRobotPrefix = "/ReefControls/ToRobot/";
-const toDashboardPrefix = "/ReefControls/ToDashboard/";
-const selectedLevelTopicName = "SelectedLevel";
-const l1TopicName = "Level1";
-const l2TopicName = "Level2";
-const l3TopicName = "Level3";
-const l4TopicName = "Level4";
-const algaeTopicName = "Algae";
-const coopTopicName = "Coop";
-const isElimsTopicName = "IsElims";
+// const toRobotPrefix = "/ReefControls/ToRobot/";
+// const toDashboardPrefix = "/ReefControls/ToDashboard/";
+// const selectedLevelTopicName = "SelectedLevel";
+// const l1TopicName = "Level1";
+// const l2TopicName = "Level2";
+// const l3TopicName = "Level3";
+// const l4TopicName = "Level4";
+// const algaeTopicName = "Algae";
+// const coopTopicName = "Coop";
+// const isElimsTopicName = "IsElims";
 
 const ntClient = new NT4_Client(
   window.location.hostname,
-  "ReefControls",
+  "Beta2025",
   () => {
     // Topic announce
   },
@@ -31,29 +31,10 @@ const ntClient = new NT4_Client(
   },
   (topic, _, value) => {
     // New data
-    if (topic.name === toDashboardPrefix + selectedLevelTopicName) {
-      selectedLevel = value;
-    } else if (topic.name === toDashboardPrefix + l1TopicName) {
-      l1State = value;
-    } else if (topic.name === toDashboardPrefix + l2TopicName) {
-      l2State = value;
-    } else if (topic.name === toDashboardPrefix + l3TopicName) {
-      l3State = value;
-    } else if (topic.name === toDashboardPrefix + l4TopicName) {
-      l4State = value;
-    } else if (topic.name === toDashboardPrefix + algaeTopicName) {
-      algaeState = value;
-    } else if (topic.name === toDashboardPrefix + coopTopicName) {
-      coopState = value;
-    } else if (topic.name === toDashboardPrefix + isElimsTopicName) {
-      isElims = value;
-    } else {
-      return;
-    }
-    updateUI();
   },
   () => {
     // Connected
+    document.body.style.backgroundColor = "white";
   },
   () => {
     // Disconnected
@@ -63,29 +44,9 @@ const ntClient = new NT4_Client(
 
 // Start NT connection
 window.addEventListener("load", () => {
-  ntClient.subscribe(
-    [
-      toDashboardPrefix + selectedLevelTopicName,
-      toDashboardPrefix + l1TopicName,
-      toDashboardPrefix + l2TopicName,
-      toDashboardPrefix + l3TopicName,
-      toDashboardPrefix + l4TopicName,
-      toDashboardPrefix + algaeTopicName,
-      toDashboardPrefix + coopTopicName,
-      toDashboardPrefix + isElimsTopicName,
-    ],
-    false,
-    false,
-    0.02
-  );
 
-  ntClient.publishTopic(toRobotPrefix + selectedLevelTopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + l1TopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + l2TopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + l3TopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + l4TopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + algaeTopicName, "int");
-  ntClient.publishTopic(toRobotPrefix + coopTopicName, "boolean");
+  ntClient.publishTopic("branch", "int");
+  ntClient.publishTopic("level", "int");
   ntClient.connect();
 });
 
@@ -227,7 +188,7 @@ window.addEventListener("load", () => {
     (element, index) => {
       if (index > 0) {
         bind(element, () => {
-          ntClient.addSample(toRobotPrefix + selectedLevelTopicName, index - 1);
+          selectedLevel = index;
         });
       }
     }
@@ -237,56 +198,44 @@ window.addEventListener("load", () => {
   Array.from(document.getElementsByClassName("branch")).forEach(
     (element, index) => {
       bind(element, () => {
-        switch (selectedLevel) {
-          case 0:
-            ntClient.addSample(
-              toRobotPrefix + l2TopicName,
-              l2State ^ (1 << index)
-            );
-            break;
-          case 1:
-            ntClient.addSample(
-              toRobotPrefix + l3TopicName,
-              l3State ^ (1 << index)
-            );
-            break;
-          case 2:
-            ntClient.addSample(
-              toRobotPrefix + l4TopicName,
-              l4State ^ (1 << index)
-            );
-            break;
-        }
-      });
-    }
-  );
-
-  // Algae toggle buttons
-  Array.from(document.getElementsByClassName("algae")).forEach(
-    (element, index) => {
-      bind(element, () => {
         ntClient.addSample(
-          toRobotPrefix + algaeTopicName,
-          algaeState ^ (1 << index)
+          "branch",
+          index
+        );
+        ntClient.addSample(
+          "level",
+          selectedLevel
         );
       });
     }
   );
 
-  // L1 count controls
-  bind(document.getElementsByClassName("subtract")[0], () => {
-    if (l1State > 0) {
-      ntClient.addSample(toRobotPrefix + l1TopicName, l1State - 1);
-    }
-  });
-  bind(document.getElementsByClassName("add")[0], () => {
-    ntClient.addSample(toRobotPrefix + l1TopicName, l1State + 1);
-  });
+  // // Algae toggle buttons
+  // Array.from(document.getElementsByClassName("algae")).forEach(
+  //   (element, index) => {
+  //     bind(element, () => {
+  //       ntClient.addSample(
+  //         toRobotPrefix + algaeTopicName,
+  //         algaeState ^ (1 << index)
+  //       );
+  //     });
+  //   }
+  // );
 
-  // Coop button
-  bind(document.getElementsByClassName("coop")[0], () => {
-    ntClient.addSample(toRobotPrefix + coopTopicName, !coopState);
-  });
+  // // L1 count controls
+  // bind(document.getElementsByClassName("subtract")[0], () => {
+  //   if (l1State > 0) {
+  //     ntClient.addSample(toRobotPrefix + l1TopicName, l1State - 1);
+  //   }
+  // });
+  // bind(document.getElementsByClassName("add")[0], () => {
+  //   ntClient.addSample(toRobotPrefix + l1TopicName, l1State + 1);
+  // });
+
+  // // Coop button
+  // bind(document.getElementsByClassName("coop")[0], () => {
+  //   ntClient.addSample(toRobotPrefix + coopTopicName, !coopState);
+  // });
 });
 
 // ***** REEF CANVAS *****

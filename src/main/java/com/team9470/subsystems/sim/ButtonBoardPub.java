@@ -37,25 +37,25 @@ public class ButtonBoardPub extends SubsystemBase {
         }
 
         // branchId = 2 (NO SUBTRACT), level = 4 (- 1)
-        corals[0][2] = true;
-        corals[1][2] = true;
-        corals[2][2] = true;
-        corals[3][2] = true;
+        // corals[0][2] = true;
+        // corals[1][2] = true;
+        // corals[2][2] = true;
+        // corals[3][2] = true;
     }
 
     @Override
     public void periodic() {
-        int opBranchId = 0;
-        int level = 0;
+//         int opBranchId = 0;
+//         int level = 0;
 
-        corals[level][opBranchId] = true;
-        // <get some updated
+//         corals[level][opBranchId] = true;
+//         // <get some updated
 
-        // TODO: actually populate with website!
-//        logger.coralInfo.set(Util.Boolean2DArrayToJSON(corals));
+//         // TODO: actually populate with website!
+// //        logger.coralInfo.set(Util.Boolean2DArrayToJSON(corals));
 
-        String coralString = gson.toJson(corals);
+//         String coralString = gson.toJson(corals);
 
-        logger.coralInfo.set(coralString);
+//         logger.coralInfo.set(coralString);
     }
 }

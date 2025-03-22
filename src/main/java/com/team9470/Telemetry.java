@@ -9,6 +9,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -47,7 +48,9 @@ public class Telemetry {
     private final DoublePublisher driveOdometryFrequency = driveStateTable.getDoubleTopic("OdometryFrequency").publish();
 
     /* For button board communications */
-    public final StringPublisher coralInfo = driveStateTable.getStringTopic("CoralInfo").publish();
+    // public final StringPublisher coralInfo = driveStateTable.getStringTopic("CoralInfo").publish();
+    public final IntegerPublisher branch = driveStateTable.getIntegerTopic("branchId").publish();
+    public final IntegerPublisher level = driveStateTable.getIntegerTopic("level").publish();
 
     /* Robot pose for field positioning */
     private final NetworkTable table = inst.getTable("Pose");

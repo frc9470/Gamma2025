@@ -77,7 +77,7 @@ public class RobotContainer {
 
     public void periodic(){
         drivetrain.periodic();
-
+        subscriber.periodic();
         // autoScoring
     }
 

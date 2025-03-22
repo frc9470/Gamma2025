@@ -254,4 +254,31 @@ public class Util {
 
         return chooser;
     }
+
+//   /* converts a 2D boolean array to JSON to be sent across a string */
+//   public static String Boolean2DArrayToJSON(boolean[][] data) {
+//       JSONArray jsonArray = new JSONArray();
+//
+//       for (boolean[] row : data) {
+//           jsonArray.put(new JSONArray(row));
+//       }
+//
+//       return jsonArray.toString();
+//   }
+//
+//   /* de-serializes JSONArray (String form) to a 2D boolean array */
+//   public static boolean[][] BooleanJSONArrayStringTo2DArray(String jsonArrayString) {
+//       JSONArray jsonArray = new JSONArray(jsonArrayString);
+//
+//       boolean[][] result = new boolean[12][3];
+//       for (int i = 0; i < jsonArray.length(); i++) {
+//           JSONArray row = jsonArray.getJSONArray(i);
+//           result[i] = new boolean[row.length()];
+//           for (int j = 0; j < row.length(); j++) {
+//               result[i][j] = row.getBoolean(j);
+//           }
+//       }
+//
+//       return result;
+//   }
 }

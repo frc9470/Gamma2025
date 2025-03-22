@@ -7,6 +7,8 @@ import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
+import com.team9470.subsystems.sim.ButtonBoardPub;
+import com.team9470.subsystems.sim.ButtonBoardSub;
 import com.team9470.subsystems.vision.Vision;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -46,6 +48,9 @@ public class RobotContainer {
     private final Autos autos = new Autos(superstructure, drivetrain);
     private final AutoChooser autoChooser = new AutoChooser();
 
+    private final ButtonBoardPub publisher = new ButtonBoardPub(logger);
+    private final ButtonBoardSub subscriber = new ButtonBoardSub(logger);
+
     CommandXboxController xbox = new CommandXboxController(0);
     Joystick buttonBoard = new Joystick(1);
 
@@ -72,7 +77,10 @@ public class RobotContainer {
 
     public void periodic(){
         drivetrain.periodic();
+        subscriber.periodic();
+        // autoScoring
 
+        System.out.println(logger.counterSub.get());
     }
 
     private void configureBindings() {
@@ -106,15 +114,15 @@ public class RobotContainer {
             final int id = i;
             Trigger trig = new Trigger(() -> (id < 2) ? buttonBoard.getX() == Math.pow(-1.0, id + 1)
                     : buttonBoard.getY() == Math.pow(-1.0, id));
-            trig.whileTrue(new InstantCommand(() -> autoScoring.setLevel(id + 1)));
+            trig.whileTrue(new InstantCommand(() -> autoScoring.overrideLevel(id + 1)));
         }
 
         // Reef position bindings (remaining unchanged)
-        for (int i = 0; i < 12; i++) {
-            JoystickButton button = new JoystickButton(buttonBoard, i+1);
-            final int id = i;
-            button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
-        }
+        // for (int i = 0; i < 12; i++) {
+        //     JoystickButton button = new JoystickButton(buttonBoard, i+1);
+        //     final int id = i;
+        //     button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
+        // }
 
         xbox.rightTrigger()
                 .whileTrue(autoScoring.autoScore(superstructure))
@@ -124,6 +132,6 @@ public class RobotContainer {
         xbox.y()
                         .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));
 
-        xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
+        // xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
     }
 }

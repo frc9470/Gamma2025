@@ -23,8 +23,8 @@ public class AutoScoring {
     }
 
     public Command autoScore(Superstructure superstructure) {
-        CoralObjective coralObjective = scoringState.getOptimalObjective();
         return new DeferredCommand(() -> {
+            CoralObjective coralObjective = scoringState.getOptimalObjective();
             Command driveToScore = new DriveToPose(coralObjective::getScoringPose, drivetrain)
                     .alongWith(
                             new WaitUntilCommand(() -> closeEnough(coralObjective, Constants.DriverAssistConstants.RAISE_DISTANCE))

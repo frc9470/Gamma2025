@@ -64,11 +64,11 @@ public final class Constants {
         public static final double STALL_CURRENT = 40; // example
 
         public static final Distance HOME_POSITION = Meters.of(0);
-        public static final Distance L0 = Meters.of(0.0); // INTAKE
+        public static final Distance L0 = Meters.of(0.06); // INTAKE
         public static final Distance L1 = Meters.of(0.28);
-        public static final Distance L2 = Meters.of(.48);
+        public static final Distance L2 = Meters.of(.45);
         public static final Distance L3 = Meters.of(.84);
-        public static final Distance L4 = Meters.of(1.49);
+        public static final Distance L4 = Meters.of(1.47);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -112,11 +112,9 @@ public final class Constants {
         public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
         public static final Voltage HOMING_OUTPUT = Volts.of(-.5);
         public static final Time HOMING_TIMEOUT = Seconds.of(10);
-        public static final Angle HOMING_ANGLE = Degrees.of(-90);
+        public static final Angle HOMING_ANGLE = Degrees.of(-95);
 
         public static final double GEAR_RATIO = 10;
-
-        public static final double STALL_CURRENT = 30; // Amps
 
         // sim stuff
         public static final Mass ARM_MASS = Kilogram.of(6.252); // kg
@@ -131,7 +129,7 @@ public final class Constants {
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kP = 15;
+            config.Slot0.kP = 25;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
             config.Slot0.kG = 0.07;
@@ -139,18 +137,8 @@ public final class Constants {
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            config.CurrentLimits.StatorCurrentLimit = 60;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-            return config;
-        }
-
-        public static TalonFXConfiguration getRollerConfig(){
-            TalonFXConfiguration config = new TalonFXConfiguration();
-            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-            config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 30;
-
             return config;
         }
     }

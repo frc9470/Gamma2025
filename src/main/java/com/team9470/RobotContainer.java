@@ -92,7 +92,8 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.povRight().whileTrue(superstructure.algaeUp()).onFalse(superstructure.algaeDown());
+        xbox.povUp().whileTrue(superstructure.algaeUp());
+        xbox.povDown().whileTrue(superstructure.algaeDown());
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
 
         // Example of binding elevator level commands via the superstructure's elevator

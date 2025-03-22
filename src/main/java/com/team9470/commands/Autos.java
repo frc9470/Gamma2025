@@ -433,7 +433,7 @@ public class Autos extends SubsystemBase{
         );
 
         toC10.done().onTrue(
-                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 12)
+                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 0)
         );
 
         return routine;
@@ -573,7 +573,7 @@ public class Autos extends SubsystemBase{
         );
 
         toC10.done().onTrue(
-                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 12)
+                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 0)
         );
 
         C10toSource.done().onTrue(
@@ -668,7 +668,7 @@ public class Autos extends SubsystemBase{
         );
 
         toC10.done().onTrue(
-                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 12)
+                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 0)
         );
 
         return routine;

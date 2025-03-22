@@ -79,6 +79,8 @@ public class RobotContainer {
         drivetrain.periodic();
         subscriber.periodic();
         // autoScoring
+
+        System.out.println(logger.counterSub.get());
     }
 
     private void configureBindings() {

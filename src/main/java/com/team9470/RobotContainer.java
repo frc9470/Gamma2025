@@ -58,12 +58,16 @@ public class RobotContainer {
         configureBindings();
 
 //        autoChooser.addRoutine("3CT", autos::getThreeCoralTop);
+//        autoChooser.addRoutine("3CB Test", autos::getBottomThreeCoralTest);
         autoChooser.addRoutine("3CTA", autos::getThreeCoralTopAutoAlign);
-        autoChooser.addRoutine("3CTP", autos::getThreeCoralTopAutoPathing);
+//        autoChooser.addRoutine("3CTP", autos::getThreeCoralTopAutoPathing);
         autoChooser.addRoutine("3CBA", autos::getThreeCoralBottomAutoAlign);
         autoChooser.addRoutine("1C", autos::getOneCoral);
         autoChooser.addRoutine("1CC", autos::getOneCoralChoreo);
-//        autoChooser.addRoutine("3CB Test", autos::getBottomThreeCoralTest);
+        autoChooser.addRoutine("4CTA", autos::getFourCoralTopAutoAlign);
+        autoChooser.addRoutine("4CBA", autos::getFourCoralBottomAutoAlign);
+        autoChooser.addRoutine("5CTA", autos::getFiveCoralTopAutoAlign);
+        autoChooser.addRoutine("5CBA", autos::getFiveCoralBottomAutoAlign);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);

@@ -22,6 +22,7 @@ import static edu.wpi.first.units.Units.*;
 public class DriveToPose extends Command {
     private final Swerve drivetrain;
     private final Supplier<Pose2d> reefPoseSupplier;
+    private final Supplier<Pose2d> robotPoseSupplier;
     private Pose2d reefPose;
 
     // PID controllers for X, Y and Theta
@@ -38,11 +39,16 @@ public class DriveToPose extends Command {
     private DoubleSupplier omegaFF = () -> 0.0;
 
     // Default constructor uses no feedforward
-    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain) {
+    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, Supplier<Pose2d> getCurrentPose) {
         pidControllerOmega.enableContinuousInput(-Math.PI, Math.PI);
         this.reefPoseSupplier = reefPoseSupplier;
         this.drivetrain = drivetrain;
+        this.robotPoseSupplier = getCurrentPose;
         addRequirements(drivetrain);
+    }
+
+    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain) {
+        this(reefPoseSupplier, drivetrain, drivetrain::getPose);
     }
 
     // Overloaded constructor to inject feedforward from joystick inputs.

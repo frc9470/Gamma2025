@@ -674,6 +674,172 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
+    public AutoRoutine getFiveCoralTopAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("5CT");
+
+        // Trajectories
+        AutoTrajectory startToC1 = routine.trajectory("S-1");
+        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
+        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
+        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
+        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+        AutoTrajectory toC10 = routine.trajectory("TC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+        AutoTrajectory toC9 = routine.trajectory("TC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+
+        LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC1.resetOdometry(),
+                        startToC1.cmd()
+                )
+        );
+
+        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        startToC1.done().onTrue(
+                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
+        );
+
+        C1toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC12.cmd())
+        );
+
+        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC12.done().onTrue(
+                scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
+        );
+
+        C12toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC11.cmd())
+        );
+
+        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC11.done().onTrue(
+                scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
+        );
+
+        C11toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC10.cmd())
+        );
+
+        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC10.done().onTrue(
+                scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
+        );
+
+        C10toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC9.cmd())
+        );
+
+        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC9.done().onTrue(
+                scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getFiveCoralBottomAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("5CB");
+
+        // Trajectories
+        AutoTrajectory startToC5 = routine.trajectory("S-5");
+        AutoTrajectory C5toSource = routine.trajectory("BC-5", 1);
+        AutoTrajectory toC7 = routine.trajectory("BC-7", 0);
+        AutoTrajectory C7toSource = routine.trajectory("BC-7", 1);
+        AutoTrajectory toC8 = routine.trajectory("BC-8", 0);
+        AutoTrajectory C8toSource = routine.trajectory("BC-8", 1);
+        AutoTrajectory toC9 = routine.trajectory("BC-9", 0);
+        AutoTrajectory C9toSource = routine.trajectory("BC-9", 1);
+        AutoTrajectory toC10 = routine.trajectory("BC-10", 0);
+        AutoTrajectory C10toSource = routine.trajectory("BC-10", 1);
+
+        LogUtil.recordPose2d("autostart", startToC5.getInitialPose().get());
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        startToC5.resetOdometry(),
+                        startToC5.cmd()
+                )
+        );
+
+        startToC5.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        startToC5.done().onTrue(
+                scoreL4WaitLower(C5toSource.cmd(), SCORING_DELAY)
+        );
+
+        C5toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC7.cmd())
+        );
+
+        toC7.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC7.done().onTrue(
+                scoreL4WaitLower(C7toSource.cmd(), SCORING_DELAY)
+        );
+
+        C7toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC8.cmd())
+        );
+
+        toC8.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC8.done().onTrue(
+                scoreL4WaitLower(C8toSource.cmd(), SCORING_DELAY)
+        );
+
+        C8toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC9.cmd())
+        );
+
+        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC9.done().onTrue(
+                scoreL4WaitLower(C9toSource.cmd(), SCORING_DELAY)
+        );
+
+        C9toSource.done().onTrue(
+                superstructure.waitForIntake().andThen(toC10.cmd())
+        );
+
+        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
+                elevator.L4()
+        );
+
+        toC10.done().onTrue(
+                scoreL4WaitLower(C10toSource.cmd(), SCORING_DELAY)
+        );
+
+        return routine;
+    }
+
     public Command getBasicAutoCommand() {
         ChassisSpeeds initial_speed = new ChassisSpeeds(1, 0, 0);
         ChassisSpeeds final_speed = new ChassisSpeeds(0, 0, 0);

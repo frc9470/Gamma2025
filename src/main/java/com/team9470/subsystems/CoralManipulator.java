@@ -41,11 +41,6 @@ public class CoralManipulator extends SubsystemBase {
         // updates the delayed boolean with whether the coral is in the manipulator
         coralBreak.update(Timer.getFPGATimestamp(), sensorTrue());
 
-        // if there isn't coral, the funnel needs to be running to accept any incoming coral
-        if (!hasCoral()) funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
-            // if there is, great! stop the funnel, as it's not necessary
-        else funnelMotor.stopMotor();
-
         leds.hasCoral = sensorTrue();
 
         SmartDashboard.putBoolean("CoralManipulator/BeamBreak", sensorTrue());
@@ -82,8 +77,10 @@ public class CoralManipulator extends SubsystemBase {
         return this.run(() -> {
             if (hasCoral()) {
                 coralMotor.setVoltage(CoralConstants.HOLD_SPEED.in(Volts));
+                funnelMotor.stopMotor();
             } else {
                 coralMotor.setVoltage(CoralConstants.COAST_SPEED.in(Volts));
+                funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
             }
         });
     }
@@ -115,6 +112,15 @@ public class CoralManipulator extends SubsystemBase {
             () -> coralMotor.setVoltage(-CoralConstants.TAKE_IN_SPEED.in(Volts))
             // brakes the motor at the end, so the coral doesn't just end up misaligning but in reverse
             , coralMotor::stopMotor
+        );
+    }
+
+    public Command scoreAndFunnel() {
+        return this.run(
+                () -> {
+                    coralMotor.setVoltage(CoralConstants.TAKE_IN_SPEED.in(Volts));
+                    funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
+                }
         );
     }
 }

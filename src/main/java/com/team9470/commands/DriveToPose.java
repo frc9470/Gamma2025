@@ -74,8 +74,8 @@ public class DriveToPose extends Command {
         Pose2d currentPose = drivetrain.getPose();
         // Determine the target pose using your drive target logic.
         Pose2d targetPose = getDriveTarget(currentPose, reefPose);
-        LogUtil.recordPose2d("Ghost", targetPose);
-        LogUtil.recordPose2d("Current Reef Pose", reefPose);
+        LogUtil.recordPose2d("DriveToPose/Ghost", targetPose);
+        LogUtil.recordPose2d("DriveToPose/Reef", reefPose);
 
         // Calculate feedback speeds from PID controllers.
         double xSpeed = pidControllerX.calculate(currentPose.getX(), targetPose.getX());
@@ -114,9 +114,9 @@ public class DriveToPose extends Command {
         // Finish when both translation and rotation are within tolerances.
         SmartDashboard.putNumber("DriveToPose/TranslationError", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()));
         SmartDashboard.putNumber("DriveToPose/HeadingError", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()));
-        SmartDashboard.putBoolean("DriveToPose/TranslationAligned", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.02);
-        SmartDashboard.putBoolean("DriveToPose/HeadingAligned", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 2);
-        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.015 &&
+        SmartDashboard.putBoolean("DriveToPose/TranslationAligned", drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.015);
+        SmartDashboard.putBoolean("DriveToPose/HeadingAligned", Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 1);
+        return drivetrain.getPose().getTranslation().getDistance(reefPose.getTranslation()) <= 0.01 &&
                 Math.abs(drivetrain.getPose().getRotation().minus(reefPose.getRotation()).getDegrees()) <= 1;
     }
 

@@ -79,4 +79,7 @@ public class Superstructure extends SubsystemBase {
         return leds;
     }
 
+    public Command scoreAndFunnel() {
+        return coral.scoreAndFunnel();
+    }
 }

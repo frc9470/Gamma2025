@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -92,8 +93,8 @@ public class RobotContainer {
         // SUPERSTRUCTURE COMMANDS
         xbox.b().whileTrue(superstructure.reverseCoral());
 
-        xbox.povUp().whileTrue(superstructure.algaeUp());
-        xbox.povDown().whileTrue(superstructure.algaeDown());
+        xbox.leftBumper().whileTrue(superstructure.algaeUp());
+        xbox.leftTrigger().whileTrue(superstructure.algaeDown());
         xbox.back().onTrue(superstructure.triggerAlgaeHoming());
 
         // Example of binding elevator level commands via the superstructure's elevator
@@ -112,12 +113,22 @@ public class RobotContainer {
         }
 
         xbox.rightTrigger()
-                .whileTrue(autoScoring.autoScore(superstructure)).onFalse(superstructure.getElevator().L0());
+                .whileTrue(autoScoring.autoScore(superstructure)).onFalse(superstructure.getElevator().L0().onlyIf(() -> !superstructure.getCoral().hasCoral()));
 
 
         xbox.y()
                         .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));
 
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
+
+        xbox.povRight().whileTrue(superstructure.scoreAndFunnel());
+//        xbox.povDown().whileTrue(superstructure.getElevator().L0());
+
+        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+
+        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 }

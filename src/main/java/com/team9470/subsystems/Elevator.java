@@ -62,7 +62,7 @@ public class Elevator extends SubsystemBase {
     private HomingState homingState = HomingState.IDLE;
 
     // Our "goal" position in meters
-    private Distance targetPosition = Meters.of(0);
+    private Distance targetPosition = L0;
 
     // Keep track of time when homing started
     private Time homingStartTime = Seconds.of(0);

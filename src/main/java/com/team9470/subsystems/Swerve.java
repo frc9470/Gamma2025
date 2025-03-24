@@ -67,8 +67,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     /* Swerve requests */
     private final SwerveRequest.ApplyFieldSpeeds    applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
-    private final PIDController pathXController = new PIDController(10, 0, 0);
-    private final PIDController pathYController = new PIDController(10, 0, 0);
+    private final PIDController pathXController = new PIDController(7, 0, 0);
+    private final PIDController pathYController = new PIDController(7, 0, 0);
     private final PIDController pathThetaController = new PIDController(7, 0, 0);
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -107,7 +107,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             )
     );
     /* The SysId routine to test */
-    private final SysIdRoutine sysIdRoutineToApply = sysIdRoutineSteer;
+    private final SysIdRoutine sysIdRoutineToApply = sysIdRoutineTranslation;
     /*
      * SysId routine for characterizing rotation.
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
@@ -407,6 +407,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     public static final double minDistanceTagPoseBlend = Units.inchesToMeters(24.0);
     public static final double maxDistanceTagPoseBlend = Units.inchesToMeters(36.0);
+    @Deprecated
+    /**
+     * chat lets not do 6328 code pretty please
+     */
     public Pose2d getReefPose(int face, Pose2d finalPose) {
         final boolean isRed = AllianceFlipUtil.shouldFlip();
         var tagPose =

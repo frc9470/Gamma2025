@@ -64,11 +64,11 @@ public final class Constants {
         public static final double STALL_CURRENT = 40; // example
 
         public static final Distance HOME_POSITION = Meters.of(0);
-        public static final Distance L0 = Meters.of(0.06); // INTAKE
+        public static final Distance L0 = Meters.of(0.0); // INTAKE
         public static final Distance L1 = Meters.of(0.28);
         public static final Distance L2 = Meters.of(.45);
         public static final Distance L3 = Meters.of(.84);
-        public static final Distance L4 = Meters.of(1.47);
+        public static final Distance L4 = Meters.of(1.48);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -96,7 +96,7 @@ public final class Constants {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = STALL_CURRENT;
+            config.CurrentLimits.StatorCurrentLimit = 90;
             return config;
         }
     }
@@ -137,7 +137,7 @@ public final class Constants {
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 60;
+            config.CurrentLimits.StatorCurrentLimit = 50;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }
@@ -148,7 +148,7 @@ public final class Constants {
         public static final Voltage COAST_SPEED = Volts.of(2);
         public static final Voltage FUNNEL_SPEED = Volts.of(-3);
         public static final Voltage HOLD_SPEED = Volts.of(-0.1);
-        public static final double BREAK_TIMEOUT = .1;
+        public static final double BREAK_TIMEOUT = .05;
 
         public static TalonFXConfiguration getMotorConfig() {
             TalonFXConfiguration config = new TalonFXConfiguration();

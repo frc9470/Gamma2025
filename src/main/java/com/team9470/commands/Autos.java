@@ -417,22 +417,23 @@ public class Autos extends SubsystemBase{
 
     public AutoRoutine getFiveCoralTopAutoAlign() {
         AutoRoutine routine = autoFactory.newRoutine("5CTA");
+        // TODO: define odom start position and reset odometry to that position, analogous to "startToC5.resetOdometry()" choreo call
 
         routine.active().onTrue(
                 Commands.sequence(
-                        AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(9, 4), swerve),
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(9, 4), swerve, SCORING_DELAY),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(10, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(11, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(0, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(0, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(1, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(1, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait()
                 )
@@ -446,19 +447,19 @@ public class Autos extends SubsystemBase{
 
         routine.active().onTrue(
                 Commands.sequence(
-                        AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(4, 4), swerve),
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(4, 4), swerve, SCORING_DELAY),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(3, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(2, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(1, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(1, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait(),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(0, 4), swerve)),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(0, 4), swerve, SCORING_DELAY)),
                         elevator.L0(),
                         alignToSourceAndWait()
                 )

@@ -76,115 +76,6 @@ public class Autos extends SubsystemBase{
         return coralManipulator.scoreCommand();
     }
 
-    public AutoRoutine getBottomThreeCoralTest() {
-        AutoRoutine routine = autoFactory.newRoutine("B3C Test");
-
-        // Trajectories
-        AutoTrajectory startToC5 = routine.trajectory("S-5");
-        AutoTrajectory C5toSource = routine.trajectory("BC-5", 1);
-        AutoTrajectory toC7 = routine.trajectory("BC-7", 0);
-        AutoTrajectory C7toSource = routine.trajectory("BC-7", 1);
-        AutoTrajectory toC8 = routine.trajectory("BC-8", 0);
-        AutoTrajectory C8toSource = routine.trajectory("BC-8", 1);
-
-        routine.active().onTrue(
-                Commands.sequence(
-                        startToC5.resetOdometry(),
-                        startToC5.cmd()
-                )
-        );
-
-        startToC5.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        startToC5.done().onTrue(
-                scoreL4WaitLower(C5toSource.cmd(), SCORING_DELAY)
-        );
-
-        C5toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC7.cmd())
-        );
-
-        toC7.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC7.done().onTrue(
-                scoreL4WaitLower(C7toSource.cmd(), SCORING_DELAY)
-        );
-
-        C7toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC8.cmd())
-        );
-
-        toC8.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC8.done().onTrue(
-                scoreL4WaitLower(C8toSource.cmd(), SCORING_DELAY)
-        );
-
-        return routine;
-    }
-
-    public AutoRoutine getThreeCoralTop() {
-        AutoRoutine routine = autoFactory.newRoutine("3CT Test");
-
-
-        // Trajectories
-        AutoTrajectory startToC1 = routine.trajectory("S-1");
-        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
-        AutoTrajectory toC12 = routine.trajectory("TC-12", 0);
-        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
-        AutoTrajectory toC11 = routine.trajectory("TC-11", 0);
-        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
-
-        LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
-
-        routine.active().onTrue(
-                Commands.sequence(
-                        startToC1.resetOdometry(),
-                        startToC1.cmd()
-                )
-        );
-
-        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        startToC1.done().onTrue(
-                scoreL4WaitLower(C1toSource.cmd(), SCORING_DELAY)
-        );
-
-        C1toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC12.cmd())
-        );
-
-        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-
-        toC12.done().onTrue(
-                scoreL4WaitLower(C12toSource.cmd(), SCORING_DELAY)
-        );
-
-        C12toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC11.cmd())
-        );
-
-        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC11.done().onTrue(
-                scoreL4WaitLower(C11toSource.cmd(), SCORING_DELAY)
-        );
-
-        return routine;
-    }
 
     public AutoRoutine getThreeCoralTopAutoAlign() {
         AutoRoutine routine = autoFactory.newRoutine("3CTA");
@@ -525,68 +416,26 @@ public class Autos extends SubsystemBase{
 
         LogUtil.recordPose2d("autostart", startToC1.getInitialPose().get());
 
+        // Start segment with reset odometry and first command.
         routine.active().onTrue(
                 Commands.sequence(
                         startToC1.resetOdometry(),
                         startToC1.cmd()
                 )
         );
-
-        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
+        startToC1.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(elevator.L4());
         startToC1.done().onTrue(
                 scoreL4AutoWaitLower(C1toSource.cmd(), SCORING_DELAY, 9)
         );
-
         C1toSource.done().onTrue(
                 superstructure.waitForIntake().andThen(toC12.cmd())
         );
 
-        toC12.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC12.done().onTrue(
-                scoreL4AutoWaitLower(C12toSource.cmd(), SCORING_DELAY, 10)
-        );
-
-        C12toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC11.cmd())
-        );
-
-        toC11.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC11.done().onTrue(
-                scoreL4AutoWaitLower(C11toSource.cmd(), SCORING_DELAY, 11)
-        );
-
-        C11toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC10.cmd())
-        );
-
-        toC10.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC10.done().onTrue(
-                scoreL4AutoWaitLower(C10toSource.cmd(), SCORING_DELAY, 0)
-        );
-
-        C10toSource.done().onTrue(
-                superstructure.waitForIntake().andThen(toC9.cmd())
-        );
-
-        toC9.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(
-                elevator.L4()
-        );
-
-        toC9.done().onTrue(
-                scoreL4AutoWaitLower(C9toSource.cmd(), SCORING_DELAY, 1)
-        );
+        // Chain segments using helper method.
+        attachSegment(toC12, C12toSource, 10, toC11);
+        attachSegment(toC11, C11toSource, 11, toC10);
+        attachSegment(toC10, C10toSource, 0, toC9);
+        attachSegment(toC9, C9toSource, 1, null);
 
         return routine;
     }
@@ -838,6 +687,14 @@ public class Autos extends SubsystemBase{
         );
 
         return routine;
+    }
+
+    private void attachSegment(AutoTrajectory travel, AutoTrajectory source, int branch, AutoTrajectory nextTravel) {
+        travel.atTimeBeforeEnd(ELEVATOR_DELAY).onTrue(elevator.L4());
+        travel.done().onTrue(scoreL4AutoWaitLower(source.cmd(), SCORING_DELAY, branch));
+        if (nextTravel != null) {
+            source.done().onTrue(superstructure.waitForIntake().andThen(nextTravel.cmd()));
+        }
     }
 
     public AutoRoutine getFiveCoralTopAutoAlign() {

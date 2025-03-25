@@ -32,8 +32,8 @@ public class AutoScoring {
                                     .andThen(superstructure.raise(coralObjective.level).asProxy())
                     );
             System.out.println("Scoring with coralobjective: " + coralObjective);
-            return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
-        }, Set.of(drivetrain));
+            return driveToScore;
+        }, Set.of(drivetrain)).asProxy().andThen(superstructure.getCoral().scoreCommand().asProxy());
     }
 
     public static Command autoScore(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {

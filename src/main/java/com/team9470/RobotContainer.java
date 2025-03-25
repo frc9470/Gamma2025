@@ -53,8 +53,9 @@ public class RobotContainer {
     public RobotContainer() {
         configureBindings();
 
-        autoChooser.addRoutine("1CN", autos::getOneCoralMiddleAutoNormal);
-        autoChooser.addRoutine("1CC", autos::getOneCoralMiddleAutoChoreo);
+        autoChooser.addRoutine("1CMN", autos::getOneCoralMiddleAutoNormal);
+        autoChooser.addRoutine("1CMC", autos::getOneCoralMiddleAutoChoreo);
+        autoChooser.addRoutine("1CMA", autos::getOneCoralMiddleAutoAlign);
         autoChooser.addRoutine("5CTN", autos::getFiveCoralTopAutoNormal);
         autoChooser.addRoutine("5CBN", autos::getFiveCoralBottomAutoNormal);
         autoChooser.addRoutine("5CTC", autos::getFiveCoralTopAutoChoreo);

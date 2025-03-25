@@ -4,6 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import com.team9470.subsystems.*;
+import com.team9470.commands.AutoScoring;
 import com.team9470.util.AllianceFlipUtil;
 import com.team9470.util.LogUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -341,8 +342,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    public AutoRoutine getOneCoral(){
-        AutoRoutine routine = autoFactory.newRoutine("1C");
+    public AutoRoutine getOneCoralMiddleAutoNormal(){
+        AutoRoutine routine = autoFactory.newRoutine("1CMN");
 
         AutoTrajectory startToC3 = routine.trajectory("S-3");
         routine.active().onTrue(
@@ -354,9 +355,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    // use when no vision
-    public AutoRoutine getOneCoralChoreo(){
-        AutoRoutine routine = autoFactory.newRoutine("1CC");
+    public AutoRoutine getOneCoralMiddleAutoChoreo(){
+        AutoRoutine routine = autoFactory.newRoutine("1CMC");
         AutoTrajectory startToC3 = routine.trajectory("S-3");
 
         routine.active().onTrue(
@@ -508,8 +508,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    public AutoRoutine getFiveCoralTopAutoAlign() {
-        AutoRoutine routine = autoFactory.newRoutine("5CTA");
+    public AutoRoutine getFiveCoralTopAutoNormal() {
+        AutoRoutine routine = autoFactory.newRoutine("5CTN");
 
         // Trajectories
         AutoTrajectory startToC1 = routine.trajectory("S-1");
@@ -591,8 +591,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    public AutoRoutine getFiveCoralBottomAutoAlign() {
-        AutoRoutine routine = autoFactory.newRoutine("5CBA");
+    public AutoRoutine getFiveCoralBottomAutoNormal() {
+        AutoRoutine routine = autoFactory.newRoutine("5CBN");
 
         // Trajectories
         AutoTrajectory startToC5 = routine.trajectory("S-5");
@@ -674,8 +674,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    public AutoRoutine getFiveCoralTopAuto() {
-        AutoRoutine routine = autoFactory.newRoutine("5CT");
+    public AutoRoutine getFiveCoralTopAutoChoreo() {
+        AutoRoutine routine = autoFactory.newRoutine("5CTC");
 
         // Trajectories
         AutoTrajectory startToC1 = routine.trajectory("S-1");
@@ -757,8 +757,8 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
-    public AutoRoutine getFiveCoralBottomAuto() {
-        AutoRoutine routine = autoFactory.newRoutine("5CB");
+    public AutoRoutine getFiveCoralBottomAutoChoreo() {
+        AutoRoutine routine = autoFactory.newRoutine("5CBC");
 
         // Trajectories
         AutoTrajectory startToC5 = routine.trajectory("S-5");
@@ -840,6 +840,59 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
+    public AutoRoutine getFiveCoralTopAutoAlign() {
+        AutoRoutine routine = autoFactory.newRoutine("5CTA");
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(9, 4), swerve),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(10, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(11, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(0, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(1, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait()
+                )
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getFiveCoralBottomAutoAlign() {
+        AutoRoutine routine = autoFactory.newRoutine("5CBA");
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(4, 4), swerve),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(3, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(2, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(1, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(0, 4), swerve)),
+                        elevator.L0(),
+                        alignToSourceAndWait()
+                )
+        );
+
+        return routine;
+    }
+
+    // basic leave auto
     public Command getBasicAutoCommand() {
         ChassisSpeeds initial_speed = new ChassisSpeeds(1, 0, 0);
         ChassisSpeeds final_speed = new ChassisSpeeds(0, 0, 0);

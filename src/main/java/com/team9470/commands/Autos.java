@@ -83,6 +83,7 @@ public class Autos extends SubsystemBase{
         routine.active().onTrue(
                 startToC3.resetOdometry().andThen(
                         scoreL4AutoWaitLower(new InstantCommand(), SCORING_DELAY, 7)
+                                .andThen(superstructure.algaeDown())
                 )
 
         );
@@ -100,6 +101,7 @@ public class Autos extends SubsystemBase{
 
         startToC3.done().onTrue(
                 scoreL4WaitLower(new InstantCommand(), SCORING_DELAY)
+                        .andThen(superstructure.algaeDown())
         );
         return routine;
     }
@@ -108,10 +110,8 @@ public class Autos extends SubsystemBase{
         AutoRoutine routine = autoFactory.newRoutine("1CMA");
 
         routine.active().onTrue(
-                Commands.sequence(
-                        AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(7, 4), swerve),
-                        elevator.L0()
-                )
+                AutoScoring.autoScore(superstructure, new AutoScoring.CoralObjective(7, 4), swerve)
+                        .andThen(Commands.parallel(superstructure.algaeDown(), elevator.L0()))
         );
         
         return routine;

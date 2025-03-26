@@ -10,7 +10,7 @@ import { NT4_Client } from "./NT4.js";
 // ***** NETWORKTABLES *****
 
 // const toRobotPrefix = "/ReefControls/ToRobot/";
-// const toDashboardPrefix = "/ReefControls/ToDashboard/";
+const toDashboardPrefix = "/DriveState/";
 // const selectedLevelTopicName = "SelectedLevel";
 // const l1TopicName = "Level1";
 // const l2TopicName = "Level2";
@@ -45,8 +45,8 @@ const ntClient = new NT4_Client(
 // Start NT connection
 window.addEventListener("load", () => {
 
-  ntClient.publishTopic("branch", "int");
-  ntClient.publishTopic("level", "int");
+  ntClient.publishTopic(toDashboardPrefix+"branch", "int");
+  ntClient.publishTopic(toDashboardPrefix+"level", "int");
   ntClient.connect();
 });
 
@@ -161,6 +161,7 @@ function bind(element, callback) {
       isTouch = true;
     }
     if (isTouch == touchEvent) {
+      console.log("EEEEEEEEE");
       callback();
     }
   };
@@ -198,12 +199,15 @@ window.addEventListener("load", () => {
   Array.from(document.getElementsByClassName("branch")).forEach(
     (element, index) => {
       bind(element, () => {
+        console.log("FFFFFFF");
+        console.log(index);
+        console.log(selectedLevel);
         ntClient.addSample(
-          "branch",
+          toDashboardPrefix+"branch",
           index
         );
         ntClient.addSample(
-          "level",
+          toDashboardPrefix+"level",
           selectedLevel
         );
       });

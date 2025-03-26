@@ -112,6 +112,10 @@ public class AutoScoring {
         scoringState = scoringState.updateCoral(branchId, level, false);
     }
 
+    public boolean[][] getCorals(){
+        return scoringState.corals;
+    }
+
     // stores scored coral and current level
     // if curLevel = 0, it will automatically set it
     public record ScoringState(boolean[][] corals, int curLevel){

@@ -32,7 +32,7 @@ public class RobotContainer {
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry();
 
     // ---------------- MECHANISM2D --------------------
     private final Mechanism2d mech = new Mechanism2d(5, 10);
@@ -49,7 +49,7 @@ public class RobotContainer {
     private final AutoChooser autoChooser = new AutoChooser();
 
     private final ButtonBoardPub publisher = new ButtonBoardPub(logger);
-    private final ButtonBoardSub subscriber = new ButtonBoardSub(logger);
+    // private final ButtonBoardSub subscriber = new ButtonBoardSub(logger);
 
     CommandXboxController xbox = new CommandXboxController(0);
     Joystick buttonBoard = new Joystick(1);
@@ -77,12 +77,11 @@ public class RobotContainer {
 
     public void periodic(){
         drivetrain.periodic();
-        subscriber.periodic();
+        // subscriber.periodic();
         // autoScoring
     }
 
     private void configureBindings() {
-        drivetrain.registerTelemetry(logger::telemeterize);
 
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() ->

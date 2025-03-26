@@ -468,6 +468,72 @@ public class Autos extends SubsystemBase{
         return routine;
     }
 
+    public AutoRoutine getFiveCoralTopAutoSplit() {
+        AutoRoutine routine = autoFactory.newRoutine("5CTS");
+
+        // Trajectories
+        AutoTrajectory C1toSource = routine.trajectory("TC-1", 1);
+        AutoTrajectory C12toSource = routine.trajectory("TC-12", 1);
+        AutoTrajectory C11toSource = routine.trajectory("TC-11", 1);
+        AutoTrajectory C10toSource = routine.trajectory("TC-10", 1);
+        AutoTrajectory C9toSource = routine.trajectory("TC-9", 1);
+        
+        routine.active().onTrue(
+                Commands.sequence(
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(9, 4), swerve, SCORING_DELAY),
+                        elevator.L0(),
+                        C1toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C12toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C11toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(0, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C10toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(1, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C9toSource.cmd()
+                )
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine getFiveCoralBottomAutoSplit() {
+        AutoRoutine routine = autoFactory.newRoutine("5CBS");
+
+        // Trajectories
+        AutoTrajectory C6toSource = routine.trajectory("BC-6", 1);
+        AutoTrajectory C7toSource = routine.trajectory("BC-7", 1);
+        AutoTrajectory C8toSource = routine.trajectory("BC-8", 1);
+        AutoTrajectory C9toSource = routine.trajectory("BC-9", 1);
+        AutoTrajectory C10toSource = routine.trajectory("BC-10", 1);
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(4, 4), swerve, SCORING_DELAY),
+                        elevator.L0(),
+                        C6toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C7toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C8toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(1, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C9toSource.cmd(),
+                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(0, 4), swerve, SCORING_DELAY)),
+                        elevator.L0(),
+                        C10toSource.cmd()
+                )
+        );
+
+        return routine;
+    }
+
     // basic leave auto
     public Command getBasicAutoCommand() {
         ChassisSpeeds initial_speed = new ChassisSpeeds(1, 0, 0);

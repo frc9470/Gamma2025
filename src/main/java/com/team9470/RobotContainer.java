@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
+import com.team9470.commands.WheelRadiusCharacterization;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.vision.Vision;
@@ -122,11 +123,13 @@ public class RobotContainer {
         xbox.povRight().whileTrue(superstructure.scoreAndFunnel());
 //        xbox.povDown().whileTrue(superstructure.getElevator().L0());
 
-        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+//        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+//        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+//
+//
+//        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+//        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
-
-        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        xbox.start().and(xbox.back()).whileTrue(new WheelRadiusCharacterization(drivetrain, WheelRadiusCharacterization.Direction.CLOCKWISE));
     }
 }

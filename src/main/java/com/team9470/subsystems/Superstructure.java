@@ -17,8 +17,8 @@ public class Superstructure extends SubsystemBase {
 
 
     public Superstructure(Mechanism2d mech) {
-        this.elevator = new Elevator(mech);
         this.coral = new CoralManipulator();
+        this.elevator = new Elevator(mech, this.coral);
         this.algae = new AlgaeArm(elevator.getElevatorLigament());
         this.leds = LEDs.getInstance();
     }

@@ -41,6 +41,8 @@ public class Elevator extends SubsystemBase {
     private final TalonFX elevatorMotor;
     private final TalonFX elevatorMotorFollower;
 
+    private final CoralManipulator coral;
+
     // Control objects
     private final MotionMagicVoltage motionMagic = new MotionMagicVoltage(0);
     private final VoltageOut homingVoltage = new VoltageOut(ElevatorConstants.HOMING_OUTPUT);
@@ -126,10 +128,12 @@ public class Elevator extends SubsystemBase {
         public HomingState homingState;               // Current homing state
     }
 
-    public Elevator(Mechanism2d mechanism) {
+    public Elevator(Mechanism2d mechanism, CoralManipulator coral) {
         elevatorMotor = TalonFXFactory.createDefaultTalon(Ports.ELEVATOR_MAIN);
         elevatorMotorFollower = TalonFXFactory.createPermanentFollowerTalon(
                 Ports.ELEVATOR_FOLLOWER, Ports.ELEVATOR_MAIN, true);
+
+        this.coral = coral;
 
         TalonUtil.applyAndCheckConfiguration(elevatorMotor, ElevatorConstants.ElevatorFXConfig());
         TalonUtil.applyAndCheckConfiguration(elevatorMotorFollower, ElevatorConstants.ElevatorFXConfigFollower());
@@ -426,18 +430,18 @@ public class Elevator extends SubsystemBase {
         return getMoveToPositionCommand(ElevatorConstants.L1);
     }
 
-    public class L1_full_sequence extends SequentialCommandGroup {
-        public L1_full_sequence() {
-            addCommands(
-                    // This command assumes the robot is aligned in a certain way with the reef
-                    getMoveToPositionCommand(ElevatorConstants.L1),
-                    new WaitCommand(1),
+    public Command L1_full_sequence() {
+        return new SequentialCommandGroup(
+                // This command assumes the robot is aligned in a certain way with the reef
+                getMoveToPositionCommand(ElevatorConstants.L1),
 
-                    // Moves elevator "up" to make the coral "tip" once it's perched on the reef, as per
-                    // https://www.chiefdelphi.com/t/frc-3061-huskie-robotics-2025-build-thread/478062/42
-                    getMoveToPositionCommand(ElevatorConstants.L2)
-            );
-        }
+                coral.scoreCommand().asProxy(),
+                new WaitCommand(1),
+
+                // Moves elevator "up" to make the coral "tip" once it's perched on the reef, as per
+                // https://www.chiefdelphi.com/t/frc-3061-huskie-robotics-2025-build-thread/478062/42
+                getMoveToPositionCommand(ElevatorConstants.L2)
+        );
     }
 
     public Command L2(){
@@ -459,7 +463,7 @@ public class Elevator extends SubsystemBase {
     public Command getLevelCommand(int level){
         return switch (level) {
             // case 1 -> L1();
-            case 1 -> new L1_full_sequence();
+            case 1 -> L1_full_sequence();
             case 2 -> L2();
             case 3 -> L3();
             case 4 -> L4();

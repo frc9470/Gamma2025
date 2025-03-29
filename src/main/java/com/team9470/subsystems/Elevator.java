@@ -435,8 +435,7 @@ public class Elevator extends SubsystemBase {
                 // This command assumes the robot is aligned in a certain way with the reef
                 getMoveToPositionCommand(ElevatorConstants.L1),
 
-                coral.scoreCommand().asProxy(),
-                new WaitCommand(1),
+                coral.scoreCommand().asProxy().withTimeout(1),
 
                 // Moves elevator "up" to make the coral "tip" once it's perched on the reef, as per
                 // https://www.chiefdelphi.com/t/frc-3061-huskie-robotics-2025-build-thread/478062/42

@@ -58,8 +58,23 @@ public class AutoScoring {
                 );
         return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());
     }
+
+    public static Command autoScoreStraight(Superstructure superstructure, CoralObjective objective, Swerve drivetrain, double timeout) {
+        // First drive to the scoring position while raising the superstructure.
+        Command driveToScore = new DriveToPose(objective::getScoringPose, drivetrain, true)
+                .alongWith(
+                        new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE.times(2)))
+                                .andThen(superstructure.raise(objective::level))
+                );
+        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());
+    }
+
     public Command autoScoreNoDrive(Superstructure superstructure) {
-        return new DeferredCommand(() -> superstructure.raise(coralObjective.level), Set.of(superstructure)).andThen(superstructure.score());
+        return new DeferredCommand(() -> {
+            if(coralObjective.level == 1){
+                return superstructure.raise(coralObjective.level).andThen(superstructure.getCoral().scoreSlow());
+            } else return superstructure.raise(coralObjective.level).andThen(superstructure.score());
+        }, Set.of());
     }
 
     private Pose2d computeDriveBackPose(Pose2d scoringPose) {

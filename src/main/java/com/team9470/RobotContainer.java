@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -57,12 +56,9 @@ public class RobotContainer {
         autoChooser.addRoutine("1CMN", autos::getOneCoralMiddleAutoNormal);
         autoChooser.addRoutine("1CMC", autos::getOneCoralMiddleAutoChoreo);
         autoChooser.addRoutine("1CMA", autos::getOneCoralMiddleAutoAlign);
-        autoChooser.addRoutine("5CTN", autos::getFiveCoralTopAutoNormal);
-        autoChooser.addRoutine("5CBN", autos::getFiveCoralBottomAutoNormal);
-        autoChooser.addRoutine("5CTC", autos::getFiveCoralTopAutoChoreo);
-        autoChooser.addRoutine("5CBC", autos::getFiveCoralBottomAutoChoreo);
         autoChooser.addRoutine("5CTA", autos::getFiveCoralTopAutoAlign);
         autoChooser.addRoutine("5CBA", autos::getFiveCoralBottomAutoAlign);
+        autoChooser.addRoutine("5CBA-NW", autos::getFiveCoralBottomAutoAlignNoWait);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);

@@ -1,5 +1,5 @@
 {
- "name":"Beta",
+ "name":"Gamma",
  "version":1,
  "type":"Swerve",
  "variables":{
@@ -254,16 +254,16 @@
   },
   "bumper":{
    "front":{
-    "exp":"18.5 in",
-    "val":0.4699
+    "exp":"18 in",
+    "val":0.4572
    },
    "side":{
-    "exp":"18.5 in",
-    "val":0.4699
+    "exp":"18 in",
+    "val":0.4572
    },
    "back":{
-    "exp":"18.5 in",
-    "val":0.4699
+    "exp":"18 in",
+    "val":0.4572
    }
   },
   "differentialTrackWidth":{

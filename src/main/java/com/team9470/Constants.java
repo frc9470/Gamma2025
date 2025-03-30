@@ -65,10 +65,10 @@ public final class Constants {
 
         public static final Distance HOME_POSITION = Meters.of(0);
         public static final Distance L0 = Meters.of(0.0); // INTAKE
-        public static final Distance L1 = Meters.of(0.28);
-        public static final Distance L2 = Meters.of(.45);
+        public static final Distance L1 = Meters.of(0.2);
+        public static final Distance L2 = Meters.of(.43);
         public static final Distance L3 = Meters.of(.84);
-        public static final Distance L4 = Meters.of(1.48);
+        public static final Distance L4 = Meters.of(1.45);
         public static final Distance INTAKE = Meters.of(0);
 
 

@@ -36,7 +36,7 @@ public class VisionDevice {
         this.photonCamera = new PhotonCamera(name);
         photonPoseEstimator = new PhotonPoseEstimator(
                 aprilTagFieldLayout,
-                PhotonPoseEstimator.PoseStrategy.CONSTRAINED_SOLVEPNP,
+                PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
                 transform
         );
 

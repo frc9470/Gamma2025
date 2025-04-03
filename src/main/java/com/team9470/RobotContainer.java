@@ -59,6 +59,7 @@ public class RobotContainer {
         autoChooser.addRoutine("5CTA", autos::getFiveCoralTopAutoAlign);
         autoChooser.addRoutine("5CBA", autos::getFiveCoralBottomAutoAlign);
         autoChooser.addRoutine("5CBA-NW", autos::getFiveCoralBottomAutoAlignNoWait);
+        autoChooser.addRoutine("5CTA-NW", autos::getFiveCoralTopAutoAlignNoWait);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);

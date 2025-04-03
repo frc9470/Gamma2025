@@ -59,14 +59,14 @@ public class AutoScoring {
         return driveToScore.andThen(superstructure.getCoral().scoreCommand().until(() -> !superstructure.getCoral().hasCoral()).asProxy());
     }
 
-    public static Command autoScoreStraight(Superstructure superstructure, CoralObjective objective, Swerve drivetrain, double timeout) {
+    public static Command autoScoreStraight(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
         // First drive to the scoring position while raising the superstructure.
         Command driveToScore = new DriveToPose(objective::getScoringPose, drivetrain, true)
                 .alongWith(
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE.times(2)))
                                 .andThen(superstructure.raise(objective::level))
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(timeout).asProxy());
+        return driveToScore.andThen(superstructure.getCoral().scoreCommand().until(() -> !superstructure.getCoral().hasCoral()).asProxy());
     }
 
     public Command autoScoreNoDrive(Superstructure superstructure) {

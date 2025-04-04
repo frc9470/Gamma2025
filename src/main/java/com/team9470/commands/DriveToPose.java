@@ -21,7 +21,7 @@ public class DriveToPose extends Command {
     private final Supplier<Pose2d> reefPoseSupplier;
     private final Supplier<Pose2d> robotPoseSupplier;
     private Pose2d reefPose;
-    private boolean inverted;
+    private boolean noInterpolate;
     private double tolerance = 1;
 
     // PID controllers for X, Y and Theta
@@ -35,13 +35,13 @@ public class DriveToPose extends Command {
 
 
     // Default constructor uses no feedforward
-    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, Supplier<Pose2d> getCurrentPose, boolean inverted, double tolerance) {
+    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, Supplier<Pose2d> getCurrentPose, boolean noInterpolate, double tolerance) {
         pidControllerOmega.enableContinuousInput(-Math.PI, Math.PI);
         this.reefPoseSupplier = reefPoseSupplier;
         this.drivetrain = drivetrain;
         this.robotPoseSupplier = getCurrentPose;
         addRequirements(drivetrain);
-        this.inverted = inverted;
+        this.noInterpolate = noInterpolate;
         this.tolerance = tolerance;
     }
 
@@ -49,13 +49,13 @@ public class DriveToPose extends Command {
         this(reefPoseSupplier, drivetrain, drivetrain::getPose, false, 1);
     }
 
-    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, boolean inverted) {
-        this(reefPoseSupplier, drivetrain, drivetrain::getPose, inverted, 1);
+    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, boolean noInterpolate) {
+        this(reefPoseSupplier, drivetrain, drivetrain::getPose, noInterpolate, 1);
     }
 
 
-    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, boolean inverted, double tolerance) {
-        this(reefPoseSupplier, drivetrain, drivetrain::getPose, inverted, tolerance);
+    public DriveToPose(Supplier<Pose2d> reefPoseSupplier, Swerve drivetrain, boolean noInterpolate, double tolerance) {
+        this(reefPoseSupplier, drivetrain, drivetrain::getPose, noInterpolate, tolerance);
     }
 
 
@@ -73,7 +73,7 @@ public class DriveToPose extends Command {
     public void execute() {
         Pose2d currentPose = drivetrain.getPose();
         // Determine the target pose using your drive target logic.
-        Pose2d targetPose = inverted ? reefPose : getDriveTarget(currentPose, reefPose);
+        Pose2d targetPose = noInterpolate ? reefPose : getDriveTarget(currentPose, reefPose);
         LogUtil.recordPose2d("DriveToPose/Ghost", targetPose);
         LogUtil.recordPose2d("DriveToPose/Reef", reefPose);
 

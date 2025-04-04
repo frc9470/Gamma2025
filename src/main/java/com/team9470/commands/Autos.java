@@ -64,12 +64,20 @@ public class Autos extends SubsystemBase{
                 ));
     }
 
-    public Command alignToSourceAndWait(boolean top) {
-        Pose2d sourcePose = AllianceFlipUtil.apply(
-                top ? new Pose2d(1.5841364860534668, 7.427209377288818, Rotation2d.fromDegrees(-54)) : new Pose2d(1.5463898181915283, 0.5990369319915771, Rotation2d.fromDegrees(54))
+    public Pose2d getSourcePose(boolean top){
+        return AllianceFlipUtil.apply(
+                top ? new Pose2d(1.52, 7.35, Rotation2d.fromDegrees(-54)) : new Pose2d(1.45, 0.73, Rotation2d.fromDegrees(54))
         );
+    }
 
-        return new DriveToPose(() -> sourcePose, swerve, true, 3).raceWith(superstructure.waitForIntake());
+    public Command alignToSource(boolean top) {
+
+        return new DriveToPose(() -> getSourcePose(top), swerve, true, 3).raceWith(superstructure.waitForIntake());
+    }
+
+    public Command alignToSourceWait(boolean top){
+        return superstructure.waitForIntake().deadlineFor(new DriveToPose(() -> getSourcePose(top), swerve, true, -1));
+
     }
 
     public Command scoreCoral() {
@@ -127,20 +135,25 @@ public class Autos extends SubsystemBase{
                 Commands.sequence(
                         new DeferredCommand(() -> new InstantCommand(() -> swerve.resetPose(AllianceFlipUtil.apply(START_TOP))), Set.of()),
                         AutoScoring.autoScoreStraight(superstructure, new AutoScoring.CoralObjective(9, 4), swerve),
-                        elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(true)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 4), swerve)),
-                        elevator.L0().alongWith(algaeArm.down())
-                                .withDeadline(alignToSourceAndWait(true)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 4), swerve)),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(true)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 3), swerve)),
-                        elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(true)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 3), swerve)),
+                                .alongWith(algaeArm.up())
+                                .withDeadline(alignToSourceWait(true)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 4), swerve),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(true))
+                                .alongWith(algaeArm.down())
+                                .withDeadline(alignToSourceWait(true)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 4), swerve),
+                        elevator.L0()
+                                .withDeadline(alignToSourceWait(true)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 3), swerve),
+                        elevator.L0()
+                                .alongWith(algaeArm.up())
+                                .withDeadline(alignToSourceWait(true)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 3), swerve)
                 )
         );
 
@@ -154,20 +167,24 @@ public class Autos extends SubsystemBase{
                 Commands.sequence(
                         new DeferredCommand(() -> new InstantCommand(() -> swerve.resetPose(AllianceFlipUtil.apply(START_BOTTOM))), Set.of()),
                         AutoScoring.autoScoreStraight(superstructure, new AutoScoring.CoralObjective(4, 4), swerve),
-                        elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(false)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 4), swerve)),
-                        elevator.L0().alongWith(algaeArm.down())
-                                .withDeadline(alignToSourceAndWait(false)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 4), swerve)),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(false)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 3), swerve)),
-                        elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(false)),
-                        superstructure.waitForIntake().andThen(AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 3), swerve)),
+                                .alongWith(algaeArm.up())
+                                .withDeadline(alignToSourceWait(false)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 4), swerve),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(false))
+                                .alongWith(algaeArm.down())
+                                .withDeadline(alignToSourceWait(false)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 4), swerve),
+                        elevator.L0()
+                                .withDeadline(alignToSourceWait(false)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 3), swerve),
+                        elevator.L0().alongWith(algaeArm.up())
+                                .withDeadline(alignToSourceWait(false)),
+
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 3), swerve)
                 )
         );
 
@@ -182,24 +199,21 @@ public class Autos extends SubsystemBase{
                         new DeferredCommand(() -> new InstantCommand(() -> swerve.resetPose(AllianceFlipUtil.apply(START_TOP))), Set.of()),
                         AutoScoring.autoScoreStraight(superstructure, new AutoScoring.CoralObjective(9, 4), swerve),
                         elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(true)),
+                                .withDeadline(alignToSource(true)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 4), swerve),
                         elevator.L0().alongWith(algaeArm.down())
-                                .withDeadline(alignToSourceAndWait(true)),
+                                .withDeadline(alignToSource(true)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 4), swerve),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(true)),
+                                .withDeadline(alignToSource(true)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(11, 3), swerve),
                         elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(true)),
+                                .withDeadline(alignToSource(true)),
                         new WaitCommand(INTAKE_DELAY),
-                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 3), swerve),
-                        elevator.L0()
-                                .withDeadline(alignToSourceAndWait(true)),
-                        new WaitCommand(INTAKE_DELAY)
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(10, 3), swerve)
                 )
         );
 
@@ -214,24 +228,21 @@ public class Autos extends SubsystemBase{
                         new DeferredCommand(() -> new InstantCommand(() -> swerve.resetPose(AllianceFlipUtil.apply(START_BOTTOM))), Set.of()),
                         AutoScoring.autoScoreStraight(superstructure, new AutoScoring.CoralObjective(4, 4), swerve),
                         elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(false)),
+                                .withDeadline(alignToSource(false)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 4), swerve),
                         elevator.L0().alongWith(algaeArm.down())
-                                .withDeadline(alignToSourceAndWait(false)),
+                                .withDeadline(alignToSource(false)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 4), swerve),
                         elevator.L0()
-                                .withDeadline(alignToSourceAndWait(false)),
+                                .withDeadline(alignToSource(false)),
                         new WaitCommand(INTAKE_DELAY),
                         AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(2, 3), swerve),
                         elevator.L0().alongWith(algaeArm.up())
-                                .withDeadline(alignToSourceAndWait(false)),
+                                .withDeadline(alignToSource(false)),
                         new WaitCommand(INTAKE_DELAY),
-                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 3), swerve),
-                        elevator.L0()
-                                .withDeadline(alignToSourceAndWait(false)),
-                        new WaitCommand(INTAKE_DELAY)
+                        AutoScoring.autoScoreWithTimeout(superstructure, new AutoScoring.CoralObjective(3, 3), swerve)
                 )
         );
 

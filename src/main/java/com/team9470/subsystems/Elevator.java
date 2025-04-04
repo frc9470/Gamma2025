@@ -271,7 +271,7 @@ public class Elevator extends SubsystemBase {
                 boolean timeOut = periodicIO.timestamp
                         .minus(homingStartTime)
                         .gt(ElevatorConstants.HOMING_TIMEOUT);
-                if (L0.isNear(periodicIO.positionMeters, Meters.of(0.01)) && timeOut) {
+                if (L0.isNear(periodicIO.positionMeters, Meters.of(0.02)) && timeOut) {
                     homingState = HomingState.HOMING;
                     homingStartTime = periodicIO.timestamp;
                 }

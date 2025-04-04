@@ -9,6 +9,7 @@ import com.team9470.commands.WheelRadiusCharacterization;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.vision.Vision;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -51,6 +52,7 @@ public class RobotContainer {
     Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
+        DataLogManager.start();
         configureBindings();
 
         autoChooser.addRoutine("1CMN", autos::getOneCoralMiddleAutoNormal);

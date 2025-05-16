@@ -6,6 +6,7 @@ import com.team9470.subsystems.Swerve;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -56,7 +57,7 @@ public class AutoScoring {
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
                                 .andThen(superstructure.raise(objective::level))
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().until(() -> !superstructure.getCoral().hasCoral()).asProxy());
+        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(1).until(() -> !superstructure.getCoral().hasCoral()).asProxy());
     }
 
     public static Command autoScoreStraight(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
@@ -66,7 +67,7 @@ public class AutoScoring {
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE.times(2)))
                                 .andThen(superstructure.raise(objective::level))
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().until(() -> !superstructure.getCoral().hasCoral()).asProxy());
+        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(1).until(() -> !superstructure.getCoral().hasCoral()).asProxy());
     }
 
     public Command autoScoreNoDrive(Superstructure superstructure) {
@@ -101,10 +102,12 @@ public class AutoScoring {
     public void setBranch(int branchId) {
         coralObjective = coralObjective.updateBranchId(branchId);
         System.out.println("Branch ID: " + branchId);
+        SmartDashboard.putNumber("AutoScoring/Branch ID", branchId);
     }
 
     public void setLevel(int level) {
         coralObjective = coralObjective.updateLevel(level);
+        SmartDashboard.putString("AutoScoring/Level: ", "L" + level);
     }
 
     public void updateClosestReefPos() {

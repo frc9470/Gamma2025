@@ -11,6 +11,8 @@ import com.pathplanner.lib.path.Waypoint;
 import com.team9470.commands.AutoScoring;
 import com.team9470.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -68,7 +70,7 @@ public final class Constants {
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.43);
         public static final Distance L3 = Meters.of(.84);
-        public static final Distance L4 = Meters.of(1.45);
+        public static Distance L4 = Meters.of(1.46);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -144,17 +146,18 @@ public final class Constants {
     }
 
     public static final class CoralConstants {
-        public static final Voltage TAKE_IN_SPEED = Volts.of(3);
+        public static final Voltage TAKE_IN_SPEED = Volts.of(2);
         public static final Voltage COAST_SPEED = Volts.of(2);
         public static final Voltage FUNNEL_SPEED = Volts.of(-3);
         public static final Voltage HOLD_SPEED = Volts.of(-0.1);
         public static final double BREAK_TIMEOUT = .05;
+        public static final Distance FUNNEL_SPEED_THRESHOLD = Meter.of(0.1);
 
         public static TalonFXConfiguration getMotorConfig() {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.CurrentLimits.StatorCurrentLimit = 45;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }

@@ -121,8 +121,8 @@ public class TunerConstants {
 
 
     // pathfinding constraints
-    public static final double maxVelocity = kSpeedAt12Volts.in(MetersPerSecond)/2;
-    public static final double maxAcceleration = 9.812/2;
+    public static final double maxVelocity = kSpeedAt12Volts.in(MetersPerSecond)*.6;
+    public static final double maxAcceleration = 9.812;
     public static final double maxAngularVelocity = 572.96; // degrees
     public static final double maxAngularAcceleration = 2480.33; // degrees
 

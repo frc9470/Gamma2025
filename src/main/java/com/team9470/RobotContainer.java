@@ -8,6 +8,7 @@ import com.team9470.commands.Autos;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.vision.Vision;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -51,17 +51,16 @@ public class RobotContainer {
     Joystick buttonBoard = new Joystick(1);
 
     public RobotContainer() {
+        DataLogManager.start();
         configureBindings();
 
         autoChooser.addRoutine("1CMN", autos::getOneCoralMiddleAutoNormal);
         autoChooser.addRoutine("1CMC", autos::getOneCoralMiddleAutoChoreo);
         autoChooser.addRoutine("1CMA", autos::getOneCoralMiddleAutoAlign);
-        autoChooser.addRoutine("5CTN", autos::getFiveCoralTopAutoNormal);
-        autoChooser.addRoutine("5CBN", autos::getFiveCoralBottomAutoNormal);
-        autoChooser.addRoutine("5CTC", autos::getFiveCoralTopAutoChoreo);
-        autoChooser.addRoutine("5CBC", autos::getFiveCoralBottomAutoChoreo);
         autoChooser.addRoutine("5CTA", autos::getFiveCoralTopAutoAlign);
         autoChooser.addRoutine("5CBA", autos::getFiveCoralBottomAutoAlign);
+        autoChooser.addRoutine("5CBA-NW", autos::getFiveCoralBottomAutoAlignNoWait);
+        autoChooser.addRoutine("5CTA-NW", autos::getFiveCoralTopAutoAlignNoWait);
         autoChooser.select("2C Test");
         SmartDashboard.putData("AutoChooser", autoChooser);
         SmartDashboard.putData("Mechanism", mech);
@@ -120,13 +119,22 @@ public class RobotContainer {
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
 
         xbox.povRight().whileTrue(superstructure.scoreAndFunnel());
+//        xbox.povUp().whileTrue(superstructure.raise(3));
 //        xbox.povDown().whileTrue(superstructure.getElevator().L0());
 
-        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        xbox.povUp().whileTrue(superstructure.climberAction());
+        xbox.povLeft().whileTrue(superstructure.funnelOut());
 
 
-        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+//        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+//        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+//
+//
+//        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+//        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+//        xbox.back().whileTrue(new InstantCommand(() -> Constants.ElevatorConstants.L4 = Meters.of(1.45)));
+
     }
 }

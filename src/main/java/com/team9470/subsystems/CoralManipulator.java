@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
@@ -80,7 +81,8 @@ public class CoralManipulator extends SubsystemBase {
                 funnelMotor.stopMotor();
             } else {
                 coralMotor.setVoltage(CoralConstants.COAST_SPEED.in(Volts));
-                funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
+                if (SmartDashboard.getNumber("Elevator/Position_m", 0) < CoralConstants.FUNNEL_SPEED_THRESHOLD.in(Meters))
+                    funnelMotor.setVoltage(CoralConstants.FUNNEL_SPEED.in(Volts));
             }
         });
     }

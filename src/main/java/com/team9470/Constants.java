@@ -11,8 +11,6 @@ import com.pathplanner.lib.path.Waypoint;
 import com.team9470.commands.AutoScoring;
 import com.team9470.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -145,6 +143,45 @@ public final class Constants {
         }
     }
 
+    public static final class ClimberConstants {
+        public static final Angle STOW = Rotations.of(0);
+        public static final Angle DEPLOY = Rotations.of(7);
+        public static final Angle CLEAR = Rotations.of(10);
+
+        public static final double CRUISE_VELOCITY = 5;
+        public static final double ACCELERATION = 10;
+        public static final double JERK = 0;
+
+        public static final double GEAR_RATIO = 18;
+
+        public static TalonFXConfiguration getMainConfig(){
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY;
+            config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
+            config.MotionMagic.MotionMagicJerk = JERK;
+            config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+            config.Slot0.kP = 0.5;
+            config.Slot0.kI = 0.0;
+            config.Slot0.kD = 0.0;
+            config.Slot0.kG = 0.0;
+            config.Slot0.kS = 0.0;
+            config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            return config;
+        }
+
+        public static TalonFXConfiguration getFollowerConfig(){
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 30;
+            return config;
+        }
+    }
+
     public static final class CoralConstants {
         public static final Voltage TAKE_IN_SPEED = Volts.of(2);
         public static final Voltage COAST_SPEED = Volts.of(2);
@@ -159,6 +196,17 @@ public final class Constants {
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = 45;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            return config;
+        }
+    }
+
+    public static final class FunnelControlConstants{
+        public static TalonFXConfiguration getMotorConfig() {
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 45;
+            config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
             return config;
         }
     }

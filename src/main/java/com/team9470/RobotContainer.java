@@ -5,7 +5,6 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.team9470.commands.AutoScoring;
 import com.team9470.commands.Autos;
-import com.team9470.commands.WheelRadiusCharacterization;
 import com.team9470.subsystems.Superstructure;
 import com.team9470.subsystems.Swerve;
 import com.team9470.subsystems.vision.Vision;
@@ -120,8 +119,13 @@ public class RobotContainer {
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
 
         xbox.povRight().whileTrue(superstructure.scoreAndFunnel());
-        xbox.povUp().whileTrue(superstructure.raise(3));
-        xbox.povDown().whileTrue(superstructure.getElevator().L0());
+//        xbox.povUp().whileTrue(superstructure.raise(3));
+//        xbox.povDown().whileTrue(superstructure.getElevator().L0());
+
+        xbox.povUp().whileTrue(superstructure.climberAction());
+        xbox.povLeft().whileTrue(superstructure.funnelOut());
+
+
 
 //        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
 //        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));

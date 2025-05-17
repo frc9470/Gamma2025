@@ -1,17 +1,17 @@
 package com.team9470.subsystems;
 
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.*;
 
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class Superstructure extends SubsystemBase {
     private final Elevator elevator;
     private final CoralManipulator coral;
     private final AlgaeArm algae;
+    private final Climber climber;
+    private final FunnelControl funnelControl;
     private final LEDs leds;
 
 
@@ -21,6 +21,8 @@ public class Superstructure extends SubsystemBase {
         this.coral = new CoralManipulator();
         this.algae = new AlgaeArm(elevator.getElevatorLigament());
         this.leds = LEDs.getInstance();
+        this.climber = new Climber();
+        this.funnelControl = new FunnelControl();
     }
 
     // Returns a command to reverse the coral manipulator.
@@ -61,6 +63,55 @@ public class Superstructure extends SubsystemBase {
         return new WaitUntilCommand(coral::hasCoral);
     }
 
+    public Command funnelOut() {
+        return funnelControl.runOut();
+    }
+
+    enum ClimberState {
+        CLEARING,
+        DEPLOY,
+        STOW;
+
+        public static ClimberState next(ClimberState state) {
+            switch (state) {
+                case STOW:
+                    return CLEARING;
+                case DEPLOY:
+                    return STOW;
+                case CLEARING:
+                    return DEPLOY;
+                default:
+                    throw new IllegalArgumentException("Invalid ClimberState: " + state);
+            }
+        }
+    }
+
+    private ClimberState climberState = ClimberState.STOW;
+
+    public Command climberAction() {
+        return new DeferredCommand(() -> {
+            Command action;
+            climberState = ClimberState.next(climberState);
+            switch (climberState) {
+                case STOW:
+                    action = climber.stow();
+                    break;
+                case CLEARING:
+                    action = climber.clear();
+                    break;
+                case DEPLOY:
+                    action = climber.deploy();
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + climberState);
+            }
+
+            return action;
+        }, Set.of(climber));
+    }
+
+
+
 
     // Accessors for the individual subsystems.
     public Elevator getElevator() {
@@ -77,6 +128,14 @@ public class Superstructure extends SubsystemBase {
 
     public LEDs getLEDs() {
         return leds;
+    }
+
+    public Climber getClimber() {
+        return climber;
+    }
+
+    public FunnelControl getFunnelControl() {
+        return funnelControl;
     }
 
     public Command scoreAndFunnel() {

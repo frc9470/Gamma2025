@@ -17,8 +17,10 @@ public class Ports {
     public static final CanDeviceId CANdle = new CanDeviceId(20, "rio");
 
     public static final CanDeviceId CLIMBER_MAIN = new CanDeviceId(21, "rio");
-
     public static final CanDeviceId CLIMBER_FOLLOWER = new CanDeviceId(22, "rio");
+
+    public static final CanDeviceId CLIMBER_WHEELS = new CanDeviceId(23, "rio");
+    public static final CanDeviceId FUNNEL_CONTROL = new CanDeviceId(24, "rio");
     /**
      * Beam Break IDs
      */

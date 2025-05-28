@@ -92,7 +92,7 @@ public class AlgaeArm extends SubsystemBase {
         TalonUtil.applyAndCheckConfiguration(pivotMotor, AlgaeConstants.getPivotConfig());
 
         // Set up sensor status signals (refresh at 50 Hz with 0.1 sec latency tolerance).
-        Frequency refreshRate = Hertz.of(50);
+        Frequency refreshRate = Hertz.of(20);
         positionSignal = pivotMotor.getPosition();
         positionSignal.setUpdateFrequency(refreshRate, 0.1);
         velocitySignal = pivotMotor.getVelocity();

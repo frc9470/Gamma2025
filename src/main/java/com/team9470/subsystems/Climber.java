@@ -18,15 +18,15 @@ import static edu.wpi.first.units.Units.*;
 
 public class Climber extends SubsystemBase {
 
-    private static Climber instance;
     private final TalonFX climberMotor;
     private final TalonFX climberMotorFollower;
+    private final TalonFX climberWheels;
 
     // --- Control objects ---
     // Use MotionMagic for smooth motion to a target angle.
     private final MotionMagicVoltage motionMagic = new MotionMagicVoltage(0);
     // When homing, we command a fixed voltage output.
-    private final VoltageOut homingVoltage = new VoltageOut(Constants.AlgaeConstants.HOMING_OUTPUT);
+    private final VoltageOut homingVoltage = new VoltageOut(Constants.ClimberConstants.HOMING_OUTPUT);
 
     // --- Status Signals (for sensor feedback) ---
     private final StatusSignal<Angle> positionSignal;
@@ -42,10 +42,10 @@ public class Climber extends SubsystemBase {
         IDLE,       // Normal operation
         HOMING,     // Running homing (moving toward the limit)
     }
-    private Climber.HomingState homingState = Climber.HomingState.HOMING;
+    private Climber.HomingState homingState = HomingState.IDLE;
 
     // --- Target angle ---
-    private Angle targetAngle = Constants.AlgaeConstants.HOMING_ANGLE;
+    private Angle targetAngle = Constants.ClimberConstants.OUT;
 
     // --- Periodic I/O container ---
     public static class PeriodicIO {
@@ -67,27 +67,20 @@ public class Climber extends SubsystemBase {
     }
     private final Climber.PeriodicIO periodicIO = new Climber.PeriodicIO();
 
-
-
-    public static Climber getInstance() {
-        if (instance == null) {
-            instance = new Climber();
-        }
-        return instance;
-    }
-
     public Climber() {
         // Create the pivot and roller TalonFX instances.
         climberMotor = TalonFXFactory.createDefaultTalon(Ports.CLIMBER_MAIN);
         climberMotorFollower = TalonFXFactory.createPermanentFollowerTalon(
-                Ports.CLIMBER_FOLLOWER, Ports.CLIMBER_MAIN, true);
+                Ports.CLIMBER_FOLLOWER, Ports.CLIMBER_MAIN, false);
+        climberWheels = TalonFXFactory.createDefaultTalon(Ports.CLIMBER_WHEELS);
 
         // Apply configuration (using your constant-provided configurations).
         TalonUtil.applyAndCheckConfiguration(climberMotor, Constants.ClimberConstants.getMainConfig());
         TalonUtil.applyAndCheckConfiguration(climberMotorFollower, Constants.ClimberConstants.getFollowerConfig());
+        TalonUtil.applyAndCheckConfiguration(climberWheels, Constants.ClimberConstants.getWheelsConfig());
 
         // Set up sensor status signals (refresh at 50 Hz with 0.1 sec latency tolerance).
-        Frequency refreshRate = Hertz.of(50);
+        Frequency refreshRate = Hertz.of(20);
         positionSignal = climberMotor.getPosition();
         positionSignal.setUpdateFrequency(refreshRate, 0.1);
         velocitySignal = climberMotor.getVelocity();
@@ -102,6 +95,7 @@ public class Climber extends SubsystemBase {
         setpointSignal.setUpdateFrequency(refreshRate, 0.1);
         setpointVelocitySignal = climberMotor.getClosedLoopReferenceSlope();
         setpointVelocitySignal.setUpdateFrequency(refreshRate, 0.1);
+        climberMotor.setPosition(Constants.ClimberConstants.HOMING_ANGLE);
     }
 
 
@@ -138,11 +132,11 @@ public class Climber extends SubsystemBase {
         if (homingState == Climber.HomingState.HOMING) {
             // When homing, if the pivot is nearly stalled and the current is high,
             // assume the arm has hit the hard stop.
-            boolean velocityStalled = Math.abs(periodicIO.velocity.in(DegreesPerSecond)) < 0.5;
-            boolean currentTooHigh = periodicIO.current.gte(Constants.AlgaeConstants.HOMING_THRESHOLD);
+            boolean velocityStalled = Math.abs(periodicIO.velocity.in(DegreesPerSecond)) < 4;
+            boolean currentTooHigh = periodicIO.current.gte(Constants.ClimberConstants.HOMING_THRESHOLD);
             if (velocityStalled && currentTooHigh) {
                 // Zero the sensor at the homing limit.
-                climberMotor.setPosition(Constants.AlgaeConstants.HOMING_ANGLE);
+                climberMotor.setPosition(Constants.ClimberConstants.HOMING_ANGLE);
                 homingState = Climber.HomingState.IDLE;
             }
         }
@@ -156,12 +150,15 @@ public class Climber extends SubsystemBase {
             periodicIO.setpointAngle = Rotations.of(0);
         } else {
             // Normal motion magic control to the target angle.
-//            System.out.println("target angle: " + targetAngle.in(Degrexes));
+//            System.out.println("target angle: " + targetAngle.in(Degrees));
             climberMotor.setControl(
                     motionMagic.withPosition(targetAngle)
                             .withSlot(0)
                             .withEnableFOC(true));
         }
+        if(targetAngle.equals(Constants.ClimberConstants.DEPLOY))
+            climberWheels.setVoltage(3);
+        else climberWheels.setVoltage(0);
     }
 
     /** Log telemetry values to SmartDashboard. */

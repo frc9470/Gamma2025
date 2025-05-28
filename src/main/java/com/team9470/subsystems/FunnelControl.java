@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FunnelControl extends SubsystemBase {
-    private final TalonFX controlMotor = TalonFXFactory.createDefaultTalon(Ports.CORAL_INTAKE);
+    private final TalonFX controlMotor = TalonFXFactory.createDefaultTalon(Ports.FUNNEL_CONTROL);
 
     public FunnelControl(){
         controlMotor.getConfigurator().apply(Constants.FunnelControlConstants.getMotorConfig());
@@ -16,10 +16,10 @@ public class FunnelControl extends SubsystemBase {
     }
 
     public Command coastUnless() {
-        return run(() -> controlMotor.setVoltage(-5));
+        return run(() -> controlMotor.setVoltage(0));
     }
 
     public Command runOut() {
-        return run(() -> controlMotor.setVoltage(5));
+        return run(() -> controlMotor.setVoltage(3));
     }
 }

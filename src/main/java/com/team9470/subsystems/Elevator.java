@@ -132,7 +132,7 @@ public class Elevator extends SubsystemBase {
         TalonUtil.applyAndCheckConfiguration(elevatorMotor, ElevatorConstants.ElevatorFXConfig());
         TalonUtil.applyAndCheckConfiguration(elevatorMotorFollower, ElevatorConstants.ElevatorFXConfigFollower());
         
-        Frequency refreshRate = Hertz.of(50);
+        Frequency refreshRate = Hertz.of(20);
 
         positionSignal = elevatorMotor.getPosition();
         positionSignal.setUpdateFrequency(refreshRate, 0.1);

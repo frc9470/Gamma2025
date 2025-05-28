@@ -68,7 +68,7 @@ public final class Constants {
         public static final Distance L1 = Meters.of(0.2);
         public static final Distance L2 = Meters.of(.43);
         public static final Distance L3 = Meters.of(.84);
-        public static Distance L4 = Meters.of(1.46);
+        public static final Distance L4 = Meters.of(1.47);
         public static final Distance INTAKE = Meters.of(0);
 
 
@@ -145,12 +145,17 @@ public final class Constants {
 
     public static final class ClimberConstants {
         public static final Angle STOW = Rotations.of(0);
-        public static final Angle DEPLOY = Rotations.of(7);
-        public static final Angle CLEAR = Rotations.of(10);
+        public static final Angle OUT = Rotations.of(2);
+        public static final Angle DEPLOY = Rotations.of(2.2);
+        public static final Angle CLEAR = Rotations.of(4.2);
 
-        public static final double CRUISE_VELOCITY = 5;
+        public static final double CRUISE_VELOCITY = 3;
         public static final double ACCELERATION = 10;
         public static final double JERK = 0;
+
+        public static final Angle HOMING_ANGLE = Rotations.of(0.8731);
+        public static final Current HOMING_THRESHOLD = Amps.of(10);
+        public static final double HOMING_OUTPUT = -1;
 
         public static final double GEAR_RATIO = 18;
 
@@ -160,16 +165,16 @@ public final class Constants {
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kP = 0.5;
-            config.Slot0.kI = 0.0;
+            config.Slot0.kP = 7;
+            config.Slot0.kI = 2;
             config.Slot0.kD = 0.0;
             config.Slot0.kG = 0.0;
             config.Slot0.kS = 0.0;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 30;
-            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            config.CurrentLimits.StatorCurrentLimit = 50;
+            config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
             return config;
         }
 
@@ -177,7 +182,15 @@ public final class Constants {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.CurrentLimits.StatorCurrentLimit = 50;
+            return config;
+        }
+
+        public static TalonFXConfiguration getWheelsConfig(){
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 50;
             return config;
         }
     }
@@ -205,7 +218,7 @@ public final class Constants {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 45;
+            config.CurrentLimits.StatorCurrentLimit = 50;
             config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
             return config;
         }

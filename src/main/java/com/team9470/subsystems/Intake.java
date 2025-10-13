@@ -133,6 +133,9 @@ public class Intake extends SubsystemBase {
 
     private void logTelemetry() {
         SmartDashboard.putNumber("Intake/Position", periodicIO.position.in(Degrees));
+        SmartDashboard.putString("Intake/HomingState", homingState.name());
+        SmartDashboard.putNumber("Intake/Goal", periodicIO.goal.in(Degrees));
+        SmartDashboard.putNumber("Intake/Setpoint", periodicIO.setpointAngle.in(Degrees));
     }
 
 
@@ -231,6 +234,7 @@ public class Intake extends SubsystemBase {
         rollersRunning = true;
     }
 
+    // TODO: Re-add.
     /** Go to down position and start rollers */
     public void goDownAndStartRollers() {
         setTargetAngle(IntakeConstants.DOWN_ANGLE);

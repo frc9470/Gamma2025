@@ -13,6 +13,7 @@ import com.team9470.Ports;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -64,6 +65,13 @@ public class Indexer extends SubsystemBase {
         
         // Update delayed boolean for debouncing
         coralDetected.update(Timer.getFPGATimestamp(), coralPresent);
+
+        // Push values to SmartDashboard
+        logTelemetry();
+    }
+
+    private void logTelemetry() {
+        SmartDashboard.putBoolean("Indexer/hasCoral", hasCoral());
     }
 
     /**
@@ -143,6 +151,10 @@ public class Indexer extends SubsystemBase {
                 .andThen(this.run(this::startIndexer))
                 .until(() -> !hasCoral())
                 .andThen(this::stopIndexer);
+    }
+
+    public Command intakeCommand() {
+        return this.run(this::startIndexer);
     }
 
     /**

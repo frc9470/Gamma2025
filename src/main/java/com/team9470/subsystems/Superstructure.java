@@ -150,11 +150,21 @@ public class Superstructure extends SubsystemBase {
     }
 
     // Intake Commands
-    public Command intakeCoral() {
+//    public Command intakeCoral() {
+//        return new ParallelCommandGroup(
+//                elevator.intake(), // Move to intake height
+//                arm.coralIntakeCommand()
+//        );
+//    }
+    public Command intakeCoralGround() {
         return new ParallelCommandGroup(
-                elevator.intake(), // Move to intake height
-                arm.coralIntakeCommand()
+                intake.goDownAndStartRollersCommand(),
+                indexer.intakeCommand()
         );
+    }
+
+    public Command releaseCoralGround() {
+        return intake.retractAndStopRollersCommand();
     }
 
     public Command intakeAlgaeGround() {

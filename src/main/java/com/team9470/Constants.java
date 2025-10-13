@@ -103,8 +103,8 @@ public final class Constants {
 
     public static final class IndexerConstants {
         // Motor control voltages
-        public static final Voltage INDEXER_SPEED = Volts.of(3.0);
-        public static final Voltage INDEXER_REVERSE_SPEED = Volts.of(-2.0);
+        public static final Voltage INDEXER_SPEED = Volts.of(-5.0);
+        public static final Voltage INDEXER_REVERSE_SPEED = Volts.of(2.0);
         public static final Voltage INDEXER_HOLD_SPEED = Volts.of(0.1);
         
         // Current thresholds for coral detection
@@ -134,17 +134,17 @@ public final class Constants {
         public static final Angle HOMING_ANGLE = RETRACTED_ANGLE; // Use down position for homing
 
         // Motion control
-        public static final double CRUISE_VELOCITY = 15; // degrees per second
-        public static final double ACCELERATION = 30; // degrees per second squared
+        public static final double CRUISE_VELOCITY = 2; // rotations per second
+        public static final double ACCELERATION = 15; // rotations per second squared
         public static final double JERK = 0;
         
         // Homing
-        public static final Current HOMING_THRESHOLD = Amps.of(8); // Current threshold for homing
-        public static final Voltage HOMING_OUTPUT = Volts.of(1.0); // Homing voltage
+        public static final Current HOMING_THRESHOLD = Amps.of(40); // Current threshold for homing
+        public static final Voltage HOMING_OUTPUT = Volts.of(2.0); // Homing voltage
         public static final Time HOMING_TIMEOUT = Seconds.of(10); // Homing timeout
         
         // Roller control
-        public static final Voltage ROLLER_SPEED = Volts.of(4.0); // Roller intake speed
+        public static final Voltage ROLLER_SPEED = Volts.of(6.0); // Roller intake speed
         public static final Voltage ROLLER_REVERSE_SPEED = Volts.of(-2.0); // Roller reverse speed
         
         // Physical properties
@@ -161,10 +161,10 @@ public final class Constants {
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kP = 25;
+            config.Slot0.kP = 15;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
-            config.Slot0.kG = 0.1;
+            config.Slot0.kG = 0.31; // 0.4 was overcompensating
             config.Slot0.kS = 0.0;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

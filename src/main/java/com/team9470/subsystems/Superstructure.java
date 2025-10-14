@@ -3,42 +3,33 @@ package com.team9470.subsystems;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj2.command.*;
 
-import java.util.Set;
 import java.util.function.Supplier;
 
 public class Superstructure extends SubsystemBase {
     private final Elevator elevator;
-    private final CoralManipulator coral;
-    private final AlgaeArm algae;
-    private final Climber climber;
-    private final FunnelControl funnelControl;
-    private final LEDs leds;
-
-
+    private final Indexer indexer;
+    private final Arm arm;
+    private final Intake intake;
 
     public Superstructure(Mechanism2d mech) {
         this.elevator = new Elevator(mech);
-        this.coral = new CoralManipulator();
-        this.algae = new AlgaeArm(elevator.getElevatorLigament());
-        this.leds = LEDs.getInstance();
-        this.climber = new Climber();
-        this.funnelControl = new FunnelControl();
+        this.indexer = new Indexer();
+        this.arm = new Arm();
+        this.intake = new Intake();
     }
 
-    // Returns a command to reverse the coral manipulator.
     public Command reverseCoral() {
-        return coral.reverseCommand();
+        return indexer.reverseCommand();
     }
-
 
     // Stow algae in alternate position (stow location 2) for coral scoring:
     // Raise elevator to L2 and move algae below the coral manipulator.
     public Command algaeUp() {
-        return algae.up();
+        return Commands.none();
     }
 
     public Command algaeDown() {
-        return algae.down();
+        return Commands.none();
     }
 
     public Command raise(int level){
@@ -51,94 +42,142 @@ public class Superstructure extends SubsystemBase {
 
     
     public Command score() {
-        return coral.scoreCommand();
+        return indexer.outputCommand();
+    }
+
+    public Command scoreSlow() {
+        return indexer.outputCommand();
     }
 
     // Trigger the algae arm’s homing routine.
     public Command triggerAlgaeHoming() {
-        return new InstantCommand(algae::triggerHoming);
+        return Commands.none();
     }
 
     public Command waitForIntake() {
-        return new WaitUntilCommand(coral::hasCoral);
+        return new WaitUntilCommand(indexer::hasCoral);
     }
 
     public Command funnelOut() {
-        return funnelControl.runOut();
+        return Commands.none();
     }
-
-    enum ClimberState {
-        CLEARING,
-        DEPLOY,
-        STOW;
-
-        public static ClimberState next(ClimberState state) {
-            switch (state) {
-                case STOW:
-                    return CLEARING;
-                case DEPLOY:
-                    return STOW;
-                case CLEARING:
-                    return DEPLOY;
-                default:
-                    throw new IllegalArgumentException("Invalid ClimberState: " + state);
-            }
-        }
-    }
-
-    private ClimberState climberState = ClimberState.STOW;
 
     public Command climberAction() {
-        return new DeferredCommand(() -> {
-            Command action;
-            climberState = ClimberState.next(climberState);
-            switch (climberState) {
-                case STOW:
-                    action = climber.stow();
-                    break;
-                case CLEARING:
-                    action = climber.clear();
-                    break;
-                case DEPLOY:
-                    action = climber.deploy();
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + climberState);
-            }
-
-            return action;
-        }, Set.of(climber));
+        return Commands.none();
     }
 
-
-
+    public boolean hasGamePiece() {
+        return indexer.hasCoral();
+    }
 
     // Accessors for the individual subsystems.
     public Elevator getElevator() {
         return elevator;
     }
 
-    public CoralManipulator getCoral() {
-        return coral;
+    public Indexer getIndexer() {
+        return indexer;
     }
 
-    public AlgaeArm getAlgae() {
-        return algae;
+    public Arm getArm() {
+        return arm;
     }
 
-    public LEDs getLEDs() {
-        return leds;
-    }
-
-    public Climber getClimber() {
-        return climber;
-    }
-
-    public FunnelControl getFunnelControl() {
-        return funnelControl;
+    public Intake getIntake() {
+        return intake;
     }
 
     public Command scoreAndFunnel() {
-        return coral.scoreAndFunnel();
+        return indexer.outputCommand();
+    }
+
+    // -- Scoring Commands (only elevator and arm) --
+
+    // Coral Scoring Commands
+    public Command scoreCoralL4() {
+        return new SequentialCommandGroup(
+                new ParallelCommandGroup(
+                        elevator.L4(),
+                        arm.coralL4BeforeScoringCommand()
+                ),
+                arm.coralL4ScoringCommand()
+        );
+    }
+
+    public Command scoreCoralL3() {
+        return new SequentialCommandGroup(
+                new ParallelCommandGroup(
+                        elevator.L3(),
+                        arm.coralL3BeforeScoringCommand()
+                ),
+                arm.coralL3ScoringCommand()
+        );
+    }
+
+    public Command scoreCoralL2() {
+        return new SequentialCommandGroup(
+                new ParallelCommandGroup(
+                        elevator.L2(),
+                        arm.coralL2BeforeScoringCommand()
+                ),
+                arm.coralL2ScoringCommand()
+        );
+    }
+
+    public Command scoreCoralL1() {
+        return new SequentialCommandGroup(
+                elevator.L1(),
+                arm.coralL1ScoringCommand()
+        );
+    }
+
+    // Algae Scoring Commands
+    public Command scoreAlgaeBarge() {
+        return new SequentialCommandGroup(
+                new ParallelCommandGroup(
+                        elevator.L4(),
+                        arm.algaeBargeBeforeScoringCommand()
+                ),
+                arm.algaeBargeScoringCommand()
+        );
+    }
+
+    public Command scoreAlgaeProcessor() {
+        return new SequentialCommandGroup(
+                elevator.L0(),
+                arm.algaeProcessorScoringCommand()
+        );
+    }
+
+    // Intake Commands
+//    public Command intakeCoral() {
+//        return new ParallelCommandGroup(
+//                elevator.intake(), // Move to intake height
+//                arm.coralIntakeCommand()
+//        );
+//    }
+    public Command intakeCoralGround() {
+        return new ParallelCommandGroup(
+                intake.goDownAndStartRollersCommand(),
+                indexer.intakeCommand()
+        );
+    }
+
+    public Command releaseCoralGround() {
+        return intake.retractAndStopRollersCommand();
+    }
+
+    public Command intakeAlgaeGround() {
+        return new ParallelCommandGroup(
+                elevator.intake(), // Move to intake height
+                arm.algaeGroundIntakeCommand()
+        );
+    }
+
+    public Command intakeAlgaeReef() {
+        return new ParallelCommandGroup(
+                elevator.intake(), // Move to intake height
+                arm.algaeReefIntakeCommand()
+        );
     }
 }

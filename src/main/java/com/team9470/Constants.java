@@ -34,12 +34,12 @@ public final class Constants {
 
     public static final class ElevatorConstants {
         // Physical geometry
-        // For example: 22 * 0.25 inches * 2 = 11 inches per rotation
+        // For example: .0150m per rotation
         // Convert to meters for internal usage
         public static final Distance DIST_PER_ROTATION =
-                Units.Inches.of(22 * 0.25).times(2);
+                Meter.of(.015);
         public static final double rotationsPerMeter = 1.0 / DIST_PER_ROTATION.in(Meters);
-        public static final double GEAR_RATIO = 6.0;
+        public static final double GEAR_RATIO = 52. / 11;
         public static final double MASS = 3.46;
         public static final double DRUM_RADIUS = DIST_PER_ROTATION.in(Meter) / (2 * Math.PI);
 
@@ -101,125 +101,160 @@ public final class Constants {
         }
     }
 
-    public static final class AlgaeConstants {
-        public static final Angle STOW_UP = Degrees.of(90);
-        public static final Angle STOW_DOWN = Degrees.of(-95);
+    public static final class IndexerConstants {
+        // Motor control voltages
+        public static final Voltage INDEXER_SPEED = Volts.of(-5.0);
+        public static final Voltage INDEXER_REVERSE_SPEED = Volts.of(2.0);
+        public static final Voltage INDEXER_HOLD_SPEED = Volts.of(0.1);
+        
+        // Current thresholds for coral detection
+        public static final Current CORAL_DETECTION_CURRENT = Amps.of(8.0);
+        public static final Current STALL_CURRENT = Amps.of(15.0);
+        
+        // Timeout for coral detection debouncing
+        public static final double CORAL_DETECTION_TIMEOUT = 0.1; // seconds
+        
+        public static TalonFXConfiguration getMotorConfig() {
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            return config;
+        }
+    }
 
-        public static final double CRUISE_VELOCITY = 10;
-        public static final double ACCELERATION = 20;
+    public static final class IntakeConstants {
+        // Range of motion: when fully down, is at -149... when up
+        // 28 is the center of gravity; 118 is horizontal, 149 is fully down
+
+        // Arm positions
+        public static final Angle RETRACTED_ANGLE = Degrees.of(118); // Retracted position
+        public static final Angle DOWN_ANGLE = Degrees.of(-32); // Down position for ground intake
+        public static final Angle HOMING_ANGLE = RETRACTED_ANGLE; // Use down position for homing
+
+        // Motion control
+        public static final double CRUISE_VELOCITY = 2; // rotations per second
+        public static final double ACCELERATION = 15; // rotations per second squared
         public static final double JERK = 0;
-
-        public static final Current HOMING_THRESHOLD = Amps.of(5); // Current
-        public static final Voltage HOMING_OUTPUT = Volts.of(-.5);
-        public static final Time HOMING_TIMEOUT = Seconds.of(10);
-        public static final Angle HOMING_ANGLE = Degrees.of(-95);
-
-        public static final double GEAR_RATIO = 10;
-
-        // sim stuff
-        public static final Mass ARM_MASS = Kilogram.of(6.252); // kg
-        public static final Distance ARM_LENGTH = Meter.of(.14); // m
-        public static final Angle MIN_ANGLE = HOMING_ANGLE; // deg
-        public static final Angle MAX_ANGLE = Degrees.of(90); // deg
-
-
-        public static TalonFXConfiguration getPivotConfig(){
+        
+        // Homing
+        public static final Current HOMING_THRESHOLD = Amps.of(40); // Current threshold for homing
+        public static final Voltage HOMING_OUTPUT = Volts.of(2.0); // Homing voltage
+        public static final Time HOMING_TIMEOUT = Seconds.of(10); // Homing timeout
+        
+        // Roller control
+        public static final Voltage ROLLER_SPEED = Volts.of(6.0); // Roller intake speed
+        public static final Voltage ROLLER_REVERSE_SPEED = Volts.of(-2.0); // Roller reverse speed
+        
+        // Physical properties
+        // TODO: Tested to be 28.787878, originally 10
+        public static final double GEAR_RATIO = 28.78; // Arm gear ratio
+        public static final Mass ARM_MASS = Kilogram.of(2.0); // Arm mass in kg
+        public static final Distance ARM_LENGTH = Meter.of(0.3); // Arm length in meters
+        public static final Angle MIN_ANGLE = Degrees.of(-95); // Minimum angle
+        public static final Angle MAX_ANGLE = Degrees.of(5); // Maximum angle
+        
+        public static TalonFXConfiguration getArmConfig() {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY;
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kP = 25;
+            config.Slot0.kP = 15;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
-            config.Slot0.kG = 0.07;
+            config.Slot0.kG = 0.31; // 0.4 was overcompensating
             config.Slot0.kS = 0.0;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 50;
+            config.CurrentLimits.StatorCurrentLimit = 40;
+            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+            return config;
+        }
+        
+        public static TalonFXConfiguration getRollerConfig() {
+            TalonFXConfiguration config = new TalonFXConfiguration();
+            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+            config.CurrentLimits.StatorCurrentLimitEnable = true;
+            config.CurrentLimits.StatorCurrentLimit = 25;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }
     }
 
-    public static final class ClimberConstants {
-        public static final Angle STOW = Rotations.of(0);
-        public static final Angle OUT = Rotations.of(2);
-        public static final Angle DEPLOY = Rotations.of(2.2);
-        public static final Angle CLEAR = Rotations.of(4.2);
-
-        public static final double CRUISE_VELOCITY = 3;
-        public static final double ACCELERATION = 10;
+    public static final class ArmConstants {
+        // Intake angles
+        public static final Angle CORAL_INTAKE_ANGLE = Degrees.of(0);
+        public static final Angle ALGAE_GROUND_INTAKE_ANGLE = Degrees.of(-45);
+        public static final Angle ALGAE_REEF_INTAKE_ANGLE = Degrees.of(45);
+        
+        // Coral scoring angles
+        public static final Angle CORAL_L4_BEFORE_SCORING = Degrees.of(10);
+        public static final Angle CORAL_L4_SCORING = Degrees.of(20);
+        public static final Angle CORAL_L3_BEFORE_SCORING = Degrees.of(15);
+        public static final Angle CORAL_L3_SCORING = Degrees.of(25);
+        public static final Angle CORAL_L2_BEFORE_SCORING = Degrees.of(20);
+        public static final Angle CORAL_L2_SCORING = Degrees.of(30);
+        public static final Angle CORAL_L1_SCORING = Degrees.of(35); // No before scoring
+        
+        // Algae scoring angles
+        public static final Angle ALGAE_BARGE_BEFORE_SCORING = Degrees.of(-20);
+        public static final Angle ALGAE_BARGE_SCORING = Degrees.of(-10);
+        public static final Angle ALGAE_PROCESSOR_SCORING = Degrees.of(-5); // No before scoring
+        
+        // Homing
+        public static final Angle HOMING_ANGLE = Degrees.of(-90);
+        public static final Current HOMING_THRESHOLD = Amps.of(8);
+        public static final Voltage HOMING_OUTPUT = Volts.of(-1.0);
+        public static final Time HOMING_TIMEOUT = Seconds.of(10);
+        
+        // Motion control
+        public static final double CRUISE_VELOCITY = 20;
+        public static final double ACCELERATION = 40;
         public static final double JERK = 0;
-
-        public static final Angle HOMING_ANGLE = Rotations.of(0.8731);
-        public static final Current HOMING_THRESHOLD = Amps.of(10);
-        public static final double HOMING_OUTPUT = -1;
-
-        public static final double GEAR_RATIO = 18;
-
-        public static TalonFXConfiguration getMainConfig(){
+        
+        // Roller control
+        public static final Voltage ROLLER_INTAKE_SPEED = Volts.of(3.0);
+        public static final Voltage ROLLER_OUTPUT_SPEED = Volts.of(-2.0);
+        public static final Voltage ROLLER_HOLD_SPEED = Volts.of(0.5); // Stalls to hold items
+        
+        // Item detection
+        public static final Current ITEM_DETECTION_CURRENT = Amps.of(6.0);
+        
+        // Physical properties
+        public static final double GEAR_RATIO = 10;
+        public static final Mass ARM_MASS = Kilogram.of(3.0);
+        public static final Distance ARM_LENGTH = Meter.of(0.4);
+        public static final Angle MIN_ANGLE = Degrees.of(-95);
+        public static final Angle MAX_ANGLE = Degrees.of(95);
+        
+        public static TalonFXConfiguration getPivotConfig() {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotionMagic.MotionMagicCruiseVelocity = CRUISE_VELOCITY;
             config.MotionMagic.MotionMagicAcceleration = ACCELERATION;
             config.MotionMagic.MotionMagicJerk = JERK;
             config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-            config.Slot0.kP = 7;
-            config.Slot0.kI = 2;
+            config.Slot0.kP = 30;
+            config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0;
-            config.Slot0.kG = 0.0;
+            config.Slot0.kG = 0.12;
             config.Slot0.kS = 0.0;
             config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = 50;
-            config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-            return config;
-        }
-
-        public static TalonFXConfiguration getFollowerConfig(){
-            TalonFXConfiguration config = new TalonFXConfiguration();
-            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 50;
-            return config;
-        }
-
-        public static TalonFXConfiguration getWheelsConfig(){
-            TalonFXConfiguration config = new TalonFXConfiguration();
-            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 50;
-            return config;
-        }
-    }
-
-    public static final class CoralConstants {
-        public static final Voltage TAKE_IN_SPEED = Volts.of(2);
-        public static final Voltage COAST_SPEED = Volts.of(2);
-        public static final Voltage FUNNEL_SPEED = Volts.of(-3);
-        public static final Voltage HOLD_SPEED = Volts.of(-0.1);
-        public static final double BREAK_TIMEOUT = .05;
-        public static final Distance FUNNEL_SPEED_THRESHOLD = Meter.of(0.1);
-
-        public static TalonFXConfiguration getMotorConfig() {
-            TalonFXConfiguration config = new TalonFXConfiguration();
-            config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-            config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 45;
             config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }
-    }
-
-    public static final class FunnelControlConstants{
-        public static TalonFXConfiguration getMotorConfig() {
+        
+        public static TalonFXConfiguration getRollerConfig() {
             TalonFXConfiguration config = new TalonFXConfiguration();
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.CurrentLimits.StatorCurrentLimitEnable = true;
-            config.CurrentLimits.StatorCurrentLimit = 50;
-            config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+            config.CurrentLimits.StatorCurrentLimit = 30;
+            config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
             return config;
         }
     }

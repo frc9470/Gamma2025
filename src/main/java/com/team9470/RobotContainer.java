@@ -87,13 +87,6 @@ public class RobotContainer {
         // Reset field-centric heading
         xbox.x().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // SUPERSTRUCTURE COMMANDS
-        xbox.b().whileTrue(superstructure.reverseCoral());
-
-        xbox.leftBumper().whileTrue(superstructure.algaeUp());
-        xbox.leftTrigger().whileTrue(superstructure.algaeDown());
-        xbox.back().onTrue(superstructure.triggerAlgaeHoming());
-
         // Example of binding elevator level commands via the superstructure's elevator
         for (int i = 0; i < 4; i++) {
             final int id = i;
@@ -109,32 +102,16 @@ public class RobotContainer {
             button.whileTrue(new InstantCommand(() -> autoScoring.setBranch(id)));
         }
 
-        xbox.rightTrigger()
-                .whileTrue(autoScoring.autoScore(superstructure)).onFalse(superstructure.getElevator().L0().onlyIf(() -> !superstructure.getCoral().hasCoral()));
+//        xbox.rightTrigger()
+//                .whileTrue(autoScoring.autoScore(superstructure)).onFalse(superstructure.getElevator().L0());
+        xbox.rightTrigger().whileTrue(superstructure.intakeCoralGround()).onFalse(superstructure.releaseCoralGround());
 
 
         xbox.y()
-                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure).onlyIf(superstructure.getCoral()::hasCoral));
+                        .whileTrue(autoScoring.autoScoreNoDrive(superstructure));
 
         xbox.rightStick().whileTrue(new InstantCommand(autoScoring::updateClosestReefPos));
 
         xbox.povRight().whileTrue(superstructure.scoreAndFunnel());
-//        xbox.povUp().whileTrue(superstructure.raise(3));
-//        xbox.povDown().whileTrue(superstructure.getElevator().L0());
-
-        xbox.povUp().whileTrue(superstructure.climberAction());
-        xbox.povLeft().whileTrue(superstructure.funnelOut());
-
-
-
-//        xbox.povUp().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-//        xbox.povDown().and(xbox.back()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-//
-//
-//        xbox.povUp().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-//        xbox.povDown().and(xbox.start()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-
-//        xbox.back().whileTrue(new InstantCommand(() -> Constants.ElevatorConstants.L4 = Meters.of(1.45)));
-
     }
 }

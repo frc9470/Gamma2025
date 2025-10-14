@@ -34,7 +34,7 @@ public class AutoScoring {
                     );
             System.out.println("Scoring with coralobjective: " + coralObjective);
             return driveToScore;
-        }, Set.of(drivetrain)).asProxy().andThen(superstructure.getCoral().scoreCommand().asProxy());
+        }, Set.of(drivetrain)).asProxy().andThen(superstructure.score().asProxy());
     }
 
     public static Command autoScore(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
@@ -46,8 +46,8 @@ public class AutoScoring {
                                 .andThen(superstructure.raise(objective.level))
                 );
         if(objective.level == 1){
-            return driveToScore.andThen(superstructure.getCoral().scoreSlow().asProxy());
-        } else return driveToScore.andThen(superstructure.getCoral().scoreCommand().asProxy());
+            return driveToScore.andThen(superstructure.scoreSlow().asProxy());
+        } else return driveToScore.andThen(superstructure.score().asProxy());
     }
 
     public static Command autoScoreWithTimeout(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
@@ -57,7 +57,7 @@ public class AutoScoring {
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE))
                                 .andThen(superstructure.raise(objective::level))
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(1).until(() -> !superstructure.getCoral().hasCoral()).asProxy());
+        return driveToScore.andThen(superstructure.score().withTimeout(1).until(() -> !superstructure.hasGamePiece()).asProxy());
     }
 
     public static Command autoScoreStraight(Superstructure superstructure, CoralObjective objective, Swerve drivetrain) {
@@ -67,13 +67,13 @@ public class AutoScoring {
                         new WaitUntilCommand(() -> closeEnough(objective, Constants.DriverAssistConstants.RAISE_DISTANCE.times(2)))
                                 .andThen(superstructure.raise(objective::level))
                 );
-        return driveToScore.andThen(superstructure.getCoral().scoreCommand().withTimeout(1).until(() -> !superstructure.getCoral().hasCoral()).asProxy());
+        return driveToScore.andThen(superstructure.score().withTimeout(1).until(() -> !superstructure.hasGamePiece()).asProxy());
     }
 
     public Command autoScoreNoDrive(Superstructure superstructure) {
         return new DeferredCommand(() -> {
             if(coralObjective.level == 1){
-                return superstructure.raise(coralObjective.level).andThen(superstructure.getCoral().scoreSlow());
+                return superstructure.raise(coralObjective.level).andThen(superstructure.scoreSlow());
             } else return superstructure.raise(coralObjective.level).andThen(superstructure.score());
         }, Set.of());
     }

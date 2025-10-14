@@ -328,13 +328,13 @@ public class Elevator extends SubsystemBase {
         // Once we think we’ve reached the setpoint, request a re-home
         // so next time we move from a known zero.
         // Or do it only if the setpoint > 0, etc.
-        if (!needsHoming &&
-                (homingState != HomingState.HOMING) &&
-                periodicIO.closedLoopError.abs(Meters) < 0.01 &&
-                Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01
-                && targetPosition.gt(Meters.of(0))) {
-            needsHoming = true;
-        }
+//        if (!needsHoming &&
+//                (homingState != HomingState.HOMING) &&
+//                periodicIO.closedLoopError.abs(Meters) < 0.01 &&
+//                Math.abs(periodicIO.velocityMps.in(MetersPerSecond)) < 0.01
+//                && targetPosition.gt(Meters.of(0))) {
+//            needsHoming = true;
+//        }
     }
 
     /** Publish key telemetry values to SmartDashboard. */

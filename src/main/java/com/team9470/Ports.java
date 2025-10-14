@@ -6,23 +6,25 @@ public class Ports {
     /**
      * Motor IDs
      */
-    public static final CanDeviceId ELEVATOR_MAIN = new CanDeviceId(14, "rio");
-    public static final CanDeviceId ELEVATOR_FOLLOWER = new CanDeviceId(15, "rio");
 
-    public static final CanDeviceId ALGAE_PIVOT = new CanDeviceId(18, "rio");
+    //done
+    // TODO: Tune ports.
+    public static final CanDeviceId ELEVATOR_MAIN = new CanDeviceId(30, "rio");
+    public static final CanDeviceId ELEVATOR_FOLLOWER = new CanDeviceId(31, "rio");
 
-    public static final CanDeviceId CORAL_INTAKE = new CanDeviceId(16, "rio");
-    public static final CanDeviceId FUNNEL = new CanDeviceId(19, "rio");
+    public static final CanDeviceId INDEXER_1 = new CanDeviceId(15, "rio");
+    public static final CanDeviceId INDEXER_2 = new CanDeviceId(16, "rio");
 
-    public static final CanDeviceId CANdle = new CanDeviceId(20, "rio");
+    // TODO: Replace placeholders.
+    public static final CanDeviceId ARM_ANGLE = new CanDeviceId(32, "rio");
+    public static final CanDeviceId ARM_ROLLERS = new CanDeviceId(33, "rio");
 
-    public static final CanDeviceId CLIMBER_MAIN = new CanDeviceId(21, "rio");
-    public static final CanDeviceId CLIMBER_FOLLOWER = new CanDeviceId(22, "rio");
+    public static final CanDeviceId INTAKE_ARM = new CanDeviceId(14, "rio");
+    public static final CanDeviceId INTAKE_ROLLERS = new CanDeviceId(13, "rio");
 
-    public static final CanDeviceId CLIMBER_WHEELS = new CanDeviceId(23, "rio");
-    public static final CanDeviceId FUNNEL_CONTROL = new CanDeviceId(24, "rio");
     /**
-     * Beam Break IDs
+     * Sensor IDs
      */
-    public static final int CORAL_BREAK = 1;
+    public static final int INDEXER_SENSOR = 1;
+    public static final int CORAL_BREAK = 0;
 }
